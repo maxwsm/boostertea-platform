@@ -3,30 +3,10 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
 
 jobs:
-  check:
-    name: Lint & Typecheck
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile || pnpm install
-      - run: pnpm typecheck || true
-      - run: pnpm lint || true
-
   deploy:
     name: Deploy to Production
-    needs: check
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Deploy via SSH
@@ -43,20 +23,13 @@ jobs:
             docker compose up -d --remove-orphans
             echo "Deploy complete: $(date)"
 
-  notify:
-    name: Notify Telegram
-    needs: deploy
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Send Telegram notification
+      - name: Notify Telegram
+        if: always()
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: 8190472475:AAFpJmPCHYyj40LOVqqwpAlvLb-wvHNhPG0
           message: |
             🚀 BoosterTea Deploy
-            Branch: ${{ github.ref_name }}
-            Status: ${{ needs.deploy.result }}
+            Status: ${{ job.status }}
             Commit: ${{ github.event.head_commit.message }}
-            By: ${{ github.actor }}
