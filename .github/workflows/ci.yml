@@ -16,7 +16,7 @@ jobs:
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /opt/boostertea/boostertea-platform
+            cd /opt/boostertea/boostertea-site
             git pull origin main
             cd /opt/boostertea
             docker compose pull
@@ -28,7 +28,7 @@ jobs:
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
-          token: 8190472475:AAFpJmPCHYyj40LOVqqwpAlvLb-wvHNhPG0
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
             🚀 BoosterTea Deploy
             Status: ${{ job.status }}
