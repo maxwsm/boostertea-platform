@@ -6,7 +6,7 @@
   <!-- Homepage -->
   <url>
     <loc>https://boostertea.com.ua/</loc>
-    <lastmod>2025-02-02</lastmod>
+    <lastmod>2026-03-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="uk" href="https://boostertea.com.ua/"/>
@@ -22,7 +22,7 @@
   <!-- Products Catalog -->
   <url>
     <loc>https://boostertea.com.ua/products</loc>
-    <lastmod>2025-02-02</lastmod>
+    <lastmod>2026-03-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <xhtml:link rel="alternate" hreflang="uk" href="https://boostertea.com.ua/products"/>
@@ -33,7 +33,7 @@
   <!-- Accessories Catalog -->
   <url>
     <loc>https://boostertea.com.ua/accessories</loc>
-    <lastmod>2025-02-02</lastmod>
+    <lastmod>2026-03-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="uk" href="https://boostertea.com.ua/accessories"/>
@@ -44,7 +44,7 @@
   <!-- PU-ERH Product -->
   <url>
     <loc>https://boostertea.com.ua/products/pu-erh</loc>
-    <lastmod>2025-02-02</lastmod>
+    <lastmod>2026-03-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="uk" href="https://boostertea.com.ua/products/pu-erh"/>
@@ -59,7 +59,7 @@
   <!-- DA HONG PAO Product -->
   <url>
     <loc>https://boostertea.com.ua/products/da-hong-pao</loc>
-    <lastmod>2025-02-02</lastmod>
+    <lastmod>2026-03-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="uk" href="https://boostertea.com.ua/products/da-hong-pao"/>
@@ -74,7 +74,7 @@
   <!-- GABA Product -->
   <url>
     <loc>https://boostertea.com.ua/products/gaba</loc>
-    <lastmod>2025-02-02</lastmod>
+    <lastmod>2026-03-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="uk" href="https://boostertea.com.ua/products/gaba"/>
@@ -89,7 +89,7 @@
   <!-- B2B Page -->
   <url>
     <loc>https://boostertea.com.ua/b2b</loc>
-    <lastmod>2025-02-02</lastmod>
+    <lastmod>2026-03-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="uk" href="https://boostertea.com.ua/b2b"/>
@@ -100,7 +100,7 @@
   <!-- Adaptation Page -->
   <url>
     <loc>https://boostertea.com.ua/adaptation</loc>
-    <lastmod>2025-02-02</lastmod>
+    <lastmod>2026-03-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="uk" href="https://boostertea.com.ua/adaptation"/>
@@ -111,7 +111,7 @@
   <!-- Blog -->
   <url>
     <loc>https://boostertea.com.ua/blog</loc>
-    <lastmod>2025-02-02</lastmod>
+    <lastmod>2026-03-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="uk" href="https://boostertea.com.ua/blog"/>
@@ -122,7 +122,7 @@
   <!-- Contacts -->
   <url>
     <loc>https://boostertea.com.ua/contacts</loc>
-    <lastmod>2025-02-02</lastmod>
+    <lastmod>2026-03-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
     <xhtml:link rel="alternate" hreflang="uk" href="https://boostertea.com.ua/contacts"/>
@@ -133,7 +133,7 @@
   <!-- Certificates -->
   <url>
     <loc>https://boostertea.com.ua/certificates</loc>
-    <lastmod>2025-02-02</lastmod>
+    <lastmod>2026-03-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
     <xhtml:link rel="alternate" hreflang="uk" href="https://boostertea.com.ua/certificates"/>
@@ -144,7 +144,7 @@
   <!-- Privacy Policy -->
   <url>
     <loc>https://boostertea.com.ua/privacy</loc>
-    <lastmod>2025-02-02</lastmod>
+    <lastmod>2026-03-08</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="uk" href="https://boostertea.com.ua/privacy"/>
@@ -155,7 +155,7 @@
   <!-- Privacy Policy (alternate URL) -->
   <url>
     <loc>https://boostertea.com.ua/privacy-policy</loc>
-    <lastmod>2025-02-02</lastmod>
+    <lastmod>2026-03-08</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="uk" href="https://boostertea.com.ua/privacy-policy"/>
@@ -166,7 +166,7 @@
   <!-- Terms of Service -->
   <url>
     <loc>https://boostertea.com.ua/terms</loc>
-    <lastmod>2025-02-02</lastmod>
+    <lastmod>2026-03-08</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="uk" href="https://boostertea.com.ua/terms"/>
@@ -177,7 +177,7 @@
   <!-- Terms of Use (alternate URL) -->
   <url>
     <loc>https://boostertea.com.ua/terms-of-use</loc>
-    <lastmod>2025-02-02</lastmod>
+    <lastmod>2026-03-08</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="uk" href="https://boostertea.com.ua/terms-of-use"/>
@@ -188,7 +188,7 @@
   <!-- Return Policy -->
   <url>
     <loc>https://boostertea.com.ua/return-policy</loc>
-    <lastmod>2025-02-02</lastmod>
+    <lastmod>2026-03-08</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
     <xhtml:link rel="alternate" hreflang="uk" href="https://boostertea.com.ua/return-policy"/>
@@ -199,7 +199,7 @@
   <!-- Login -->
   <url>
     <loc>https://boostertea.com.ua/login</loc>
-    <lastmod>2025-02-02</lastmod>
+    <lastmod>2026-03-08</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
@@ -207,7 +207,7 @@
   <!-- Register -->
   <url>
     <loc>https://boostertea.com.ua/register</loc>
-    <lastmod>2025-02-02</lastmod>
+    <lastmod>2026-03-08</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>

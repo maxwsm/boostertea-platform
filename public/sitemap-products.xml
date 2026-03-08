@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://boostertea.com.ua/products/pu-erh</loc>
+    <lastmod>2026-03-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://boostertea.com.ua/2c48187c-dfae-4491-8a85-29ceb65cf85c.png</image:loc>
+      <image:title>BoosterTea Пуер — чайний концентрат</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://boostertea.com.ua/products/da-hong-pao</loc>
+    <lastmod>2026-03-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://boostertea.com.ua/e188ef51-7d4a-41dd-87fb-d6756d50f7b1.png</image:loc>
+      <image:title>BoosterTea Да Хун Пао — чайний концентрат</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://boostertea.com.ua/products/gaba</loc>
+    <lastmod>2026-03-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://boostertea.com.ua/584c19ed-170d-4d1e-b258-5603552bab8d.png</image:loc>
+      <image:title>BoosterTea ГАБА чай — чайний концентрат</image:title>
+    </image:image>
+  </url>
+</urlset>
