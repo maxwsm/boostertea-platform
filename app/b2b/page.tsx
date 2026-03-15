@@ -1,10 +1,11 @@
-'use client'
+import type { Metadata } from 'next'
+import { B2BClient } from './client'
 
-import dynamic from 'next/dynamic'
-
-
-const Page = dynamic(() => import('../../src/web/pages/b2b'), { ssr: false })
+export const metadata: Metadata = {
+  title: 'B2B партнерство — Чай для кафе та бізнесу | BoosterTea',
+  description: 'Оптові поставки чайних концентратів для HoReCa, кафе, ресторанів, офісів. Висока маржинальність, без обладнання.',
+}
 
 export default function B2BPage() {
-  return <Page />
+  return <B2BClient />
 }

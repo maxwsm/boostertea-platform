@@ -1,10 +1,10 @@
-'use client'
+import type { Metadata } from 'next'
+import { OrderSuccessClient } from './client'
 
-import dynamic from 'next/dynamic'
-
-
-const Page = dynamic(() => import('../../src/web/pages/order-success'), { ssr: false })
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 
 export default function OrderSuccessPage() {
-  return <Page />
+  return <OrderSuccessClient />
 }

@@ -2,8 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
-  
-  <!-- Homepage -->
+
   <url>
     <loc>https://www.boostertea.com.ua/</loc>
     <lastmod>2026-03-15</lastmod>
@@ -15,78 +14,31 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://www.boostertea.com.ua/"/>
     <image:image>
       <image:loc>https://www.boostertea.com.ua/og-image.png</image:loc>
-      <image:title>BoosterTea - Premium Tea Concentrates</image:title>
+      <image:title>BoosterTea — Преміальні чайні концентрати</image:title>
     </image:image>
   </url>
 
-  <!-- Products Catalog -->
   <url>
-    <loc>https://www.boostertea.com.ua/products</loc>
+    <loc>https://www.boostertea.com.ua/catalog</loc>
     <lastmod>2026-03-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-    <xhtml:link rel="alternate" hreflang="uk" href="https://www.boostertea.com.ua/products"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.boostertea.com.ua/products?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.boostertea.com.ua/products?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://www.boostertea.com.ua/catalog"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.boostertea.com.ua/catalog?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.boostertea.com.ua/catalog?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.boostertea.com.ua/catalog"/>
   </url>
 
-  <!-- Accessories Catalog -->
   <url>
-    <loc>https://www.boostertea.com.ua/accessories</loc>
-    <lastmod>2026-03-15</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="uk" href="https://www.boostertea.com.ua/accessories"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.boostertea.com.ua/accessories?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.boostertea.com.ua/accessories?lang=es"/>
-  </url>
-
-  <!-- PU-ERH Product -->
-  <url>
-    <loc>https://www.boostertea.com.ua/products/pu-erh</loc>
+    <loc>https://www.boostertea.com.ua/faq</loc>
     <lastmod>2026-03-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="uk" href="https://www.boostertea.com.ua/products/pu-erh"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.boostertea.com.ua/products/pu-erh?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.boostertea.com.ua/products/pu-erh?lang=es"/>
-    <image:image>
-      <image:loc>https://www.boostertea.com.ua/2c48187c-dfae-4491-8a85-29ceb65cf85c.png</image:loc>
-      <image:title>BoosterTea PU-ERH Tea Concentrate</image:title>
-    </image:image>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://www.boostertea.com.ua/faq"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.boostertea.com.ua/faq?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.boostertea.com.ua/faq"/>
   </url>
 
-  <!-- DA HONG PAO Product -->
-  <url>
-    <loc>https://www.boostertea.com.ua/products/da-hong-pao</loc>
-    <lastmod>2026-03-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="uk" href="https://www.boostertea.com.ua/products/da-hong-pao"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.boostertea.com.ua/products/da-hong-pao?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.boostertea.com.ua/products/da-hong-pao?lang=es"/>
-    <image:image>
-      <image:loc>https://www.boostertea.com.ua/e188ef51-7d4a-41dd-87fb-d6756d50f7b1.png</image:loc>
-      <image:title>BoosterTea DA HONG PAO Tea Concentrate</image:title>
-    </image:image>
-  </url>
-
-  <!-- GABA Product -->
-  <url>
-    <loc>https://www.boostertea.com.ua/products/gaba</loc>
-    <lastmod>2026-03-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-    <xhtml:link rel="alternate" hreflang="uk" href="https://www.boostertea.com.ua/products/gaba"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.boostertea.com.ua/products/gaba?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.boostertea.com.ua/products/gaba?lang=es"/>
-    <image:image>
-      <image:loc>https://www.boostertea.com.ua/584c19ed-170d-4d1e-b258-5603552bab8d.png</image:loc>
-      <image:title>BoosterTea GABA Tea Concentrate</image:title>
-    </image:image>
-  </url>
-
-  <!-- B2B Page -->
   <url>
     <loc>https://www.boostertea.com.ua/b2b</loc>
     <lastmod>2026-03-15</lastmod>
@@ -94,21 +46,9 @@
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="uk" href="https://www.boostertea.com.ua/b2b"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://www.boostertea.com.ua/b2b?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.boostertea.com.ua/b2b?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.boostertea.com.ua/b2b"/>
   </url>
 
-  <!-- Adaptation Page -->
-  <url>
-    <loc>https://www.boostertea.com.ua/adaptation</loc>
-    <lastmod>2026-03-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-    <xhtml:link rel="alternate" hreflang="uk" href="https://www.boostertea.com.ua/adaptation"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.boostertea.com.ua/adaptation?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.boostertea.com.ua/adaptation?lang=es"/>
-  </url>
-
-  <!-- Blog -->
   <url>
     <loc>https://www.boostertea.com.ua/blog</loc>
     <lastmod>2026-03-15</lastmod>
@@ -116,10 +56,29 @@
     <priority>0.7</priority>
     <xhtml:link rel="alternate" hreflang="uk" href="https://www.boostertea.com.ua/blog"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://www.boostertea.com.ua/blog?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.boostertea.com.ua/blog?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.boostertea.com.ua/blog"/>
   </url>
 
-  <!-- Contacts -->
+  <url>
+    <loc>https://www.boostertea.com.ua/adaptation</loc>
+    <lastmod>2026-03-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://www.boostertea.com.ua/adaptation"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.boostertea.com.ua/adaptation?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.boostertea.com.ua/adaptation"/>
+  </url>
+
+  <url>
+    <loc>https://www.boostertea.com.ua/accessories</loc>
+    <lastmod>2026-03-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://www.boostertea.com.ua/accessories"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.boostertea.com.ua/accessories?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.boostertea.com.ua/accessories"/>
+  </url>
+
   <url>
     <loc>https://www.boostertea.com.ua/contacts</loc>
     <lastmod>2026-03-15</lastmod>
@@ -127,51 +86,52 @@
     <priority>0.6</priority>
     <xhtml:link rel="alternate" hreflang="uk" href="https://www.boostertea.com.ua/contacts"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://www.boostertea.com.ua/contacts?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.boostertea.com.ua/contacts?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.boostertea.com.ua/contacts"/>
   </url>
 
-  <!-- Certificates -->
   <url>
     <loc>https://www.boostertea.com.ua/certificates</loc>
     <lastmod>2026-03-15</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.5</priority>
     <xhtml:link rel="alternate" hreflang="uk" href="https://www.boostertea.com.ua/certificates"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.boostertea.com.ua/certificates?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.boostertea.com.ua/certificates?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.boostertea.com.ua/certificates"/>
   </url>
 
-  <!-- Privacy Policy -->
+  <url>
+    <loc>https://www.boostertea.com.ua/mlm</loc>
+    <lastmod>2026-03-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://www.boostertea.com.ua/mlm"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.boostertea.com.ua/mlm"/>
+  </url>
+
   <url>
     <loc>https://www.boostertea.com.ua/privacy</loc>
     <lastmod>2026-03-15</lastmod>
     <changefreq>yearly</changefreq>
-    <priority>0.4</priority>
+    <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="uk" href="https://www.boostertea.com.ua/privacy"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.boostertea.com.ua/privacy?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.boostertea.com.ua/privacy?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.boostertea.com.ua/privacy"/>
   </url>
 
-  <!-- Terms of Service -->
   <url>
     <loc>https://www.boostertea.com.ua/terms</loc>
     <lastmod>2026-03-15</lastmod>
     <changefreq>yearly</changefreq>
-    <priority>0.4</priority>
+    <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="uk" href="https://www.boostertea.com.ua/terms"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.boostertea.com.ua/terms?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.boostertea.com.ua/terms?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.boostertea.com.ua/terms"/>
   </url>
 
-  <!-- Return Policy -->
   <url>
     <loc>https://www.boostertea.com.ua/return-policy</loc>
     <lastmod>2026-03-15</lastmod>
     <changefreq>yearly</changefreq>
-    <priority>0.4</priority>
+    <priority>0.3</priority>
     <xhtml:link rel="alternate" hreflang="uk" href="https://www.boostertea.com.ua/return-policy"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.boostertea.com.ua/return-policy?lang=en"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://www.boostertea.com.ua/return-policy?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.boostertea.com.ua/return-policy"/>
   </url>
 
 </urlset>

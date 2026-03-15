@@ -48,6 +48,15 @@ export const metadata: Metadata = {
     description: 'Готовий чай за 15 секунд. PU-ERH, DA HONG PAO, GABA.',
     images: ['/og-image.png'],
   },
+  alternates: {
+    canonical: SITE_URL,
+    languages: {
+      'uk': SITE_URL,
+      'en': `${SITE_URL}/?lang=en`,
+      'es': `${SITE_URL}/?lang=es`,
+      'x-default': SITE_URL,
+    },
+  },
   robots: {
     index: true,
     follow: true,

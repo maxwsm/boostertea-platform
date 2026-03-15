@@ -1,10 +1,11 @@
-'use client'
+import type { Metadata } from 'next'
+import { ContactsClient } from './client'
 
-import dynamic from 'next/dynamic'
-
-
-const Page = dynamic(() => import('../../src/web/pages/contacts'), { ssr: false })
+export const metadata: Metadata = {
+  title: 'Контакти BoosterTea — Адреса, телефон, email',
+  description: "Зв'яжіться з BoosterTea: адреса у Львові, телефон, email, Instagram, TikTok, Telegram для B2B.",
+}
 
 export default function ContactsPage() {
-  return <Page />
+  return <ContactsClient />
 }

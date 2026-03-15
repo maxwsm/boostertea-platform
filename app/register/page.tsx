@@ -1,10 +1,10 @@
-'use client'
+import type { Metadata } from 'next'
+import { RegisterClient } from './client'
 
-import dynamic from 'next/dynamic'
-
-
-const Page = dynamic(() => import('../../src/web/pages/register'), { ssr: false })
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 
 export default function RegisterPage() {
-  return <Page />
+  return <RegisterClient />
 }

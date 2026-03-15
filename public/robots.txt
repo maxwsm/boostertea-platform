@@ -7,6 +7,13 @@ Disallow: /api/
 Disallow: /admin
 Disallow: /admin/
 Disallow: /grafana/
+Disallow: /account
+Disallow: /account/
+Disallow: /checkout
+Disallow: /checkout/
+Disallow: /login
+Disallow: /register
+Disallow: /order-success
 Disallow: /*.json$
 Disallow: /search?
 Disallow: /*?*utm_
@@ -19,13 +26,18 @@ User-agent: Googlebot
 Allow: /
 Disallow: /api/
 Disallow: /admin
-Disallow: /admin/
+Disallow: /account
+Disallow: /checkout
+Disallow: /login
+Disallow: /register
+Disallow: /order-success
 
 User-agent: Yandex
 Allow: /
 Disallow: /api/
 Disallow: /admin
-Disallow: /admin/
+Disallow: /account
+Disallow: /checkout
 
 Sitemap: https://www.boostertea.com.ua/sitemap.xml
 Sitemap: https://www.boostertea.com.ua/sitemap-products.xml

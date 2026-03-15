@@ -1,10 +1,11 @@
-'use client'
+import type { Metadata } from 'next'
+import { AdaptationClient } from './client'
 
-import dynamic from 'next/dynamic'
-
-
-const Page = dynamic(() => import('../../src/web/pages/adaptation'), { ssr: false })
+export const metadata: Metadata = {
+  title: 'Як адаптувати чайний концентрат — рецепти та подача | BoosterTea',
+  description: 'Рецепти приготування напоїв з чайних концентратів BoosterTea: латте, смузі, коктейлі, холодний чай.',
+}
 
 export default function AdaptationPage() {
-  return <Page />
+  return <AdaptationClient />
 }
