@@ -29,14 +29,18 @@ const Cart = () => {
   const seoConfig = useSEOConfig('cart');
 
   const teaSubtotal = cart.reduce((total, item) => {
-    const price = item.volume === '1L' ? item.product.price1L : item.product.price025L;
+    const price = item.volume === '1L' ? item.product.price1L
+      : item.volume === 'sticks' ? (item.product.priceSticks ?? item.product.price025L)
+      : item.product.price025L;
     return total + price * item.quantity;
   }, 0);
 
-  // Calculate total tea volume in liters
+  // Calculate total tea volume in liters (sticks = 0, bundle 1L = 3)
   const totalTeaVolume = cart.reduce((total, item) => {
-    const volumeInLiters = item.volume === '1L' ? 1 : 0.25;
-    return total + volumeInLiters * item.quantity;
+    if (item.volume === 'sticks') return total;
+    const baseVolume = item.volume === '1L' ? 1 : 0.25;
+    const multiplier = item.product.isBundle ? 3 : 1;
+    return total + baseVolume * multiplier * item.quantity;
   }, 0);
   
   const accessoriesUnlocked = totalTeaVolume >= 3;
@@ -172,7 +176,9 @@ const Cart = () => {
                     🍵 {t('nav.products')}
                   </h3>
                   {cart.map((item) => {
-                    const price = item.volume === '1L' ? item.product.price1L : item.product.price025L;
+                    const price = item.volume === '1L' ? item.product.price1L
+                      : item.volume === 'sticks' ? (item.product.priceSticks ?? item.product.price025L)
+                      : item.product.price025L;
                     const minQuantity = 1; // B2C can buy single bottles
                     
                     return (

@@ -171,7 +171,7 @@ const ProductDetail = () => {
   const { addToCart } = useStore();
   const { language, t } = useI18n();
   
-  const [selectedVolume, setSelectedVolume] = useState<'1L' | '0.25L'>('1L');
+  const [selectedVolume, setSelectedVolume] = useState<'1L' | '0.25L' | 'sticks'>('1L');
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
 
@@ -196,7 +196,9 @@ const ProductDetail = () => {
   }
 
   const minQuantity = 1; // B2C can buy single bottles
-  const currentPrice = selectedVolume === '1L' ? product.price1L : product.price025L;
+  const currentPrice = selectedVolume === '1L' ? product.price1L
+    : selectedVolume === 'sticks' ? (product.priceSticks ?? product.price025L)
+    : product.price025L;
   const totalPrice = currentPrice * quantity;
 
   const otherProducts = products.filter(p => p.id !== product.id);
@@ -389,7 +391,7 @@ const ProductDetail = () => {
                 {/* Volume Selector */}
                 <div className="mb-8">
                   <h3 className="text-[var(--text-primary)]/var(--text-muted) text-sm uppercase tracking-wider mb-3">{t('productDetail.volume')}</h3>
-                  <div className="flex gap-4">
+                  <div className="flex gap-3">
                     <button
                       onClick={() => {
                         setSelectedVolume('1L');
@@ -401,29 +403,56 @@ const ProductDetail = () => {
                           : 'border-[var(--border)] hover:border-[#F5F0E8]/30'
                       }`}
                     >
-                      <p className="text-[var(--text-primary)] text-lg font-semibold">1 {t('productDetail.liter')}</p>
+                      <p className="text-[var(--text-primary)] text-base font-semibold">
+                        {product.isBundle ? '3× 1 л' : '1 л'}
+                      </p>
                       <p className="text-[var(--accent)] font-bold">{product.price1L}₴</p>
-                      <p className="text-[var(--text-primary)]/var(--text-muted) text-xs mt-1">~34 порції</p>
+                      <p className="text-[var(--text-muted)] text-xs mt-1">
+                        {product.isBundle ? '~102 порції' : '~34 порції'}
+                      </p>
                     </button>
-                    
+
                     <button
                       onClick={() => {
                         setSelectedVolume('0.25L');
                         setQuantity(1);
                       }}
-                      className={`flex-1 py-4 rounded-xl border-2 transition-all relative overflow-hidden ${
+                      className={`flex-1 py-4 rounded-xl border-2 transition-all ${
                         selectedVolume === '0.25L'
                           ? 'border-[#9FD356] bg-[var(--accent)]/10'
-                          : 'border-[var(--border)]'
+                          : 'border-[var(--border)] hover:border-[#F5F0E8]/30'
                       }`}
                     >
-                      <div className="absolute inset-0 bg-[var(--bg-primary)]/var(--text-secondary) flex items-center justify-center">
-                        <span className="text-[#C9A55C] font-medium">{t('productDetail.comingSoon')}</span>
-                      </div>
-                      <p className="text-[var(--text-primary)] text-lg font-semibold">0.25 {t('productDetail.liters')}</p>
+                      <p className="text-[var(--text-primary)] text-base font-semibold">
+                        {product.isBundle ? '3× 0.25 л' : '0.25 л'}
+                      </p>
                       <p className="text-[var(--accent)] font-bold">{product.price025L}₴</p>
-                      <p className="text-[var(--text-primary)]/var(--text-muted) text-xs mt-1">~8 порцій</p>
+                      <p className="text-[var(--text-muted)] text-xs mt-1">
+                        {product.isBundle ? '~24 порції' : '~8 порцій'}
+                      </p>
                     </button>
+
+                    {product.priceSticks !== undefined && (
+                      <button
+                        onClick={() => {
+                          setSelectedVolume('sticks');
+                          setQuantity(1);
+                        }}
+                        className={`flex-1 py-4 rounded-xl border-2 transition-all ${
+                          selectedVolume === 'sticks'
+                            ? 'border-[#9FD356] bg-[var(--accent)]/10'
+                            : 'border-[var(--border)] hover:border-[#F5F0E8]/30'
+                        }`}
+                      >
+                        <p className="text-[var(--text-primary)] text-base font-semibold">
+                          {product.isBundle ? '3× стіки' : 'Стіки'}
+                        </p>
+                        <p className="text-[var(--accent)] font-bold">{product.priceSticks}₴</p>
+                        <p className="text-[var(--text-muted)] text-xs mt-1">
+                          {product.isBundle ? '72 порції' : '24 порції'}
+                        </p>
+                      </button>
+                    )}
                   </div>
                 </div>
 

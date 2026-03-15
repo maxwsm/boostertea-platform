@@ -11,11 +11,14 @@ export interface Product {
   effectsUk: string[];
   price1L: number;
   price025L: number;
+  priceSticks?: number;
   image: string;
   category: string;
   brewingTime: string;
   temperature: string;
   origin: string;
+  isBundle?: boolean;
+  bundleIncludes?: string[];
 }
 
 export interface Accessory {
@@ -35,7 +38,7 @@ export interface Accessory {
 
 export interface CartItem {
   product: Product;
-  volume: '1L' | '0.25L';
+  volume: '1L' | '0.25L' | 'sticks';
   quantity: number;
 }
 
@@ -74,12 +77,12 @@ export const getBonusPointsValue = (points: number) => points * BONUS_POINT_VALU
 interface StoreContextType {
   cart: CartItem[];
   accessoryCart: AccessoryCartItem[];
-  addToCart: (product: Product, volume: '1L' | '0.25L', quantity: number) => void;
+  addToCart: (product: Product, volume: '1L' | '0.25L' | 'sticks', quantity: number) => void;
   addAccessoryToCart: (accessory: Accessory, quantity: number) => void;
   addAccessoryWithBonus: (accessory: Accessory, quantity: number, useBonus: boolean, bonusPoints: number) => { success: boolean; pointsUsed: number };
-  removeFromCart: (productId: string, volume: '1L' | '0.25L') => void;
+  removeFromCart: (productId: string, volume: '1L' | '0.25L' | 'sticks') => void;
   removeAccessoryFromCart: (accessoryId: string) => void;
-  updateQuantity: (productId: string, volume: '1L' | '0.25L', quantity: number) => void;
+  updateQuantity: (productId: string, volume: '1L' | '0.25L' | 'sticks', quantity: number) => void;
   updateAccessoryQuantity: (accessoryId: string, quantity: number) => void;
   clearCart: () => void;
   getCartTotal: () => number;
@@ -109,8 +112,9 @@ export const products: Product[] = [
     descriptionUk: 'Преміальний витриманий чайний концентрат з глибокими земляними нотами та природним енергетичним зарядом. Ідеальний для ранкових ритуалів та зосередженої роботи.',
     effects: ['Energy boost', 'Focus enhancement', 'Metabolism support'],
     effectsUk: ['Заряд енергії', 'Покращення концентрації', 'Підтримка метаболізму'],
-    price1L: 975,
-    price025L: Math.round(975 * 0.7 / 4),
+    price1L: 900,
+    price025L: 300,
+    priceSticks: 720,
     image: './2c48187c-dfae-4491-8a85-29ceb65cf85c.png',
     category: 'energy',
     brewingTime: '15 секунд',
@@ -126,8 +130,9 @@ export const products: Product[] = [
     descriptionUk: 'Легендарний улун "Великий Червоний Халат" з насиченим смаком обсмаження та зігріваючими властивостями. Відомий як король чаїв.',
     effects: ['Warming sensation', 'Stress relief', 'Digestive comfort'],
     effectsUk: ['Зігріваючий ефект', 'Зняття стресу', 'Комфорт травлення'],
-    price1L: 1020,
-    price025L: Math.round(1020 * 0.7 / 4),
+    price1L: 936,
+    price025L: 312,
+    priceSticks: 900,
     image: './e188ef51-7d4a-41dd-87fb-d6756d50f7b1.png',
     category: 'classic',
     brewingTime: '15 секунд',
@@ -143,14 +148,38 @@ export const products: Product[] = [
     descriptionUk: 'Унікальний чайний концентрат збагачений ГАМК для розслаблення без сонливості. Ідеальний для вечірнього відпочинку та підготовки до якісного сну.',
     effects: ['Deep relaxation', 'Better sleep', 'Anxiety reduction'],
     effectsUk: ['Глибоке розслаблення', 'Кращий сон', 'Зниження тривожності'],
-    price1L: 1200,
-    price025L: Math.round(1200 * 0.7 / 4),
+    price1L: 1068,
+    price025L: 360,
+    priceSticks: 1008,
     image: './584c19ed-170d-4d1e-b258-5603552bab8d.png',
     category: 'relaxation',
     brewingTime: '15 секунд',
     temperature: '80-90°C',
     origin: 'Тайвань'
-  }
+  },
+  {
+    id: '4',
+    slug: 'set-all-three',
+    name: 'SET — All Three',
+    nameUk: 'Сет «Три смаки»',
+    description: 'Complete collection: Pu-erh + Da Hong Pao + GABA. Save 30% vs buying separately. Discover your favourite.',
+    descriptionUk: 'Повна колекція: Пуер + Да Хун Пао + ГАБА. Економія 30% порівняно з окремою покупкою. Знайдіть свій смак.',
+    effects: ['Best value', 'Full collection', 'Perfect gift'],
+    effectsUk: ['Найкраща ціна', 'Повна колекція', 'Ідеальний подарунок'],
+    // 3× 1L: (900+936+1068)*0.7 = 2033
+    price1L: 2033,
+    // 3× 0.25L: (300+312+360)*0.7 = 680
+    price025L: 680,
+    // 3× sticks: (720+900+1008)*0.7 = 1840
+    priceSticks: 1840,
+    image: './2c48187c-dfae-4491-8a85-29ceb65cf85c.png',
+    category: 'energy',
+    brewingTime: '15 секунд',
+    temperature: '80-98°C',
+    origin: 'Китай / Тайвань',
+    isBundle: true,
+    bundleIncludes: ['pu-erh', 'da-hong-pao', 'gaba'],
+  },
 ];
 
 // Accessory products - thermoses, mugs, cups, pialas, dry tea
@@ -334,7 +363,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     setTimeout(() => setToastKey(null), 3000);
   };
 
-  const addToCart = (product: Product, volume: '1L' | '0.25L', quantity: number) => {
+  const addToCart = (product: Product, volume: '1L' | '0.25L' | 'sticks', quantity: number) => {
     setCart(prev => {
       const existingIndex = prev.findIndex(
         item => item.product.id === product.id && item.volume === volume
@@ -392,7 +421,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const removeFromCart = (productId: string, volume: '1L' | '0.25L') => {
+  const removeFromCart = (productId: string, volume: '1L' | '0.25L' | 'sticks') => {
     setCart(prev => prev.filter(
       item => !(item.product.id === productId && item.volume === volume)
     ));
@@ -404,7 +433,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     showToast('toast.removedFromCart');
   };
 
-  const updateQuantity = (productId: string, volume: '1L' | '0.25L', quantity: number) => {
+  const updateQuantity = (productId: string, volume: '1L' | '0.25L' | 'sticks', quantity: number) => {
     if (quantity <= 0) {
       removeFromCart(productId, volume);
       return;
@@ -438,7 +467,9 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
   const getCartTotal = () => {
     const teaSubtotal = cart.reduce((total, item) => {
-      const price = item.volume === '1L' ? item.product.price1L : item.product.price025L;
+      const price = item.volume === '1L' ? item.product.price1L
+        : item.volume === 'sticks' ? (item.product.priceSticks ?? item.product.price025L)
+        : item.product.price025L;
       return total + price * item.quantity;
     }, 0);
 
@@ -451,7 +482,9 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
   const getTeaCartTotal = () => {
     return cart.reduce((total, item) => {
-      const price = item.volume === '1L' ? item.product.price1L : item.product.price025L;
+      const price = item.volume === '1L' ? item.product.price1L
+        : item.volume === 'sticks' ? (item.product.priceSticks ?? item.product.price025L)
+        : item.product.price025L;
       return total + price * item.quantity;
     }, 0) * (1 - promoDiscount / 100);
   };
@@ -482,11 +515,13 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     cart.forEach(item => {
       if (item.volume === '1L') {
         has1L = true;
-        totalCups += item.quantity * 5; // 5 cups per 1L bottle
-      } else {
+        // SET bundle counts as 3 bottles
+        totalCups += item.quantity * (item.product.isBundle ? 15 : 5);
+      } else if (item.volume === '0.25L') {
         has025L = true;
-        totalCups += item.quantity * 3; // 3 cups per 0.25L bottle
+        totalCups += item.quantity * (item.product.isBundle ? 9 : 3);
       }
+      // sticks: no cups gift
     });
     
     return { totalCups, has1L, has025L };

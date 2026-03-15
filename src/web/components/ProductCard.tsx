@@ -136,16 +136,34 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
           ))}
         </div>
 
+        {/* Bundle badge */}
+        {product.isBundle && (
+          <div className="mb-3 px-3 py-1.5 bg-[var(--accent)]/15 border border-[var(--accent)]/30 rounded-lg text-center">
+            <span className="text-[var(--accent)] text-xs font-semibold">
+              Пуер + Да Хун Пао + ГАБА — економія 30%
+            </span>
+          </div>
+        )}
+
         {/* Price and CTA */}
         <div className="flex items-end justify-between">
           <div>
             <p className="text-[var(--text-subtle)] text-xs mb-1">{t('products.from')}</p>
-            <p className="text-[var(--accent)] text-2xl font-bold">
-              {product.price1L}₴
-              <span className="text-sm text-[var(--text-subtle)] font-normal ml-1">/1L</span>
-            </p>
+            {product.isBundle ? (
+              <p className="text-[var(--accent)] text-2xl font-bold">
+                {product.price025L}₴
+                <span className="text-sm text-[var(--text-subtle)] font-normal ml-1">/3× 0.25л</span>
+              </p>
+            ) : (
+              <p className="text-[var(--accent)] text-2xl font-bold">
+                {Math.min(product.price025L, product.priceSticks ?? product.price025L)}₴
+                <span className="text-sm text-[var(--text-subtle)] font-normal ml-1">
+                  {(product.priceSticks ?? 0) < product.price025L ? '/стіки' : '/0.25л'}
+                </span>
+              </p>
+            )}
           </div>
-          
+
           <button
             onClick={(e) => {
               e.preventDefault();
