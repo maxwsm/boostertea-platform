@@ -9,6 +9,7 @@ import { ThemeProvider } from "./lib/theme";
 import { CookieConsent } from "./components/CookieConsent";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { BottomNav } from "./components/BottomNav";
+import ChatWidget from "./components/ChatWidget";
 import { Search } from "./components/Search";
 import { PageSkeleton } from "./components/Skeleton";
 
@@ -156,6 +157,9 @@ function App() {
                                                         
                                                         {/* Mobile Bottom Navigation */}
                                                         <BottomNav />
+
+                                                        {/* AI Chat Widget */}
+                                                        <ChatWidget />
                                                 </StoreProvider>
                                         </AuthProvider>
                                 </I18nProvider>
