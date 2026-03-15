@@ -1,0 +1,16 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "bun run build",
+  "installCommand": "bun install --frozen-lockfile",
+  "outputDirectory": ".next",
+  "regions": ["fra1"],
+  "env": {
+    "NEXT_PUBLIC_SITE_URL": "https://www.boostertea.com.ua"
+  },
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "http://5.189.141.134:4000/api/:path*"
+    }
+  ]
+}

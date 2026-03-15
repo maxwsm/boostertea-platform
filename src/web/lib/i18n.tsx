@@ -15,7 +15,7 @@ import ukTranslations from '../locales/uk.json';
 import enTranslations from '../locales/en.json';
 import esTranslations from '../locales/es.json';
 
-const translations: Record<Language, Record<string, string>> = {
+const translations: Record<Language, Record<string, unknown>> = {
   uk: ukTranslations,
   en: enTranslations,
   es: esTranslations,

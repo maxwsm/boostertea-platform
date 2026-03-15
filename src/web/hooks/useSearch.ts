@@ -83,8 +83,8 @@ export function useSearch(options: UseSearchOptions = {}) {
   const [recentSearches, setRecentSearches] = useState<string[]>(loadRecentSearches);
 
   const offsetRef = useRef(0);
-  const debounceTimer = useRef<ReturnType<typeof setTimeout>>();
-  const abortController = useRef<AbortController>();
+  const debounceTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const abortController = useRef<AbortController>(undefined);
 
   const addRecentSearch = useCallback((q: string) => {
     if (!q.trim()) return;
