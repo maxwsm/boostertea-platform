@@ -26,7 +26,7 @@ export interface SEOProps {
 }
 
 // Base URL for the site
-const BASE_URL = 'https://boostertea.com.ua';
+const BASE_URL = 'https://www.boostertea.com.ua';
 
 // Organization structured data
 const organizationSchema = {

@@ -1,42 +1,32 @@
 # BoosterTea robots.txt
-# https://boostertea.com.ua
+# https://www.boostertea.com.ua
 
 User-agent: *
 Allow: /
-Allow: /catalog
-Allow: /product
-Allow: /blog
-Allow: /about
-Allow: /contacts
-Allow: /mlm
 Disallow: /api/
+Disallow: /admin
 Disallow: /admin/
 Disallow: /grafana/
-Disallow: /api
-Disallow: /admin
-Disallow: /grafana
 Disallow: /*.json$
 Disallow: /search?
-Disallow: /?*
-Disallow: /*?*
-Disallow: /*utm_
-Disallow: /*fbclid=
-Disallow: /*gclid=
+Disallow: /*?*utm_
+Disallow: /*?*fbclid=
+Disallow: /*?*gclid=
 
 Crawl-delay: 1
 
 User-agent: Googlebot
 Allow: /
 Disallow: /api/
+Disallow: /admin
 Disallow: /admin/
-Disallow: /grafana/
 
 User-agent: Yandex
 Allow: /
 Disallow: /api/
+Disallow: /admin
 Disallow: /admin/
-Disallow: /grafana/
 
-Sitemap: https://boostertea.com.ua/sitemap.xml
-Sitemap: https://boostertea.com.ua/sitemap-products.xml
-Sitemap: https://boostertea.com.ua/sitemap-blog.xml
+Sitemap: https://www.boostertea.com.ua/sitemap.xml
+Sitemap: https://www.boostertea.com.ua/sitemap-products.xml
+Sitemap: https://www.boostertea.com.ua/sitemap-blog.xml

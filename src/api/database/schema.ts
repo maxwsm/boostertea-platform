@@ -380,6 +380,50 @@ export const notificationLog = sqliteTable('notification_log', {
   sentAt: text('sent_at').notNull().default(sql`(datetime('now'))`)
 })
 
+
+// ============================================
+// BLOG POSTS
+// ============================================
+
+export const blogPosts = sqliteTable('blog_posts', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  slug: text('slug').notNull().unique(),
+
+  // Multilingual content
+  titleUk: text('title_uk').notNull(),
+  titleEn: text('title_en'),
+  titleEs: text('title_es'),
+  excerptUk: text('excerpt_uk'),
+  excerptEn: text('excerpt_en'),
+  excerptEs: text('excerpt_es'),
+  contentUk: text('content_uk').notNull(),
+  contentEn: text('content_en'),
+  contentEs: text('content_es'),
+
+  category: text('category').notNull().default('general'),
+  tags: text('tags').default('[]'), // JSON array stored as text
+  image: text('image'),
+  authorName: text('author_name').notNull().default('BoosterTea Team'),
+  
+  isPublished: integer('is_published', { mode: 'boolean' }).notNull().default(false),
+  isFeatured: integer('is_featured', { mode: 'boolean' }).notNull().default(false),
+  views: integer('views').notNull().default(0),
+  readingTime: integer('reading_time').default(5),
+
+  // SEO
+  metaTitleUk: text('meta_title_uk'),
+  metaTitleEn: text('meta_title_en'),
+  metaDescriptionUk: text('meta_description_uk'),
+  metaDescriptionEn: text('meta_description_en'),
+
+  publishedAt: text('published_at'),
+  createdAt: text('created_at').notNull().default(sql),
+  updatedAt: text('updated_at').notNull().default(sql)
+})
+
+export type BlogPost = typeof blogPosts.
+export type NewBlogPost = typeof blogPosts.
+
 // Type exports for use in application
 export type Product = typeof products.$inferSelect
 export type NewProduct = typeof products.$inferInsert

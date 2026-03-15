@@ -55,6 +55,7 @@ const Login = () => {
       <SEO 
         title={seoConfig.title}
         description={seoConfig.description}
+        noIndex={true}
       />
       <Header />
       

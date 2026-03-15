@@ -2645,3 +2645,228 @@ app.get('/social/stats', async (c) => {
   return c.json(stats);
 });
 
+
+
+// ============================================
+// BLOG API
+// ============================================
+
+const blogPostSchema = z.object({
+  slug: z.string().min(1).max(200),
+  titleUk: z.string().min(1),
+  titleEn: z.string().optional(),
+  titleEs: z.string().optional(),
+  excerptUk: z.string().optional(),
+  excerptEn: z.string().optional(),
+  excerptEs: z.string().optional(),
+  contentUk: z.string().min(1),
+  contentEn: z.string().optional(),
+  contentEs: z.string().optional(),
+  category: z.string().default('general'),
+  tags: z.array(z.string()).default([]),
+  image: z.string().optional(),
+  authorName: z.string().default('BoosterTea Team'),
+  isPublished: z.boolean().default(false),
+  isFeatured: z.boolean().default(false),
+  readingTime: z.number().int().positive().default(5),
+  metaTitleUk: z.string().optional(),
+  metaTitleEn: z.string().optional(),
+  metaDescriptionUk: z.string().optional(),
+  metaDescriptionEn: z.string().optional(),
+  publishedAt: z.string().optional(),
+})
+
+// GET /blog/categories
+app.get('/blog/categories', async (c) => {
+  const db = getDb(c.env)
+  try {
+    const all = await db.select({ count: sql<number> })
+      .from(schema.blogPosts)
+      .where(eq(schema.blogPosts.isPublished, true))
+    
+    const byCategory = await db
+      .select({
+        category: schema.blogPosts.category,
+        count: sql<number>
+      })
+      .from(schema.blogPosts)
+      .where(eq(schema.blogPosts.isPublished, true))
+      .groupBy(schema.blogPosts.category)
+      .orderBy(desc(sql))
+
+    return c.json({
+      success: true,
+      data: {
+        all: Number(all[0]?.count ?? 0),
+        categories: byCategory.map(r => ({
+          slug: r.category,
+          name: r.category,
+          count: Number(r.count)
+        }))
+      }
+    })
+  } catch (e) {
+    return c.json({ success: false, error: 'Failed to fetch categories' }, 500)
+  }
+})
+
+// GET /blog/posts
+app.get('/blog/posts', async (c) => {
+  const db = getDb(c.env)
+  const { category, featured, search, limit = '12', page = '1' } = c.req.query()
+  
+  try {
+    const offset = (parseInt(page) - 1) * parseInt(limit)
+    let conditions = [eq(schema.blogPosts.isPublished, true)]
+    
+    if (category) conditions.push(eq(schema.blogPosts.category, category))
+    if (featured === 'true') conditions.push(eq(schema.blogPosts.isFeatured, true))
+    
+    const whereClause = and(...conditions)
+    
+    const [posts, countResult] = await Promise.all([
+      db.select({
+        id: schema.blogPosts.id,
+        slug: schema.blogPosts.slug,
+        titleUk: schema.blogPosts.titleUk,
+        titleEn: schema.blogPosts.titleEn,
+        excerptUk: schema.blogPosts.excerptUk,
+        excerptEn: schema.blogPosts.excerptEn,
+        category: schema.blogPosts.category,
+        tags: schema.blogPosts.tags,
+        image: schema.blogPosts.image,
+        authorName: schema.blogPosts.authorName,
+        isFeatured: schema.blogPosts.isFeatured,
+        views: schema.blogPosts.views,
+        readingTime: schema.blogPosts.readingTime,
+        publishedAt: schema.blogPosts.publishedAt,
+        createdAt: schema.blogPosts.createdAt,
+      })
+      .from(schema.blogPosts)
+      .where(whereClause)
+      .orderBy(desc(schema.blogPosts.publishedAt), desc(schema.blogPosts.createdAt))
+      .limit(parseInt(limit))
+      .offset(offset),
+      db.select({ total: count() }).from(schema.blogPosts).where(whereClause)
+    ])
+
+    const total = Number(countResult[0]?.total ?? 0)
+
+    return c.json({
+      success: true,
+      data: {
+        posts,
+        pagination: {
+          total,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          pages: Math.ceil(total / parseInt(limit))
+        }
+      }
+    })
+  } catch (e) {
+    return c.json({ success: false, error: 'Failed to fetch posts' }, 500)
+  }
+})
+
+// GET /blog/posts/:slug
+app.get('/blog/posts/:slug', async (c) => {
+  const db = getDb(c.env)
+  const { slug } = c.req.param()
+  
+  try {
+    const posts = await db.select()
+      .from(schema.blogPosts)
+      .where(and(eq(schema.blogPosts.slug, slug), eq(schema.blogPosts.isPublished, true)))
+      .limit(1)
+    
+    if (!posts.length) return c.json({ success: false, error: 'Post not found' }, 404)
+    
+    const post = posts[0]
+    
+    // Increment views
+    await db.update(schema.blogPosts)
+      .set({ views: post.views + 1 })
+      .where(eq(schema.blogPosts.id, post.id))
+
+    // Related posts
+    const related = await db.select({
+      id: schema.blogPosts.id,
+      slug: schema.blogPosts.slug,
+      titleUk: schema.blogPosts.titleUk,
+      titleEn: schema.blogPosts.titleEn,
+      excerptUk: schema.blogPosts.excerptUk,
+      image: schema.blogPosts.image,
+      category: schema.blogPosts.category,
+      publishedAt: schema.blogPosts.publishedAt,
+      readingTime: schema.blogPosts.readingTime,
+    })
+    .from(schema.blogPosts)
+    .where(and(
+      eq(schema.blogPosts.isPublished, true),
+      eq(schema.blogPosts.category, post.category),
+      sql
+    ))
+    .orderBy(desc(schema.blogPosts.publishedAt))
+    .limit(3)
+
+    return c.json({ success: true, data: { post, related } })
+  } catch (e) {
+    return c.json({ success: false, error: 'Failed to fetch post' }, 500)
+  }
+})
+
+// POST /blog/posts (admin)
+app.post('/blog/posts', zValidator('json', blogPostSchema), async (c) => {
+  const db = getDb(c.env)
+  const data = c.req.valid('json')
+  
+  try {
+    const result = await db.insert(schema.blogPosts).values({
+      ...data,
+      tags: JSON.stringify(data.tags),
+      publishedAt: data.isPublished && !data.publishedAt ? new Date().toISOString() : data.publishedAt,
+    }).returning()
+    return c.json({ success: true, data: result[0] }, 201)
+  } catch (e: any) {
+    if (e?.message?.includes('UNIQUE')) {
+      return c.json({ success: false, error: 'Slug already exists' }, 409)
+    }
+    return c.json({ success: false, error: 'Failed to create post' }, 500)
+  }
+})
+
+// PUT /blog/posts/:id (admin)
+app.put('/blog/posts/:id', async (c) => {
+  const db = getDb(c.env)
+  const id = parseInt(c.req.param('id'))
+  const data = await c.req.json()
+  
+  try {
+    if (data.tags && Array.isArray(data.tags)) data.tags = JSON.stringify(data.tags)
+    if (data.isPublished === true && !data.publishedAt) {
+      data.publishedAt = new Date().toISOString()
+    }
+    data.updatedAt = new Date().toISOString()
+    
+    const result = await db.update(schema.blogPosts).set(data).where(eq(schema.blogPosts.id, id)).returning()
+    if (!result.length) return c.json({ success: false, error: 'Post not found' }, 404)
+    return c.json({ success: true, data: result[0] })
+  } catch (e) {
+    return c.json({ success: false, error: 'Failed to update post' }, 500)
+  }
+})
+
+// DELETE /blog/posts/:id (admin)
+app.delete('/blog/posts/:id', async (c) => {
+  const db = getDb(c.env)
+  const id = parseInt(c.req.param('id'))
+  
+  try {
+    const result = await db.delete(schema.blogPosts).where(eq(schema.blogPosts.id, id)).returning()
+    if (!result.length) return c.json({ success: false, error: 'Post not found' }, 404)
+    return c.json({ success: true, data: result[0] })
+  } catch (e) {
+    return c.json({ success: false, error: 'Failed to delete post' }, 500)
+  }
+})

@@ -107,6 +107,7 @@ const Register = () => {
       <SEO 
         title={seoConfig.title}
         description={seoConfig.description}
+        noIndex={true}
       />
       <Header />
       
