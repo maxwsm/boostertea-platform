@@ -12,6 +12,9 @@
     "tsx": "^4.7.1"
   },
   "scripts": {
+    "build": "prisma generate",
+    "postinstall": "prisma generate",
+    "generate": "prisma generate",
     "seed-mock": "tsx prisma/seedMockEcosystem.ts",
     "seed-gurman": "tsx prisma/seedPanGurman.ts"
   },
