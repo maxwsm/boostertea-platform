@@ -1,7 +1,7 @@
 {
   "name": "wsm-ecosystem",
   "private": true,
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@9.15.5",
   "workspaces": [
     "apps/*",
     "packages/*"
