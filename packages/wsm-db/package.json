@@ -1,0 +1,21 @@
+{
+  "name": "@wsm/db",
+  "version": "1.0.0",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@prisma/client": "^5.10.2"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "prisma": "^5.10.2",
+    "tsx": "^4.7.1"
+  },
+  "scripts": {
+    "seed-mock": "tsx prisma/seedMockEcosystem.ts",
+    "seed-gurman": "tsx prisma/seedPanGurman.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }
+}

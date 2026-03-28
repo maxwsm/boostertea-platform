@@ -1,0 +1,70 @@
+http:
+  routers:
+    # --- API ROUTER (High Priority) ---
+    wsm-api-router:
+      rule: '(Host(`boostertea.com.ua`) || Host(`www.boostertea.com.ua`) || Host(`funny.boostertea.com.ua`) || Host(`dino.boostertea.com.ua`) || Host(`tlab.boostertea.com.ua`)) && PathPrefix(`/api`)'
+      service: wsm-api-service
+      entryPoints: ['websecure']
+      tls: { certResolver: 'letsencrypt' }
+      middlewares: ['security-headers', 'compression']
+
+    # --- FRONTEND ROUTERS ---
+    boostertea-router:
+      rule: '(Host(`boostertea.com.ua`) || Host(`www.boostertea.com.ua`)) && !PathPrefix(`/api`)'
+      service: boostertea-service
+      entryPoints: ['websecure']
+      tls: { certResolver: 'letsencrypt' }
+      middlewares: ['security-headers', 'compression']
+
+    funnydrops-router:
+      rule: 'Host(`funny.boostertea.com.ua`) && !PathPrefix(`/api`)'
+      service: funnydrops-service
+      entryPoints: ['websecure']
+      tls: { certResolver: 'letsencrypt' }
+      middlewares: ['security-headers', 'compression']
+
+    dinoslush-router:
+      rule: 'Host(`dino.boostertea.com.ua`) && !PathPrefix(`/api`)'
+      service: dinoslush-service
+      entryPoints: ['websecure']
+      tls: { certResolver: 'letsencrypt' }
+      middlewares: ['security-headers', 'compression']
+
+    tlab-router:
+      rule: 'Host(`tlab.boostertea.com.ua`) && !PathPrefix(`/api`)'
+      service: tlab-service
+      entryPoints: ['websecure']
+      tls: { certResolver: 'letsencrypt' }
+      middlewares: ['security-headers', 'compression']
+
+  services:
+    wsm-api-service:
+      loadBalancer:
+        servers:
+          - url: 'http://172.20.0.1:4000'
+    boostertea-service:
+      loadBalancer:
+        servers:
+          - url: 'http://172.20.0.1:3010'
+    funnydrops-service:
+      loadBalancer:
+        servers:
+          - url: 'http://172.20.0.1:3005'
+    dinoslush-service:
+      loadBalancer:
+        servers:
+          - url: 'http://172.20.0.1:3004'
+    tlab-service:
+      loadBalancer:
+        servers:
+          - url: 'http://172.20.0.1:3006'
+
+  middlewares:
+    security-headers:
+      headers:
+        stsSeconds: 31536000
+        forceSTSHeader: true
+        contentTypeNosniff: true
+        referrerPolicy: 'strict-origin-when-cross-origin'
+    compression:
+      compress: {}

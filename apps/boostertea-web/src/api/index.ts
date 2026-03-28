@@ -1,0 +1,700 @@
+import { Hono } from 'hono';
+import { cors } from "hono/cors";
+import { sign, verify } from 'hono/jwt';
+import { prisma } from '@wsm/db';
+import { products, accessoryProducts } from '@wsm/config';
+import { WsmEventBus } from '@wsm/events';
+import { startBot } from './bot';
+import { startWorker } from './worker';
+import { retentionTriggerQueue } from './redis';
+
+// Background AI processes are now handled by @wsm-telegram/bot-gateway and dedicated PM2 workers
+// to prevent Vercel Serverless timeout and multiple instance conflicts.
+
+const eventBus = new WsmEventBus();
+
+const app = new Hono().basePath('/api');
+
+// Basic DDOS protection memory limiter (Phase 18 Audit)
+const rateLimiter = new Map<string, number[]>();
+app.use('*', async (c, next) => {
+  const ip = c.req.header('x-real-ip') || c.req.header('x-forwarded-for') || 'anon';
+  const now = Date.now();
+  const windowMs = 60000;
+  
+  if (!rateLimiter.has(ip)) rateLimiter.set(ip, []);
+  const hits = rateLimiter.get(ip)!.filter(t => now - t < windowMs);
+  hits.push(now);
+  rateLimiter.set(ip, hits);
+
+  if (hits.length > 200) {
+    console.warn(`[FIREWALL] Blocked IP ${ip} after 200 hits/min`);
+    return c.json({ error: 'Too Many Requests' }, 429);
+  }
+  await next();
+});
+app.use('*', cors({
+  origin: ['https://boostertea.com.ua', 'https://funnydrop.com.ua', 'https://tai-drink.com.ua', 'http://localhost:3000', 'http://localhost:3011', 'http://localhost:3014'],
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+}));
+
+const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_wsm_cart_testing_only';
+if (!process.env.JWT_SECRET) {
+  console.warn('WARNING: JWT_SECRET is missing. Using unsafe development fallback secret.');
+}
+
+app.post('/auth/login', async (c) => {
+  const body = await c.req.json();
+  const { email, password } = body;
+
+  try {
+    if (!email || password.length < 6) {
+      return c.json({ success: false, error: 'Невірні дані' }, 401);
+    }
+
+    // Try to find the user in our newly implemented Prisma DB
+    let user = await prisma.user.findUnique({ where: { email } });
+    
+    // Auto-create for the incubator phase (simulate full SSO flow)
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          email,
+          name: email.split('@')[0],
+          languageCode: 'uk',
+        }
+      });
+      
+      // Initialize the Global Wallet (Cross-Brand Points)
+      await prisma.wallet.create({
+        data: {
+          userId: user.id,
+          balance: 200.0, // Welcome bonus across the entire WSM ecosystem
+        }
+      });
+    }
+
+    const wallet = await prisma.wallet.findUnique({ where: { userId: user.id } });
+
+    // Generate Global WSM Ecosystem JWT
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: 'user',
+      exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30, // 30 days
+    };
+    
+    const token = await sign(payload, JWT_SECRET);
+
+    return c.json({ 
+      success: true, 
+      token, 
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        bonusPoints: wallet?.balance || 0,
+        isAdmin: payload.role === 'admin'
+      }
+    });
+
+  } catch (e: any) {
+    console.error('AUTH_ERROR:', e.message);
+    return c.json({ success: false, error: 'Помилка сервера' }, 500);
+  }
+});
+
+// Middleware to verify JWT for protected routes (Cross-Brand Validation)
+app.use('/auth/me', async (c, next) => {
+  const authHeader = c.req.header('Authorization');
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return c.json({ success: false, error: 'Unauthorized' }, 401);
+  }
+  
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = await verify(token, JWT_SECRET);
+    c.set('jwtPayload', decoded);
+    await next();
+  } catch (e) {
+    return c.json({ success: false, error: 'Invalid Token' }, 401);
+  }
+});
+
+app.get('/auth/me', async (c) => {
+  const payload = c.get('jwtPayload');
+  
+  try {
+    const user = await prisma.user.findUnique({ where: { id: payload.sub } });
+    const wallet = await prisma.wallet.findUnique({ where: { userId: payload.sub } });
+    
+    if (!user) return c.json({ success: false, error: 'User not found' }, 404);
+    
+    return c.json({
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        bonusPoints: wallet?.balance || 0,
+        isAdmin: payload.role === 'admin'
+      }
+    });
+  } catch (e) {
+    return c.json({ success: false, error: 'DB Error' }, 500);
+  }
+});
+
+app.get('/health', (c) => c.json({ status: 'wsm-global-auth-active' }));
+
+// WSM Gamification & Order Processing
+app.post('/orders', async (c) => {
+  try {
+    const body = await c.req.json();
+    
+    // Calculate total securely using backend config
+    const total = body.items.reduce((acc: number, item: any) => {
+      let price = 0;
+      if (item.productId.startsWith('acc-')) {
+         const accItem = accessoryProducts.find(a => a.id === item.productId);
+         if (accItem) price = accItem.price;
+      } else {
+         const prodItem = products.find(p => p.id === String(item.productId));
+         if (prodItem) {
+           price = item.volume === '1L' ? prodItem.price1L : prodItem.price025L;
+         }
+      }
+      return acc + (price * item.quantity);
+    }, 0);
+    
+    let resolvedUserId = body.userId ? String(body.userId) : null;
+    
+    // Telegram Guest Auto-Registration Protocol (Golden Grail)
+    if (!resolvedUserId && body.telegramId) {
+      const tgId = String(body.telegramId);
+      let tgUser = await prisma.user.findUnique({ where: { telegramId: tgId } });
+      if (!tgUser) {
+         tgUser = await prisma.user.create({
+           data: {
+             telegramId: tgId,
+             name: body.telegramFirstName || body.telegramUsername || 'Telegram Guest',
+             phone: body.customerPhone || null,
+             languageCode: 'uk',
+           }
+         });
+         await prisma.wallet.create({
+           data: { userId: tgUser.id, balance: 200.0 }
+         });
+         console.log(`[TMA Auth] Auto-created new Telegram Guest User: ${tgUser.id}`);
+      }
+      resolvedUserId = tgUser.id;
+    }
+    
+    const safeUserIdStr = resolvedUserId || 'guest-user-id';
+    
+    // 1. Determine active brand for this sub-order
+    // 1. Multi-Brand Cart Check removed for seamless cross-brand checkout
+    const brandsInCart = Array.from(new Set(body.items.map((i: any) => i.brandId).filter(Boolean)));
+
+    const merchantId = body.merchantId || 'boostertea';
+    let brand = await prisma.brand.findUnique({ where: { slug: merchantId } });
+    if (!brand) {
+      brand = await prisma.brand.create({
+        data: { slug: merchantId, name: merchantId.charAt(0).toUpperCase() + merchantId.slice(1) }
+      });
+    }
+    
+    const rawIp = (c.req.header('x-real-ip') || c.req.header('x-forwarded-for') || '127.0.0.1') as string;
+    const ipAddress = require('crypto').createHash('sha256').update(rawIp).digest('hex').substring(0, 16);
+    const deviceId = body.deviceId || 'unknown';
+
+    // Check for Ambassador Referral ("Promo is King" -> Promo code overrides refCode)
+    let referredById = null;
+    let actualRefCode = body.promoCode || body.refCode;
+    
+    if (actualRefCode) {
+      const ambProfile = await prisma.ambassadorProfile.findUnique({
+        where: { referralCode: String(actualRefCode) },
+        include: { user: true }
+      });
+      if (ambProfile && ambProfile.user) {
+        // Anti-Fraud: Self-Buy Firewall Check
+        const isFraud = (ambProfile.user.lastIpAddress === ipAddress) || (ambProfile.user.lastDeviceId === deviceId);
+        if (!isFraud) {
+          referredById = ambProfile.id;
+        } else {
+          console.warn(`[ANTI-FRAUD] Self-buy prevented for refCode ${actualRefCode} from IP ${ipAddress}`);
+        }
+      }
+    }
+    
+    // 1.5 HARD INVENTORY LOCK MOVED TO ERP (Dashboard KanBan) to prevent Double-Spend
+    // The items are now safely created as FROZEN. Cargo will be decremented upon SHIPPED transition.
+    
+    let finalTotal = total;
+    // Server-side Promo Evaluation (Phase 18 Audit)
+    if (body.promoCode === 'WSM_PARTNER_2026') {
+      finalTotal = Math.floor(total * 0.85); // 15% off
+    } else if (referredById) {
+      finalTotal = Math.floor(total * 0.90); // 10% off for valid ambassador
+    }
+
+    // 2. Create Master Transaction & Order atomically (Anti Double-Spend)
+    const { transaction, order } = await prisma.$transaction(async (tx) => {
+      const t = await tx.transaction.create({
+        data: {
+          brandId: brand.id,
+          userId: resolvedUserId,
+          totalAmount: finalTotal,
+          status: 'FROZEN',
+          unfreezeDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days hold
+          paymentGateway: body.paymentGateway || 'monobank',
+          ipAddress,
+          deviceId,
+          referredById
+        }
+      });
+
+      const o = await tx.order.create({
+        data: {
+          userId: safeUserIdStr,
+          brandId: brand.id,
+          transactionId: t.id,
+          status: 'PENDING',
+          totalAmount: finalTotal,
+          items: {
+            create: body.items.map((i: any) => {
+               let price = 0;
+               if (i.productId.startsWith('acc-')) {
+                  const accItem = accessoryProducts.find(a => a.id === i.productId);
+                  if (accItem) price = accItem.price;
+               } else {
+                  const prodItem = products.find(p => p.id === String(i.productId));
+                  if (prodItem) {
+                    price = i.volume === '1L' ? prodItem.price1L : prodItem.price025L;
+                  }
+               }
+               return {
+                  productId: String(i.productId),
+                  quantity: i.quantity,
+                  priceAtBuy: price
+               };
+            })
+          }
+        }
+      });
+
+      return { transaction: t, order: o };
+    });
+
+    // Update telemetry for known user (Moved out of transaction to avoid blocking main path)
+    if (resolvedUserId) {
+       await prisma.user.update({
+          where: { id: resolvedUserId },
+          data: { lastIpAddress: ipAddress, lastDeviceId: deviceId }
+       });
+    }
+
+    // 4. Trigger Event-Driven Gamification Logic at Transaction level
+    if (resolvedUserId) {
+      await eventBus.publish('TRANSACTION_CREATED', {
+        transactionId: transaction.id,
+        userId: resolvedUserId,
+        amount: total,
+        orderIds: [order.id]
+      });
+
+      await eventBus.publish('ORDER_CREATED', {
+        orderId: order.id,
+        userId: resolvedUserId,
+        amount: finalTotal,
+        items: body.items
+      });
+
+      // 5. Predictive Consumption: Schedule 14-day retention trigger
+      if (retentionTriggerQueue) {
+        await retentionTriggerQueue.add(
+          'retention-push', 
+          { 
+            userId: resolvedUserId, 
+            transactionId: transaction.id, 
+            phone: body.customerPhone || "0000000000"
+          }, 
+          { delay: 14 * 24 * 60 * 60 * 1000 } // 14 Days delay
+        );
+        console.log(`[BullMQ] Predictive Retention Job scheduled for 14-days for User: ${resolvedUserId}`);
+      }
+    }
+
+    // 6. Telegram Notification to Admin/Manager Hub
+    try {
+      const { bot } = require('./bot');
+      const chatId = process.env.TELEGRAM_ADMIN_CHAT_ID || process.env.TELEGRAM_CHAT_ID;
+      
+      if (chatId) {
+        const itemsList = body.items.map((i: any) => `▪ ${i.productId} (x${i.quantity})`).join('\n');
+        const deliveryText = body.deliveryMethod === 'nova_poshta' 
+          ? `Нова Пошта\n📍 ${body.deliveryCity}, ${body.deliveryWarehouse}` 
+          : 'Самовивіз (Львів)';
+
+        const msg = `🚨 *Нове замовлення (${brand.name})* 🚨\n\n` +
+                    `👤 *Клієнт:* ${body.customerName || 'Гість'}\n` +
+                    `📞 *Телефон:* ${body.customerPhone || 'Не вказано'}\n` +
+                    `💰 *Сума (до сплати):* ${finalTotal} ₴\n\n` +
+                    `📦 *Доставка:*\n${deliveryText}\n\n` +
+                    `🛒 *Кошик:*\n${itemsList}`;
+        
+        await bot.telegram.sendMessage(chatId, msg, { parse_mode: 'Markdown' });
+        console.log(`[Telegram] Order notification dispatched successfully.`);
+      } else {
+        console.warn(`[Telegram] Skipping notification: TELEGRAM_ADMIN_CHAT_ID is not configured.`);
+      }
+    } catch (tgError) {
+      console.error(`[Telegram] Failed to send order notification:`, tgError);
+    }
+
+    return c.json({ success: true, transaction, order });
+  } catch (e: any) {
+    console.error('ORDER_ERROR:', e.message);
+    return c.json({ success: false, error: 'Помилка оформлення' }, 500);
+  }
+});
+
+// ----------------------------------------------------
+// WSM Ambassador Module
+// ----------------------------------------------------
+
+app.get('/ambassadors/stats/:userId', async (c) => {
+  try {
+     const userId = c.req.param('userId');
+     const profile = await prisma.ambassadorProfile.findUnique({
+         where: { userId },
+         include: { transactions: { orderBy: { createdAt: 'desc' }, take: 50 } }
+     });
+
+     if (!profile) return c.json({ error: 'Не знайдено профайл амбасадора' }, 404);
+
+     // Recalculate "AVAILABLE" vs "FROZEN" balances 
+     // We only count money as 'yours' if it is COMPLETED.
+     const completed = profile.transactions.filter(t => t.status === 'COMPLETED');
+     const frozen = profile.transactions.filter(t => t.status === 'FROZEN');
+     
+     const totalSalesAmount = completed.reduce((sum, t) => sum + Number(t.totalAmount), 0);
+     const frozenSalesAmount = frozen.reduce((sum, t) => sum + Number(t.totalAmount), 0);
+
+     return c.json({ 
+       profile: {
+         ...profile,
+         totalSalesAmount, // overriding internal raw value for frontend
+         frozenSalesAmount,
+         totalLockedCommissions: frozenSalesAmount * Number(profile.commissionRate)
+       }
+     });
+  } catch (e: any) {
+     return c.json({ error: e.message }, 500);
+  }
+});
+
+app.post('/ambassadors/generate', async (c) => {
+  try {
+     const { userId, customCode } = await c.req.json();
+     if (!userId) return c.json({ error: 'userId is required' }, 400);
+
+     const generatedCode = customCode || `REF-${Math.floor(Math.random() * 1000000)}`;
+
+     let profile = await prisma.ambassadorProfile.findUnique({ where: { userId } });
+     
+     if (!profile) {
+         // Create profile if doesn't exist
+         profile = await prisma.ambassadorProfile.create({
+             data: {
+                 userId,
+                 referralCode: generatedCode
+             }
+         });
+     }
+
+     return c.json({ 
+         success: true, 
+         profile, 
+         link: `https://boostertea.com.ua/?ref=${profile.referralCode}` 
+     });
+  } catch (e: any) {
+     return c.json({ error: e.message }, 500);
+  }
+});
+
+app.post('/ambassadors/click', async (c) => {
+  try {
+     const { refCode } = await c.req.json();
+     if (!refCode) return c.json({ success: false });
+
+     await prisma.ambassadorProfile.update({
+         where: { referralCode: refCode },
+         data: { totalClicks: { increment: 1 } }
+     });
+
+     return c.json({ success: true });
+  } catch (e: any) {
+     return c.json({ error: e.message }, 500);
+  }
+});
+
+// Real MonoBank Payment Endpoint for Sequential Checkout
+app.post('/payment/create-invoice', async (c) => {
+  try {
+    const { transactionId, merchantId, redirectUrl } = await c.req.json();
+    
+    const transaction = await prisma.transaction.findUnique({
+      where: { id: transactionId }
+    });
+
+    if (!transaction) return c.json({ success: false, error: 'Transaction not found' }, 404);
+
+    // Use different tokens based on the merchant FOP
+    const token = merchantId === 'funnydrops' 
+      ? process.env.MONOBANK_TOKEN_FUNNYDROPS || process.env.MONOBANK_TOKEN_BOOSTERTEA
+      : process.env.MONOBANK_TOKEN_BOOSTERTEA;
+
+    if (!token) {
+      console.warn('[MonoBank] Token missing. Simulating success redirect for local development.');
+      return c.json({ success: true, transactionId, pageUrl: redirectUrl });
+    }
+
+    const mBody = {
+      amount: Math.round(Number(transaction.totalAmount) * 100), // in kopecks
+      ccy: 980,
+      merchantPaymInfo: {
+        reference: transaction.id,
+        destination: `Оплата замовлення ${transaction.id.slice(0, 8).toUpperCase()}`,
+      },
+      redirectUrl,
+      webhooks: `https://boostertea.com.ua/api/webhooks/monobank`
+    };
+
+    const monoRes = await fetch('https://api.monobank.ua/api/merchant/invoice/create', {
+      method: 'POST',
+      headers: {
+        'X-Token': token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(mBody)
+    });
+
+    if (!monoRes.ok) {
+      const errTxt = await monoRes.text();
+      console.error('[MonoBank] API Error:', errTxt);
+      return c.json({ success: false, error: 'Payment gateway error' }, 500);
+    }
+
+    const monoData = await monoRes.json();
+    return c.json({ success: true, transactionId, pageUrl: monoData.pageUrl });
+
+  } catch (e: any) {
+    console.error('[MonoBank] Create Invoice Error:', e.message);
+    return c.json({ success: false, error: e.message }, 500);
+  }
+});
+
+console.log("🚀 WSM Global Auth & Wallet API starting on port 3000...");
+
+// ----------------------------------------------------
+// C2B2B Trojan Horse: Lead Generator
+// ----------------------------------------------------
+
+app.post('/b2b/leads', async (c) => {
+  try {
+    const { userId, cafeName, city, address, notes } = await c.req.json();
+    if (!userId || !cafeName) return c.json({ error: 'Missing required fields' }, 400);
+
+    const lead = await prisma.b2BLead.create({
+      data: { userId, cafeName, city, address, notes }
+    });
+    return c.json({ success: true, lead });
+  } catch(e: any) {
+    return c.json({ error: e.message }, 500);
+  }
+});
+
+// ----------------------------------------------------
+// POS Webhooks (Poster / R-Keeper)
+// ----------------------------------------------------
+
+// ----------------------------------------------------
+// Google Merchant Center & SEO
+// ----------------------------------------------------
+
+app.get('/feed.xml', (c) => {
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
+<channel>
+  <title>BoosterTea Omniverse Market</title>
+  <link>https://boostertea.com.ua</link>
+  <description>Енергетичні концентрати, адапктогени та аксесуари</description>
+`;
+  
+  for (const product of products) {
+    if (product.price025L) {
+      xml += `  <item>
+    <g:id>${product.id}-025L</g:id>
+    <g:title>${product.nameUk} (0.25L)</g:title>
+    <g:description>${product.descriptionUk || 'Концентрат'}</g:description>
+    <g:link>https://boostertea.com.ua/product/${product.id}</g:link>
+    <g:image_link>https://boostertea.com.ua/assets/products/${product.image}</g:image_link>
+    <g:condition>new</g:condition>
+    <g:availability>in stock</g:availability>
+    <g:price>${product.price025L} UAH</g:price>
+    <g:brand>${product.merchantId || 'BoosterTea'}</g:brand>
+  </item>\n`;
+    }
+    if (product.price1L) {
+      xml += `  <item>
+    <g:id>${product.id}-1L</g:id>
+    <g:title>${product.nameUk} (1L)</g:title>
+    <g:description>${product.descriptionUk || 'Концентрат'}</g:description>
+    <g:link>https://boostertea.com.ua/product/${product.id}</g:link>
+    <g:image_link>https://boostertea.com.ua/assets/products/${product.image}</g:image_link>
+    <g:condition>new</g:condition>
+    <g:availability>in stock</g:availability>
+    <g:price>${product.price1L} UAH</g:price>
+    <g:brand>${product.merchantId || 'BoosterTea'}</g:brand>
+  </item>\n`;
+    }
+  }
+
+  xml += `</channel>\n</rss>`;
+  return c.text(xml, 200, {
+    'Content-Type': 'application/xml',
+    'Cache-Control': 's-maxage=3600, stale-while-revalidate'
+  });
+});
+
+// ----------------------------------------------------
+// Payment Webhooks (Monobank)
+// ----------------------------------------------------
+
+app.post('/webhooks/monobank', async (c) => {
+  try {
+    const signature = c.req.header('x-sign');
+    if (!signature && process.env.NODE_ENV === 'production') {
+      // TODO: Full ECDSA verification via Monobank PubKey
+      console.warn('[MonoBank] Missing X-Sign. [BYPASS ACTIVE for Day 1 Sales] Proceeding...');
+    }
+    
+    const body = await c.req.json();
+    console.log(`[MonoBank] Webhook received for invoice ${body.invoiceId || 'UNKNOWN'}, status: ${body.status}`);
+
+    const invoiceId = body.invoiceId;
+    const mbStatus = body.status;
+
+    if (invoiceId && mbStatus === 'success') {
+      // 1. Mark Transaction as COMPLETED
+      const transaction = await prisma.transaction.update({
+        where: { id: invoiceId },
+        data: { status: 'COMPLETED' }
+      });
+
+      // 2. Mark related Order as PAID
+      if (transaction) {
+         await prisma.order.updateMany({
+           where: { transactionId: invoiceId },
+           data: { status: 'PAID' }
+         });
+         console.log(`✅ [Ecosystem ERP] Order paid successfully. Transaction ${invoiceId} is COMPLETED.`);
+         
+         // 3. META CAPI & GA4 Server-Side Purchase Event
+         try {
+           const metaPixelId = process.env.META_PIXEL_ID || 'dummy_pixel';
+           const metaToken = process.env.META_CAPI_TOKEN || 'dummy_token';
+           
+           if (metaToken !== 'dummy_token') {
+             // Визначаємо time-context (Nanobanana DCO tracking)
+             const hour = new Date().getHours();
+             let timeContext = 'ACTIVE';
+             if (hour >= 22 || hour <= 4) timeContext = 'NIGHT_CODING';
+             else if (hour > 4 && hour <= 10) timeContext = 'SYSTEM_START';
+
+             const capiPayload = {
+               data: [
+                 {
+                   event_name: 'Purchase',
+                   event_time: Math.floor(Date.now() / 1000),
+                   action_source: 'website',
+                   user_data: { client_ip_address: transaction.ipAddress || '0.0.0.0' },
+                   custom_data: { 
+                     currency: 'UAH', 
+                     value: Number(transaction.totalAmount), 
+                     order_id: transaction.id,
+                     creative_time_context: timeContext // Nanobanana Analytics 
+                   }
+                 }
+               ]
+             };
+             
+             fetch(`https://graph.facebook.com/v19.0/${metaPixelId}/events?access_token=${metaToken}`, {
+               method: 'POST',
+               headers: { 'Content-Type': 'application/json' },
+               body: JSON.stringify(capiPayload)
+             }).catch(e => console.error('[Meta CAPI] Network drift error:', e));
+             
+             console.log(`🎯 [Meta CAPI] Purchase event dispatched to server!`);
+           }
+         } catch (capiErr) {
+           console.error(`[Meta CAPI] Failed to trigger server purchase:`, capiErr);
+         }
+      }
+    } else if (invoiceId && mbStatus === 'failure') {
+      await prisma.transaction.update({
+        where: { id: invoiceId },
+        data: { status: 'CANCELLED' }
+      });
+      console.warn(`[Ecosystem ERP] Transaction ${invoiceId} CANCELLED by Monobank.`);
+    }
+    
+    return c.json({ status: 'ok' }); // Mono expects 200 OK
+  } catch (e: any) {
+    console.error('[MonoBank] Webhook Database Error:', e.message);
+    return c.json({ error: e.message }, 500);
+  }
+});
+
+app.post('/webhooks/pos', async (c) => {
+  try {
+    // SECURITY: POS IP Firewall & Signature Validation
+    const clientIp = c.req.header('x-real-ip') || c.req.header('x-forwarded-for') || '';
+    const whitelistedIps = ['176.12.34.5', '192.168.1.1']; // Mock Poster IPs
+    if (!whitelistedIps.includes(clientIp as string) && process.env.NODE_ENV === 'production') {
+      console.warn(`[SECURITY] Blocked unauthorized POS webhook from IP ${clientIp}`);
+      return c.json({ error: 'Unauthorized IP' }, 403);
+    }
+    
+    const signature = c.req.header('x-poster-signature');
+    if (signature !== process.env.POSTER_SECRET && process.env.NODE_ENV === 'production') {
+      return c.json({ error: 'Invalid Webhook Signature' }, 403);
+    }
+
+    const payload = await c.req.json();
+    
+    // According to the Syndicate Doctrine: 1L = 17 portions (2 pumps)
+    // We listen to the POS system checkouts. If a specific B2B partner drops below
+    // 2-3 portions of inventory, we instantly dispatch a Telegram Re-Order Bot ping.
+    
+    await eventBus.publish('POS_TRANSACTION_RECEIVED' as any, {
+      payload,
+      timestamp: new Date().toISOString()
+    });
+    
+    console.log(`[POS Integration] Validated external register check. Payload integrity OK. Routing to AI analyzer.`);
+
+    return c.json({ success: true, processed: true });
+  } catch(e: any) {
+    return c.json({ error: e.message }, 500);
+  }
+});
+
+export const honoApp = app;
+
+export default {
+  port: 3001,
+  fetch: app.fetch,
+};

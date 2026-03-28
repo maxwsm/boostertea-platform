@@ -1,0 +1,783 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------------------------------
+// 1. GLOBAL USERS & WALLETS (WSM CORE)
+// ----------------------------------------------------
+
+model User {
+  id           String  @id @default(uuid())
+  telegramId   String? @unique
+  phone        String? @unique
+  googleId     String? @unique
+  email        String? @unique
+  name         String?
+  languageCode String  @default("uk")
+
+  // Cross-brand tracking
+  fbp          String? // Meta Browser ID
+  fbc          String? // Meta Click ID
+  ttclid       String? // TikTok Click ID
+  gclid        String? // Google Click ID
+  discountUsed Boolean @default(false)
+  horecaPoints Int     @default(0)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  lastActiveAt DateTime @default(now())
+
+  // Anti-fraud / Telemetry
+  lastIpAddress String?
+  lastDeviceId  String?
+
+  // Relations
+  wallet        Wallet?
+  orders        Order[]
+  transactions  Transaction[]
+  carts         Cart[]
+  telemetryLogs TelemetryLog[]
+  events        Event[]
+
+  // Ecosystem Extensions
+  ambassadorProfile     AmbassadorProfile?
+  aiAudits              AiResponseAudit[]
+  b2bPartner            B2BPartner?
+  b2bLeads              B2BLead[]
+  logisticsAchievements LogisticsAchievement[]
+  carrierScore          CarrierScore?
+  partner               Partner?
+  taskAssignments       TaskAssignment[]
+  EmployeeProfile       EmployeeProfile?
+  authoredDocs          KnowledgeDocument[]
+}
+
+model Wallet {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Unified digital currency (Booster Coins / Dino Coins / TLab Points are abstractly stored here)
+  balance     Decimal @default(0.0)
+  totalEarned Decimal @default(0.0)
+  totalSpent  Decimal @default(0.0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ----------------------------------------------------
+// 2. BRANDS & MULTI-TENANCY
+// ----------------------------------------------------
+
+model Brand {
+  id       String  @id @default(uuid())
+  slug     String  @unique // 'boostertea', 'dinoslush', 'funnydrops', 'tlab'
+  name     String
+  domain   String? @unique
+  isActive Boolean @default(true)
+
+  // Relations
+  products      Product[]
+  orders        Order[]
+  transactions  Transaction[]
+  telemetryLogs TelemetryLog[]
+  aiAudits      AiResponseAudit[]
+  brandContents BrandContent[]
+  aiAgents      AiAgent[]
+  knowledgeDocs KnowledgeDocument[]
+}
+
+model BrandContent {
+  id      String @id @default(uuid())
+  brandId String
+  brand   Brand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  key   String // e.g., 'hero_title', 'about_us_text'
+  value String // The actual content (Markdown or plain text)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([brandId, key])
+}
+
+// ----------------------------------------------------
+// 3. PRODUCTS & E-COMMERCE
+// ----------------------------------------------------
+
+model Product {
+  id      String @id @default(uuid())
+  brandId String
+  brand   Brand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  slug          String
+  nameUk        String
+  descriptionUk String
+  price         Decimal
+  image         String?
+  category      String
+  stockStatus   Boolean @default(true)
+  stockQuantity Int     @default(100) // Hardware Lock (Inventory)
+
+  // JSON stringified for local SQLite
+  metadata String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orderItems OrderItem[]
+  CartItem   CartItem[]
+
+  // ERP BOM & Measurement Tracking
+  baseUomId   String?
+  baseUom     MeasurementUnit? @relation(fields: [baseUomId], references: [id], onDelete: SetNull)
+  techCard    TechCard?
+  componentOf TechCardItem[]   @relation("RawProductComponents")
+  lotReceipts LotReceipt[]
+
+  @@unique([brandId, slug])
+}
+
+// ----------------------------------------------------
+// 4. E-COMMERCE: CART & CHECKOUT
+// ----------------------------------------------------
+
+model Cart {
+  id        String     @id @default(uuid())
+  userId    String?
+  user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  sessionId String?
+  items     CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CartItem {
+  id     String @id @default(uuid())
+  cartId String
+  cart   Cart   @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  quantity   Int
+  priceAtAdd Decimal
+  variant    String?
+}
+
+model ShadowCart {
+  id        String   @id @default(uuid())
+  sessionId String   @unique
+  phone     String?
+  email     String?
+  payload   String // JSON stringified cart data
+  status    String   @default("abandoned") // abandoned, processing, converted
+  triggerAt DateTime // Time when the bot should send the message (e.g. now + 45m)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Transaction {
+  id     String  @id @default(uuid())
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  brandId String
+  brand   Brand  @relation(fields: [brandId], references: [id], onDelete: Restrict)
+
+  totalAmount    Decimal
+  paymentGateway String?
+  paymentRef     String? // External LiqPay/Stripe UUID
+  status         String    @default("PENDING") // PENDING, FROZEN, COMPLETED, CANCELLED
+  unfreezeDate   DateTime?
+
+  // Anti-fraud tracking
+  ipAddress String?
+  deviceId  String?
+
+  referredById String?
+  referredBy   AmbassadorProfile? @relation(fields: [referredById], references: [id], onDelete: SetNull)
+
+  order Order?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ----------------------------------------------------
+// 5. ORDERS 
+// ----------------------------------------------------
+
+model Order {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  brandId String
+  brand   Brand  @relation(fields: [brandId], references: [id], onDelete: Restrict)
+
+  transactionId String?      @unique
+  transaction   Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+
+  status         String  @default("PENDING")
+  totalAmount    Decimal
+  discountAmount Decimal @default(0.0)
+
+  deliveryData String? // NovaPoshta coords, Address, etc.
+  paymentData  String? // Monobank/WayForPay ref
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items OrderItem[]
+}
+
+model OrderItem {
+  id      String @id @default(uuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  quantity   Int
+  priceAtBuy Decimal
+  variant    String? // e.g. "1L", "0.25L"
+}
+
+// Enum simulated as String for SQLite
+// PENDING, PAID, PROCESSING, SHIPPED, DELIVERED, CANCELLED
+
+// ----------------------------------------------------
+// 5. AI TELEMETRY & BEHAVIOR
+// ----------------------------------------------------
+
+model TelemetryLog {
+  id String @id @default(uuid())
+
+  // Who and where
+  userId  String?
+  user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  brandId String
+  brand   Brand   @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  // What happened
+  eventType String // 'VIEW_ITEM', 'ADD_TO_CART', 'SCROLL_BOTTOM', 'TELEGRAM_BOT_OPEN'
+  eventData String // Dynamic payload { productId: "1", duration: "12s" }
+
+  createdAt DateTime @default(now())
+}
+
+// ----------------------------------------------------
+// 6. AI AUDIT & ECONOMICS
+// ----------------------------------------------------
+
+model AiResponseAudit {
+  id      String  @id @default(uuid())
+  userId  String?
+  user    User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  brandId String?
+  brand   Brand?  @relation(fields: [brandId], references: [id], onDelete: SetNull)
+
+  modelUsed    String // e.g. "gpt-4-turbo", "claude-3-opus"
+  tokensInput  Int     @default(0)
+  tokensOutput Int     @default(0)
+  costUsd      Decimal @default(0.0)
+
+  promptHash String?
+  createdAt  DateTime @default(now())
+}
+
+// ----------------------------------------------------
+// 7. B2B & ENTERPRISE COMPLIANCE
+// ----------------------------------------------------
+
+model AmbassadorProfile {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  referralCode     String  @unique
+  commissionRate   Decimal @default(0.15) // default 15% commission
+  totalClicks      Int     @default(0)
+  totalSalesAmount Decimal @default(0.0)
+
+  transactions Transaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model B2BLead {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  cafeName String
+  city     String?
+  address  String?
+  notes    String?
+
+  status      String  @default("NEW") // PENDING, CONTACTED, CONVERTED, REJECTED
+  bonusIssued Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model B2BPartner {
+  id     String  @id @default(uuid())
+  userId String? @unique
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  companyName String
+  edrpou      String? @unique
+
+  // YouControl Simulation Flags
+  hasTaxDebt      Boolean @default(false)
+  courtCasesCount Int     @default(0)
+  isVerified      Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ----------------------------------------------------
+// 8. LOGISTICS & GAMIFICATION
+// ----------------------------------------------------
+
+model LogisticsAchievement {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+  badgeUrl    String?
+  awardedAt   DateTime @default(now())
+}
+
+model CarrierScore {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  score     Int     @default(0)
+  packSpeed Decimal @default(0.0) // pkgs per hour
+  level     String  @default("Novice")
+
+  updatedAt DateTime @updatedAt
+}
+
+// ----------------------------------------------------
+// 9. OMNI-CHANNEL AI ORCHESTRATOR
+// ----------------------------------------------------
+
+model AiAgent {
+  id      String @id @default(uuid())
+  brandId String
+  brand   Brand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  name         String // e.g. "Operations Manager", "TikTok Bot", "Personal Assistant"
+  systemPrompt String // Instructing the specific memory behavior
+  provider     String @default("gemini-1.5-pro-latest")
+
+  canReadFiles  Boolean @default(false)
+  canReadAudio  Boolean @default(false)
+  canPostSocial Boolean @default(false)
+
+  memories     AgentMemory[]
+  integrations AiIntegration[]
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AgentMemory {
+  id      String  @id @default(uuid())
+  agentId String
+  agent   AiAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  userId  String // Identifier from Telegram/Insta/Thread or system employee id
+  context String // Chat history, learned facts, etc. stored as text/json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([agentId, userId])
+}
+
+model BehavioralArchive {
+  id        String   @id @default(uuid())
+  userId    String
+  platform  String
+  message   String
+  role      String
+  intent    String?
+  sentiment Decimal?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([platform])
+}
+
+model Task {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  status      String    @default("TODO") // TODO, IN_PROGRESS, REVIEW, DONE
+  priority    String    @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  dueDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  assignees TaskAssignment[]
+
+  @@index([status])
+}
+
+model TaskAssignment {
+  id        String   @id @default(uuid())
+  taskId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, userId])
+}
+
+model AiIntegration {
+  id      String  @id @default(uuid())
+  agentId String
+  agent   AiAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  platform    String // enum logic: "INSTAGRAM", "TIKTOK", "TELEGRAM", "VIBER", "YOUTUBE", "THREADS", "WHATSAPP"
+  webhookUrl  String?
+  credentials String? // API keys, page tokens, etc.
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([agentId, platform])
+}
+
+// ==========================================
+// 10. ADVANCED ERP (ODOO ARCHITECTURE)
+// ==========================================
+
+// --- Unified Partner CRM ---
+model Partner {
+  id      String  @id @default(uuid())
+  name    String
+  email   String? @unique
+  phone   String?
+  company String?
+
+  isCustomer Boolean @default(false)
+  isVendor   Boolean @default(false)
+  isEmployee Boolean @default(false)
+
+  // Link to ecosystem Auth User if they login
+  userId String? @unique
+  user   User?   @relation(fields: [userId], references: [id])
+
+  accountMoves AccountMove[]
+  stockMoves   StockMove[]
+
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  Contract  Contract[]
+}
+
+// --- Double-Entry Bookkeeping ---
+model AccountMove {
+  id        String   @id @default(uuid())
+  type      String // OUT_INVOICE (Sales), IN_INVOICE (Bills), ENTRY (Manual)
+  reference String? // Order number, Invoice number
+  date      DateTime @default(now())
+  state     String   @default("DRAFT") // DRAFT, POSTED, CANCELLED
+
+  partnerId String?
+  partner   Partner? @relation(fields: [partnerId], references: [id])
+
+  lines AccountMoveLine[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AccountMoveLine {
+  id     String      @id @default(uuid())
+  moveId String
+  move   AccountMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
+
+  accountId String // Internal string mapping, e.g., "1001 Cash", "4000 Sales"
+  label     String? // Line description
+  debit     Decimal @default(0.0)
+  credit    Decimal @default(0.0)
+
+  productId String? // Ties the financial line to a product
+}
+
+// --- Virtual Inventory Locations ---
+model StockLocation {
+  id   String @id @default(uuid())
+  name String // e.g., "WH/Stock", "Partner Locations/Customers", "Virtual/Scrap"
+  type String @default("INTERNAL") // INTERNAL, CUSTOMER, VENDOR, INVENTORY_LOSS
+}
+
+model StockMove {
+  id        String @id @default(uuid())
+  productId String
+  // We refer to productId as String to decouple from exact product table structures dynamically
+
+  sourceLocId String
+  destLocId   String
+
+  qty   Int    @default(0)
+  state String @default("DRAFT") // DRAFT, CONFIRMED, DONE
+
+  partnerId String?
+  partner   Partner? @relation(fields: [partnerId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Event {
+  id         String   @id @default(uuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  eventName  String
+  source     String
+  eventData  Json?
+  syncedMeta Boolean  @default(false)
+  syncedTk   Boolean  @default(false)
+  syncedGgl  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model HorecaLead {
+  id        String   @id @default(uuid())
+  scoutId   String
+  cafeName  String
+  address   String
+  status    String   @default("PENDING")
+  createdAt DateTime @default(now())
+}
+
+model AdSpend {
+  id           String   @id @default(cuid())
+  platform     String // 'META', 'GOOGLE', 'TIKTOK'
+  campaignId   String
+  campaignName String?
+  date         DateTime // Дата зрізу (день)
+  spend        Float    @default(0) // Витрачені гроші
+  impressions  Int      @default(0)
+  clicks       Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Унікальний індекс, щоб при оновленні кожні 15 хв запис перезаписувався, а не дублювався
+  @@unique([platform, campaignId, date])
+}
+
+model UserLoreProgress {
+  id        String   @id @default(cuid())
+  userId    String
+  episodeId Int // Номер серії коміксу (1-6)
+  viewedAt  DateTime @default(now())
+
+  @@unique([userId, episodeId])
+}
+
+// ==========================================
+// 11. ADVANCED HR, TAXES & CONTRACTS (DB8/DB9)
+// ==========================================
+
+model LegalEntity {
+  id       String   @id @default(uuid())
+  name     String // "ФОП Федченко С." або "ТОВ ТайДрінк"
+  type     String // FOP, TOV
+  taxGroup Int? // 2, 3 (для ФОП)
+  taxRate  Decimal? // 5.0 (5%)
+  edrpou   String?  @unique
+  isActive Boolean  @default(true)
+
+  employees EmployeeProfile[]
+  contracts Contract[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EmployeeProfile {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  legalEntityId String?
+  legalEntity   LegalEntity? @relation(fields: [legalEntityId], references: [id])
+
+  role           String // "CTO", "Packer", "Sales"
+  monthlyRateUah Decimal @default(0.0)
+  salaryDebtUah  Decimal @default(0.0) // Борг компанії перед працівником
+  iban           String?
+
+  status String @default("ACTIVE") // ACTIVE, INACTIVE, SUSPENDED_DEBT
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Contract {
+  id    String @id @default(uuid())
+  title String // "Договір позики №30/01"
+  type  String // CONTRACT, LOAN, NDA
+
+  legalEntityId String
+  legalEntity   LegalEntity @relation(fields: [legalEntityId], references: [id])
+
+  counterpartyId String
+  counterparty   Partner @relation(fields: [counterpartyId], references: [id])
+
+  amountUah  Decimal  @default(0.0)
+  signedDate DateTime
+  expiryDate DateTime
+
+  status String @default("ACTIVE") // ACTIVE, EXPIRED, TERMINATED
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================================
+// 12. MANUFACTURING & LOGISTICS (ERP BOM)
+// ==========================================
+
+model MeasurementUnit {
+  id    String  @id @default(uuid())
+  code  String  @unique // e.g. "g", "ml", "pcs", "kg", "l"
+  name  String // e.g. "Грами", "Мілілітри", "Штуки"
+  ratio Decimal @default(1.0) // Factor relative to reference unit
+
+  // Relations
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TechCard {
+  id        String  @id @default(uuid())
+  productId String  @unique
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  description String?
+  laborCost   Decimal @default(0.0) // Estimated cost of manufacturing one unit
+  isActive    Boolean @default(true)
+
+  // Notion Clone RAG Sync
+  knowledgeDocumentId String?
+  knowledgeDocument   KnowledgeDocument? @relation(fields: [knowledgeDocumentId], references: [id])
+
+  items TechCardItem[]
+  manufacturingOrders ManufacturingOrder[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TechCardItem {
+  id         String   @id @default(uuid())
+  techCardId String
+  techCard   TechCard @relation(fields: [techCardId], references: [id], onDelete: Cascade)
+
+  rawProductId String // Core material (Straw, Syrup, Cup)
+  rawProduct   Product @relation("RawProductComponents", fields: [rawProductId], references: [id], onDelete: Restrict)
+
+  quantity Decimal // E.g. 50 (ml) or 1 (pcs)
+  uomId    String? // Overriding measurement unit
+  // If uomId is empty, it uses the rawProduct's baseUomId.
+
+  notes String? // Special extraction instructions
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================================
+// 13. NATIVE DOCUMENT FLOW & RAG (NOTION/MIRO CLONES)
+// ==========================================
+
+model KnowledgeDocument {
+  id        String   @id @default(uuid())
+  title     String
+  type      String   @default("NOTION_PAGE") // NOTION_PAGE, MIRO_BOARD
+  content   String?  // Stringified JSON containing Tiptap Blocks or React Flow Elements
+  status    String   @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
+  
+  brandId   String?
+  brand     Brand?   @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  
+  authorId  String?
+  author    User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  techCards TechCard[] // RAG documents attached to TechCards (SOPs)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================================
+// 14. NATIVE MANUFACTURING & FEFO INVENTORY (1C + MIRO)
+// ==========================================
+
+model LotReceipt {
+  id           String   @id @default(uuid())
+  lotNumber    String   @unique
+  productId    String
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  initialQty   Decimal
+  remainingQty Decimal
+  uomId        String?
+
+  manufacturingDate DateTime @default(now())
+  expirationDate    DateTime // Required for FEFO logic
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ManufacturingOrder {
+  id         String   @id @default(uuid())
+  orderRef   String   @unique // e.g. "MO-001"
+  techCardId String
+  techCard   TechCard @relation(fields: [techCardId], references: [id], onDelete: Restrict)
+  
+  targetQty  Decimal  @default(1.0)
+  status     String   @default("DRAFT") // DRAFT, MIXING, FERMENTATION, PACKING, DONE, CANCELLED
+
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  // Financial Cost tracking
+  totalMaterialCost Decimal @default(0.0)
+  totalLaborCost    Decimal @default(0.0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

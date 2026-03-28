@@ -1,0 +1,16 @@
+{
+  "name": "boostertea-api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "worker": "bun run src/worker.ts"
+  },
+  "dependencies": {
+    "@wsm/config": "workspace:*",
+    "@wsm/db": "workspace:*",
+    "dotenv": "^17.3.1",
+    "fastify": "^5.8.4",
+    "telegraf": "^4.16.3"
+  }
+}

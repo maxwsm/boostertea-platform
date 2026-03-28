@@ -1,0 +1,17 @@
+{
+  "name": "wsm-ecosystem",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "build:prod": "npx -y -p node@24 -- npm run build --workspaces --if-present"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  }
+}

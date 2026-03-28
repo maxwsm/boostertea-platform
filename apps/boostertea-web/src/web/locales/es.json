@@ -1,0 +1,1345 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "products": "Productos",
+    "accessories": "Accesorios",
+    "b2b": "Para Negocios",
+    "blog": "Blog",
+    "contacts": "Contactos",
+    "cart": "Carrito",
+    "account": "Mi Cuenta",
+    "login": "Iniciar Sesión",
+    "register": "Registrarse",
+    "logout": "Cerrar Sesión",
+    "admin": "Panel de Admin",
+    "adaptation": "Adaptación",
+    "catalog": "Catálogo",
+    "forBusiness": "Para Negocios"
+  },
+  "hero": {
+    "badge": "🍵 Concentrados de Té Premium",
+    "title": "Bebida lista en",
+    "titleAccent": "15 segundos",
+    "description": "Auténtico té chino sin compromisos. Solo agrega agua — y disfruta del increíble sabor.",
+    "cta": "Elige Tu Té",
+    "ctaB2B": "Para Negocios",
+    "stats": {
+      "time": "Tiempo de preparación",
+      "natural": "Natural",
+      "portions": "Porciones por 1L"
+    },
+    "organic": "🌿 100% Orgánico",
+    "energy": "⚡ Energía Instantánea",
+    "scroll": "Desplazar"
+  },
+  "products": {
+    "title": "Nuestros",
+    "titleAccent": "Productos",
+    "subtitle": "Concentrados de té premium de las mejores regiones de China. Elige tu sabor y disfruta del verdadero té en segundos.",
+    "collectionTitle": "Nuestra",
+    "collectionAccent": "Colección",
+    "collectionSubtitle": "Tres sabores únicos para diferentes momentos de tu día. Cada uno — una verdadera obra maestra del arte del té.",
+    "viewAll": "Ver Todos los Productos",
+    "noProducts": "No hay productos que coincidan con los filtros",
+    "filters": {
+      "all": "Todos",
+      "energy": "Energía",
+      "classic": "Clásico",
+      "relaxation": "Relajación"
+    },
+    "volumes": {
+      "all": "Todos los volúmenes",
+      "1l": "1 litro",
+      "025l": "0.25 litro"
+    },
+    "info": {
+      "minOrder": "Pedido Mín.",
+      "minOrderDesc1L": "6 uds. para botellas de 1L",
+      "minOrderDesc025L": "12 uds. para botellas de 0.25L",
+      "discount": "Descuento 0.25L",
+      "discountDesc": "-30% del precio base",
+      "comingSoon": "¡Próximamente!",
+      "freeDelivery": "Envío Gratis",
+      "freeDeliveryDesc": "Pedidos mayores de 3000₴",
+      "allUkraine": "En toda Ucrania"
+    },
+    "addToCart": "Añadir al Carrito",
+    "buyNow": "Comprar Ahora",
+    "from": "desde",
+    "details": "Detalles"
+  },
+  "productDetail": {
+    "breadcrumb": "Catálogo",
+    "volume": "Volumen",
+    "comingSoon": "¡Próximamente!",
+    "quantity": "Cantidad",
+    "minOrder": "Mínimo {{count}} uds.",
+    "minOrderShort": "mín. {{count}} uds.",
+    "perUnit": "Precio por unidad",
+    "total": "Total",
+    "addToCart": "Añadir al Carrito",
+    "effects": "Efectos",
+    "origin": "Origen",
+    "brewing": "Preparación",
+    "brewingTime": "Tiempo de Preparación",
+    "temperature": "Temperatura",
+    "tryAlso": "Prueba También",
+    "reviews": "Reseñas",
+    "noReviews": "Aún no hay reseñas",
+    "beFirst": "¡Sé el primero en dejar una reseña!",
+    "writeReview": "Escribir Reseña",
+    "brewingGuide": "Cómo Preparar",
+    "step1": "Calienta el agua a la temperatura deseada",
+    "step2": "Añade 25ml de concentrado",
+    "step3": "Añade 200ml de agua caliente",
+    "step4": "¡Disfruta!",
+    "brewingStep1": "Paso 1: Mide el concentrado",
+    "brewingStep2": "Paso 2: Vierte 25ml",
+    "brewingStep3": "Paso 3: Añade agua",
+    "brewingStep4": "Paso 4: ¡Listo! Disfruta ☕",
+    "certifiedProducts": "Productos Certificados",
+    "liter": "litro",
+    "liters": "litros",
+    "pieces": "uds."
+  },
+  "cart": {
+    "title": "Tu",
+    "titleAccent": "Carrito",
+    "empty": "Carrito Vacío",
+    "emptyMessages": [
+      "Está vacío aquí. Como una taza sin té — triste 😢",
+      "Tu carrito extraña el té. ¡Dale algo de compañía!",
+      "Tu carrito está meditando mientras espera el té..."
+    ],
+    "chooseTea": "Elegir Té",
+    "clearCart": "Vaciar Carrito",
+    "summary": "Resumen",
+    "promoCode": "Código Promocional",
+    "promoPlaceholder": "Ingresa el código",
+    "promoApplied": "✓ ¡Descuento del {{discount}}% aplicado!",
+    "items": "Artículos:",
+    "itemsUnit": "uds.",
+    "subtotal": "Subtotal:",
+    "discount": "Descuento:",
+    "delivery": "Envío:",
+    "freeDelivery": "Gratis",
+    "total": "Total:",
+    "bonusPoints": "🎁 Recibirás {{points}} puntos de bonificación",
+    "checkout": "Finalizar Compra",
+    "terms": "Al hacer clic, aceptas los términos",
+    "emptyMessage1": "Está vacío aquí. Como una taza sin té — triste 😢",
+    "emptyMessage2": "Tu carrito extraña el té. ¡Dale compañía!",
+    "emptyMessage3": "Tu carrito está meditando esperando el té..."
+  },
+  "account": {
+    "breadcrumb": "Mi Cuenta",
+    "tabs": {
+      "profile": "Perfil",
+      "orders": "Pedidos",
+      "journey": "Mi Viaje",
+      "referral": "Referidos",
+      "promo": "Códigos Promo",
+      "addresses": "Direcciones",
+      "notifications": "Notificaciones"
+    },
+    "bonus": "puntos de bonificación",
+    "profile": {
+      "title": "Mi Perfil",
+      "name": "Nombre",
+      "email": "Email",
+      "phone": "Teléfono",
+      "registrationDate": "Fecha de Registro",
+      "save": "Guardar Cambios"
+    },
+    "orders": {
+      "title": "Mis Pedidos",
+      "empty": "Está vacío aquí. ¡Es hora de pedir tu primer té! 🍵",
+      "goToCatalog": "Ir al Catálogo",
+      "orderNumber": "Pedido",
+      "status": {
+        "created": "Creado",
+        "processing": "Procesando",
+        "shipped": "Enviado",
+        "delivered": "Entregado"
+      },
+      "trackingNumber": "Seguimiento #"
+    },
+    "journey": {
+      "title": "Mi Viaje del Té",
+      "cups": "Has bebido el equivalente a",
+      "cupsUnit": "tazas de té",
+      "liters": "Eso es aproximadamente",
+      "litersUnit": "litros de té",
+      "saved": "Has ahorrado",
+      "savedUnit": "horas vs preparación tradicional",
+      "favorite": "Tu té favorito",
+      "daysWithUs": "Has estado con nosotros por",
+      "daysUnit": "días"
+    },
+    "referral": {
+      "title": "Programa de Referidos",
+      "description": "¡Invita amigos y gana bonificaciones!",
+      "yourCode": "Tu código de referido",
+      "copyLink": "Copiar Enlace",
+      "copied": "¡Copiado!",
+      "share": "Compartir",
+      "friends": "Amigos Invitados",
+      "status": {
+        "pending": "Pendiente",
+        "registered": "Registrado",
+        "first_order": "Primer Pedido"
+      }
+    },
+    "promo": {
+      "title": "Mis Códigos Promo",
+      "add": "Añadir Código Promo",
+      "placeholder": "Ingresa código promo",
+      "saved": "Códigos Promo Guardados",
+      "noPromo": "Aún no tienes códigos promo guardados"
+    },
+    "addresses": {
+      "title": "Mis Direcciones",
+      "add": "Añadir Dirección",
+      "default": "Predeterminada",
+      "setDefault": "Establecer como Predeterminada",
+      "delete": "Eliminar",
+      "noAddresses": "Aún no tienes direcciones guardadas",
+      "form": {
+        "label": "Etiqueta de Dirección",
+        "fullName": "Nombre Completo",
+        "phone": "Teléfono",
+        "city": "Ciudad",
+        "address": "Dirección",
+        "save": "Guardar Dirección"
+      }
+    },
+    "notifications": {
+      "title": "Configuración de Notificaciones",
+      "email": "Notificaciones por Email",
+      "sms": "Notificaciones por SMS",
+      "telegram": "Notificaciones por Telegram",
+      "orderUpdates": "Actualizaciones de Pedidos",
+      "promotions": "Promociones y Descuentos",
+      "news": "Noticias y Artículos"
+    },
+    "teaFact": "🍵 Dato curioso sobre el té"
+  },
+  "login": {
+    "title": "¡Bienvenido de Nuevo!",
+    "subtitle": "Tu té te extrañó 💚",
+    "email": "Email",
+    "emailPlaceholder": "tu@email.com",
+    "password": "Contraseña",
+    "passwordPlaceholder": "••••••••",
+    "rememberMe": "Recordarme",
+    "forgotPassword": "¿Olvidaste la contraseña?",
+    "submit": "Iniciar Sesión",
+    "loading": "Iniciando sesión...",
+    "or": "o inicia sesión con",
+    "noAccount": "¿No tienes cuenta?",
+    "register": "Registrarse",
+    "error": "Error de inicio de sesión"
+  },
+  "register": {
+    "title": "¡Únete!",
+    "subtitle": "Crea una cuenta y obtén bonificaciones 🎁",
+    "name": "Nombre",
+    "namePlaceholder": "Tu nombre",
+    "email": "Email",
+    "emailPlaceholder": "tu@email.com",
+    "phone": "Teléfono",
+    "phonePlaceholder": "+380",
+    "password": "Contraseña",
+    "passwordPlaceholder": "Mínimo 6 caracteres",
+    "confirmPassword": "Confirmar Contraseña",
+    "confirmPlaceholder": "Repetir contraseña",
+    "terms": "Acepto los",
+    "termsLink": "términos de servicio",
+    "submit": "Crear Cuenta",
+    "loading": "Creando...",
+    "or": "o regístrate con",
+    "hasAccount": "¿Ya tienes cuenta?",
+    "login": "Iniciar Sesión",
+    "passwordHint": "Mínimo 6 caracteres",
+    "error": "Error de registro"
+  },
+  "b2b": {
+    "badge": "🤝 Asociación Comercial",
+    "title": "Negocio de Té",
+    "titleAccent": "sin complicaciones",
+    "description": "Añade té premium al menú de tu establecimiento. Sin equipo especial, sin capacitación de personal, sin desperdicios. Bebida lista en 15 segundos.",
+    "cta": "Contactar por Telegram",
+    "ctaCalculator": "Calcular Ganancia",
+    "whyUs": {
+      "title": "¿Por qué",
+      "titleAccent": "BoosterTea?",
+      "subtitle": "Creamos un producto fácil de integrar en cualquier negocio"
+    },
+    "benefits": {
+      "speed": {
+        "title": "Velocidad",
+        "description": "Bebida lista en 15 segundos. Sin demoras en hora punta."
+      },
+      "simplicity": {
+        "title": "Simplicidad",
+        "description": "No se requiere equipo especial ni capacitación de personal."
+      },
+      "margin": {
+        "title": "Alto Margen",
+        "description": "Hasta 80% de margen por taza. Bajo costo por porción."
+      },
+      "noWaste": {
+        "title": "Cero Desperdicios",
+        "description": "El concentrado se conserva hasta 6 meses. Usa exactamente lo que necesitas."
+      },
+      "quality": {
+        "title": "Unicidad",
+        "description": "Destácate de la competencia con té de calidad premium."
+      },
+      "support": {
+        "title": "Soporte",
+        "description": "Materiales de marketing, capacitación, soporte continuo del gerente."
+      }
+    },
+    "calculator": {
+      "title": "Calculadora",
+      "titleAccent": "de Ganancias",
+      "subtitle": "Calcula cuánto puedes ganar con BoosterTea",
+      "cupsPerDay": "Tazas por día",
+      "sellingPrice": "Precio de venta (₴)",
+      "costPerCup": "Costo por taza",
+      "profitPerCup": "Ganancia por taza",
+      "dailyProfit": "Ganancia diaria",
+      "yearlyProfit": "Ganancia anual",
+      "yearlyChart": "Gráfico de ganancias anuales",
+      "months": {
+        "jan": "Ene",
+        "jun": "Jun",
+        "dec": "Dic"
+      },
+      "results": {
+        "monthlyRevenue": "Ingresos Mensuales",
+        "monthlyCost": "Costo Mensual",
+        "monthlyProfit": "Ganancia mensual",
+        "margin": "Margen",
+        "roi": "ROI"
+      }
+    },
+    "partners": {
+      "title": "Nuestros",
+      "titleAccent": "Socios",
+      "description": "BoosterTea ya está presente en los mejores establecimientos de Ucrania",
+      "mapTitle": "Mapa interactivo de socios",
+      "totalPartners": "32+ socios en Ucrania",
+      "partnersCount": "socios",
+      "becomePartner": "Conviértete en socio en tu ciudad",
+      "regions": {
+        "kyiv": "Kiev",
+        "lviv": "Leópolis",
+        "odesa": "Odesa",
+        "kharkiv": "Járkov",
+        "dnipro": "Dnipró"
+      }
+    },
+    "cases": {
+      "title": "Historias de",
+      "titleAccent": "Éxito",
+      "subtitle": "Cómo nuestros socios aumentan ganancias con BoosterTea",
+      "avgSales": "Ventas promedio",
+      "case1": {
+        "name": "Café \"Smachna\"",
+        "location": "Kiev",
+        "result": "+15% ingresos",
+        "quote": "El té se convirtió en un éxito entre nuestros clientes habituales. Especialmente GABA para visitantes nocturnos.",
+        "metric": "45 tazas/día"
+      },
+      "case2": {
+        "name": "Coworking \"Hub\"",
+        "location": "Leópolis",
+        "result": "+20% satisfacción",
+        "quote": "¡A los residentes les encanta! Pu-erh se convirtió en imprescindible para sesiones de trabajo productivas.",
+        "metric": "80 tazas/día"
+      },
+      "case3": {
+        "name": "Restaurante \"Skhid\"",
+        "location": "Odesa",
+        "result": "80% margen",
+        "quote": "El té premium complementó perfectamente nuestro menú. Los huéspedes piden varias tazas.",
+        "metric": "60 tazas/día"
+      }
+    },
+    "ctaSection": {
+      "title": "¿Listo para empezar?",
+      "description": "Escríbenos en Telegram y te contamos todo sobre la asociación.",
+      "button": "Mensaje en Telegram",
+      "learnMore": "Saber más",
+      "specialOffer": "¡Primer lote — precio especial para nuevos socios!"
+    },
+    "faq": {
+      "q1": "¿Cuál es el pedido mínimo para socios B2B?",
+      "a1": "Pedido mínimo: 6 botellas de 1L o 12 botellas de 0.25L. Ofrecemos condiciones flexibles para socios regulares.",
+      "q2": "¿Se requiere equipo especial para la preparación?",
+      "a2": "No, no se necesita equipo especial. Un hervidor y una taza son suficientes. Bebida lista en 15 segundos.",
+      "q3": "¿Cuál es la marginalidad del producto?",
+      "a3": "El margen promedio es 200-300% al vender por taza. La calculadora de ganancias te ayudará a calcular cifras exactas para tu establecimiento.",
+      "q4": "¿Proporcionan capacitación para el personal?",
+      "a4": "Sí, proporcionamos capacitación gratuita que toma solo 5 minutos. También proporcionamos instrucciones en video y materiales POS.",
+      "q5": "¿Cómo se maneja la entrega?",
+      "a5": "Entrega en toda Ucrania vía Nova Poshta. Entrega gratis para pedidos mayores de 5000₴."
+    }
+  },
+  "adaptation": {
+    "badge": "📚 Guía Completa",
+    "title": "Guía completa de adaptación de",
+    "titleAccent": "BoosterTea para tu negocio",
+    "description": "Instrucciones paso a paso para implementar exitosamente té premium en tu establecimiento.",
+    "steps": {
+      "step1": {
+        "title": "Pedido",
+        "description": "Elige productos y haz tu pedido"
+      },
+      "step2": {
+        "title": "Entrega",
+        "description": "Entrega rápida en toda Ucrania"
+      },
+      "step3": {
+        "title": "Capacitación",
+        "description": "5 minutos de capacitación — y estás listo"
+      },
+      "step4": {
+        "title": "Integración al Menú",
+        "description": "Recomendaciones de precios y posicionamiento"
+      },
+      "step5": {
+        "title": "Soporte de Marketing",
+        "description": "Materiales POS y plantillas para redes sociales"
+      },
+      "step6": {
+        "title": "Retroalimentación",
+        "description": "Soporte y consulta continuos"
+      }
+    },
+    "faq": {
+      "title": "Preguntas Frecuentes"
+    },
+    "resources": {
+      "title": "Descargar Materiales",
+      "menuTemplate": "Plantilla de Menú",
+      "trainingVideo": "Video de Capacitación",
+      "posDesigns": "Materiales POS"
+    },
+    "metrics": {
+      "title": "Resultados de Socios",
+      "profitIncrease": "Aumento Promedio de Ganancias",
+      "satisfaction": "Satisfacción del Cliente"
+    },
+    "contact": {
+      "title": "¿Tienes Preguntas?",
+      "description": "Llena el formulario y te contactaremos",
+      "name": "Tu Nombre",
+      "phone": "Teléfono",
+      "business": "Tipo de Negocio",
+      "message": "Mensaje",
+      "submit": "Enviar"
+    }
+  },
+  "blog": {
+    "title": "Blog",
+    "titleAccent": "BoosterTea",
+    "subtitle": "Artículos sobre té chino, su historia, beneficios y métodos de preparación.",
+    "readMore": "Leer Más",
+    "backToBlog": "Volver al Blog",
+    "share": "Compartir",
+    "allArticles": "Todos los Artículos",
+    "minRead": "min de lectura",
+    "categories": {
+      "all": "Todos los Artículos",
+      "recipes": "Recetas",
+      "history": "Historia del Té",
+      "health": "Beneficios"
+    },
+    "posts": {
+      "puerh": {
+        "title": "Pu-erh: La Historia del Té que Envejece como el Vino",
+        "excerpt": "Descubre por qué el pu-erh se llama \"té del emperador\" y cómo el envejecimiento adecuado transforma hojas ordinarias en una verdadera delicadeza."
+      },
+      "gaba": {
+        "title": "Té GABA: La Ciencia de la Calma",
+        "excerpt": "Qué es el té GABA, cómo afecta al cerebro y por qué los científicos lo llaman un antidepresivo natural."
+      },
+      "dahongpao": {
+        "title": "Da Hong Pao: La Leyenda del Gran Manto Rojo",
+        "excerpt": "La romántica historia de cómo un oolong de las montañas Wuyi se convirtió en uno de los tés más caros del mundo."
+      },
+      "teacoffee": {
+        "title": "Té vs Café: Qué Elegir para la Productividad",
+        "excerpt": "Comparando los efectos de la cafeína del té y el café en el cuerpo. Spoiler: el té gana en todos los parámetros."
+      },
+      "ceremony": {
+        "title": "Gongfu Cha: El Arte de la Ceremonia del Té China",
+        "excerpt": "Instrucciones paso a paso para realizar una ceremonia del té china tradicional en casa."
+      },
+      "storage": {
+        "title": "Cómo Almacenar el Té Correctamente",
+        "excerpt": "Consejos de expertos: temperatura, humedad, luz y otros factores que afectan la calidad del té.",
+        "content": "El almacenamiento adecuado del té es un arte que preserva todas las propiedades de sabor y aroma de la bebida. Reglas básicas: mantén el té en envases herméticos, protege de la luz y la humedad, almacena a temperatura ambiente. Diferentes variedades tienen diferentes requisitos: el pu-erh necesita ventilación, mientras que el té verde es mejor mantenerlo en el refrigerador."
+      }
+    },
+    "newsletter": {
+      "title": "Suscríbete a las",
+      "titleAccent": "Noticias del Té",
+      "description": "Una vez a la semana — lo más interesante sobre té, promociones y nuevos productos",
+      "placeholder": "Tu email",
+      "subscribe": "Suscribirse"
+    },
+    "postNotFound": "Artículo No Encontrado",
+    "postNotFoundDesc": "Lo sentimos, no pudimos encontrar este artículo. Puede haber sido movido o eliminado.",
+    "tryOurTea": "Prueba Nuestro Té",
+    "tryOurTeaDesc": "Experimenta el auténtico sabor del té chino con nuestros concentrados premium.",
+    "relatedPosts": "Artículos Relacionados"
+  },
+  "contacts": {
+    "title": "Contáctenos",
+    "titleAccent": "",
+    "subtitle": "¿Tienes preguntas? ¡Siempre estamos felices de ayudar! Elige una forma conveniente de comunicarte.",
+    "phone": "Teléfono",
+    "email": "Email",
+    "address": "Dirección",
+    "telegram": "Telegram",
+    "social": "Redes Sociales",
+    "socialTitle": "Síguenos",
+    "form": {
+      "title": "Escríbenos",
+      "name": "Nombre",
+      "namePlaceholder": "Tu nombre",
+      "email": "Email",
+      "emailPlaceholder": "tu@email.com",
+      "subject": "Asunto",
+      "subjectPlaceholder": "Selecciona el asunto",
+      "subjectOrder": "Consulta sobre pedido",
+      "subjectB2B": "Colaboración B2B",
+      "subjectProduct": "Consulta sobre producto",
+      "subjectOther": "Otro",
+      "message": "Mensaje",
+      "messagePlaceholder": "Tu mensaje...",
+      "submit": "Enviar",
+      "success": "¡Mensaje enviado!"
+    },
+    "workingHours": {
+      "title": "Horario de Atención",
+      "monFri": "Lunes - Viernes",
+      "saturday": "Sábado",
+      "sunday": "Domingo",
+      "closed": "Cerrado",
+      "telegramSupport": "* Soporte por Telegram disponible 24/7"
+    },
+    "map": {
+      "title": "Mapa interactivo",
+      "address": "Lviv, Bohdana Khmelnytskoho St. 66a"
+    }
+  },
+  "accessories": {
+    "badge": "Accesorios de Té",
+    "title": "Accesorios de",
+    "titleAccent": "Té",
+    "subtitle": "Todo para la ceremonia del té perfecta. Termos, tazas, cuencos, pialas y té seco para verdaderos conocedores.",
+    "filters": {
+      "all": "Todos",
+      "thermoses": "Termos",
+      "mugs": "Tazas",
+      "cups": "Copas",
+      "pialas": "Pialas",
+      "dryTea": "Té Seco"
+    },
+    "sort": {
+      "featured": "Destacados",
+      "priceAsc": "Precio: Menor a Mayor",
+      "priceDesc": "Precio: Mayor a Menor",
+      "name": "Por Nombre"
+    },
+    "priceRange": "Precio",
+    "found": "Encontrados",
+    "items": "productos",
+    "noProducts": "No hay productos que coincidan con los filtros seleccionados",
+    "resetFilters": "Restablecer Filtros",
+    "addToCart": "Agregar",
+    "outOfStock": "Agotado",
+    "promo": {
+      "giftTitle": "Regalo Perfecto",
+      "giftDesc": "Crea un set de té con concentrado y accesorios — un regalo maravilloso para los verdaderos amantes del té.",
+      "viewTeas": "Ver Concentrados",
+      "dryTeaTitle": "Preparación Tradicional",
+      "dryTeaDesc": "Para quienes aman preparar té de forma clásica — auténtico té chino seco.",
+      "viewDryTea": "Ver Té Seco"
+    }
+  },
+  "footer": {
+    "description": "Concentrados de té premium de China. Bebida lista en 15 segundos — té real sin compromisos.",
+    "navigation": "Navegación",
+    "products": "Productos",
+    "contacts": "Contactos",
+    "copyright": "© {{year}} BoosterTea. Todos los derechos reservados.",
+    "privacy": "Política de Privacidad",
+    "terms": "Términos de Uso",
+    "returnPolicy": "Política de Devolución",
+    "weAccept": "Aceptamos",
+    "certified": "Certificado"
+  },
+  "theme": {
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Sistema",
+    "switchToLight": "Cambiar a modo claro",
+    "switchToDark": "Cambiar a modo oscuro"
+  },
+  "404": {
+    "title": "404",
+    "subtitle": "¡Ups, se derramó el té!",
+    "description": "Parece que esta página se perdió en algún lugar entre las plantaciones de té. ¡Pero no te preocupes — tenemos mucho té delicioso!",
+    "quote": "\"Incluso el mejor té a veces se derrama... ¡Pero eso no es razón para estar triste!\"",
+    "home": "Ir al Inicio",
+    "products": "Ver Tés",
+    "tip": "💡 Consejo: mientras buscas la página correcta,",
+    "tipLink": "prepárate un té"
+  },
+  "toast": {
+    "addedToCart": "¡Genial! Tu té está esperando 🍵",
+    "removedFromCart": "Eliminado del carrito",
+    "cartCleared": "Carrito vaciado",
+    "saved": "Guardado",
+    "error": "Ocurrió un error",
+    "copied": "¡Copiado!"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "submit": "Enviar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "all": "Todos",
+    "more": "Más",
+    "less": "Menos",
+    "yes": "Sí",
+    "no": "No",
+    "currency": "₴",
+    "actions": "Acciones",
+    "details": "Detalles",
+    "create": "Crear",
+    "add": "Agregar",
+    "update": "Actualizar",
+    "confirm": "Confirmar",
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "enabled": "Habilitado",
+    "disabled": "Deshabilitado",
+    "status": "Estado",
+    "date": "Fecha",
+    "total": "Total",
+    "amount": "Monto",
+    "quantity": "Cantidad",
+    "price": "Precio",
+    "name": "Nombre",
+    "description": "Descripción",
+    "image": "Imagen",
+    "category": "Categoría",
+    "pcs": "uds"
+  },
+  "teaFacts": [
+    "El té es la segunda bebida más popular del mundo después del agua.",
+    "Todos los tipos de té provienen de la misma planta — Camellia sinensis.",
+    "El turco promedio bebe más de 3 kg de té al año.",
+    "El té contiene L-teanina, que mejora la concentración sin nerviosismo.",
+    "Las primeras bolsitas de té aparecieron accidentalmente en 1908.",
+    "El Pu-erh puede almacenarse durante décadas y mejora con el tiempo.",
+    "El té GABA fue inventado en Japón en 1987.",
+    "Da Hong Pao es uno de los tés más caros del mundo."
+  ],
+  "howItWorks": {
+    "title": "Cómo",
+    "titleAccent": "Funciona",
+    "subtitle": "Olvida los rituales complicados de preparación. El té de verdad ahora es simple.",
+    "steps": {
+      "step1": {
+        "title": "Mide",
+        "description": "Vierte 25 ml de concentrado en un vaso. La botella con dosificador te ayuda a medir con precisión."
+      },
+      "step2": {
+        "title": "Añade Agua",
+        "description": "Añade 200-250 ml de agua caliente o fría — según tu preferencia."
+      },
+      "step3": {
+        "title": "Remueve",
+        "description": "Remueve suavemente con una cuchara o simplemente agita el vaso."
+      },
+      "step4": {
+        "title": "Disfruta",
+        "description": "¡Listo! Té chino auténtico en 15 segundos. ¡Disfruta!"
+      }
+    }
+  },
+  "scenarios": {
+    "title": "Tu Té para",
+    "titleAccent": "Cada Momento",
+    "subtitle": "Diferentes situaciones necesitan diferentes enfoques. Encuentra tu té perfecto.",
+    "morning": {
+      "title": "Energía Matutina",
+      "description": "Pu-erh en lugar de café — energía pura sin nerviosismo"
+    },
+    "evening": {
+      "title": "Calma Nocturna",
+      "description": "GABA te ayuda a relajarte después de un día estresante"
+    },
+    "student": {
+      "title": "Enfoque Estudiantil",
+      "description": "Concentración para estudiar y trabajo productivo"
+    },
+    "driver": {
+      "title": "Alerta del Conductor",
+      "description": "Alternativa segura a las bebidas energéticas en viajes largos"
+    }
+  },
+  "testimonials": {
+    "title": "Lo Que Dicen",
+    "titleAccent": "Nuestros Clientes",
+    "subtitle": "Miles ya han descubierto el sabor del té de verdad",
+    "reviews": {
+      "review1": {
+        "name": "Olena K.",
+        "role": "Empresaria",
+        "text": "¡Por fin encontré un sustituto del café! Pu-erh da energía limpia sin manos temblorosas. Además — increíblemente conveniente para llevar."
+      },
+      "review2": {
+        "name": "Andrii M.",
+        "role": "Diseñador",
+        "text": "GABA es magia para la relajación nocturna. Duermo como un bebé después. Lo recomiendo a cualquiera con problemas de sueño."
+      },
+      "review3": {
+        "name": "María P.",
+        "role": "Estudiante",
+        "text": "Da Hong Pao me ayuda a concentrarme en los estudios. ¡Y el sabor es simplemente increíble! Todos mis compañeros ya han pedido para ellos."
+      }
+    }
+  },
+  "instagram": {
+    "title": "Síguenos",
+    "titleAccent": "en Instagram",
+    "follow": "Seguir"
+  },
+  "checkout": {
+    "title": "Finalizar Compra",
+    "description": "Completa tu pedido de BoosterTea",
+    "steps": {
+      "contact": "Contacto",
+      "delivery": "Entrega",
+      "payment": "Pago"
+    },
+    "contactInfo": "Información de Contacto",
+    "deliveryInfo": "Información de Entrega",
+    "paymentInfo": "Pago",
+    "fields": {
+      "name": "Tu Nombre",
+      "email": "Email",
+      "phone": "Teléfono",
+      "deliveryMethod": "Método de Entrega",
+      "city": "Ciudad",
+      "warehouse": "Almacén",
+      "address": "Dirección",
+      "pickupAddress": "Dirección de Recogida"
+    },
+    "placeholders": {
+      "name": "Introduce tu nombre",
+      "email": "ejemplo@email.com",
+      "phone": "+380 XX XXX XX XX",
+      "city": "Empieza a escribir el nombre de la ciudad",
+      "warehouse": "Número o dirección del almacén",
+      "address": "Calle, edificio, apartamento"
+    },
+    "hints": {
+      "warehouse": "Introduce el número de almacén de Nova Poshta (ej.: 1, 25, 150)"
+    },
+    "delivery": {
+      "novaPoshta": "Nova Poshta",
+      "ukrposhta": "Ukrposhta",
+      "pickup": "Recogida"
+    },
+    "pickupAddress": "Dirección de Recogida",
+    "pickupHours": "Lun-Vie: 9:00-18:00, Sáb: 10:00-15:00",
+    "useBonus": "Usar Puntos de Bonificación",
+    "availableBonus": "Disponible: {{points}} puntos",
+    "bonusDiscount": "Descuento por Bonos",
+    "orderSummary": "Tu Pedido",
+    "payWithMonobank": "Pagar con Monobank",
+    "monobankDesc": "Pago seguro con Visa/Mastercard",
+    "monobankNotConfigured": "El sistema de pago aún no está configurado. El pedido se creará en modo demo.",
+    "continue": "Continuar",
+    "back": "Atrás",
+    "pay": "Pagar",
+    "processing": "Procesando...",
+    "edit": "Editar",
+    "errors": {
+      "nameRequired": "Por favor, introduce tu nombre",
+      "emailInvalid": "Por favor, introduce un email válido",
+      "phoneInvalid": "Por favor, introduce un número de teléfono válido",
+      "cityRequired": "Por favor, introduce una ciudad",
+      "warehouseRequired": "Por favor, introduce el número de almacén",
+      "addressRequired": "Por favor, introduce una dirección",
+      "orderFailed": "Error al crear el pedido",
+      "paymentFailed": "Error al crear el pago",
+      "generic": "Ocurrió un error. Por favor, inténtalo de nuevo.",
+      "productNotFound": "Producto No Encontrado",
+      "productNotFoundDesc": "Lo sentimos, este producto no fue encontrado. Explora nuestro catálogo de concentrados de té.",
+      "backToCatalog": "Volver al Catálogo"
+    }
+  },
+  "orderSuccess": {
+    "title": "¡Pedido Confirmado!",
+    "description": "Gracias por tu pedido en BoosterTea",
+    "subtitle": "¡Gracias por tu pedido! Tu té está en camino 🍵",
+    "demoNotice": "Este es un pedido de demostración. El sistema de pago Monobank aún no está configurado.",
+    "orderNumber": "Número de Pedido",
+    "orderStatus": "Estado",
+    "items": "Artículos",
+    "deliveryInfo": "Entrega",
+    "contactInfo": "Contacto",
+    "status": {
+      "pending": "Pendiente de Pago",
+      "processing": "Procesando",
+      "paid": "Pagado",
+      "shipped": "Enviado",
+      "delivered": "Entregado",
+      "cancelled": "Cancelado"
+    },
+    "whatsNext": "¿Qué Sigue?",
+    "step1Title": "Confirmación del Pedido",
+    "step1Desc": "Te enviaremos un email con la confirmación del pedido y los detalles de pago.",
+    "step2Title": "Procesamiento y Envío",
+    "step2Desc": "Después del pago, prepararemos tu pedido y lo enviaremos en 1-2 días hábiles.",
+    "step3Title": "Recibe Tu Pedido",
+    "step3Desc": "Recibirás un SMS con el número de seguimiento de tu paquete.",
+    "trackOrder": "Rastrear Pedido",
+    "continueShopping": "Continuar Comprando",
+    "notFound": "Pedido No Encontrado",
+    "notFoundDesc": "Lo sentimos, no pudimos encontrar información sobre este pedido."
+  },
+  "novaPoshta": {
+    "city": "Ciudad",
+    "cityPlaceholder": "Ingresa el nombre de la ciudad",
+    "warehouse": "Almacén",
+    "warehousePlaceholder": "Ingresa el número o dirección del almacén",
+    "warehouseLabel": "Almacén",
+    "allWarehouses": "Todos",
+    "branches": "Sucursales",
+    "postomats": "Postomats",
+    "cargo": "Carga",
+    "deliveryPoint": "Dirección de Entrega",
+    "maxWeight": "Peso máx",
+    "kg": "kg",
+    "warehousesCount": "almacenes",
+    "noCitiesFound": "Ciudad no encontrada. Intenta otro nombre.",
+    "noWarehousesFound": "No se encontraron almacenes",
+    "errors": {
+      "citySearch": "Error buscando ciudad. Por favor intenta de nuevo.",
+      "warehouseLoad": "Error cargando almacenes. Por favor intenta de nuevo."
+    }
+  },
+  "admin": {
+    "title": "Panel de Administración",
+    "subtitle": "Panel de gestión de BoosterTea",
+    "menu": {
+      "dashboard": "Panel",
+      "orders": "Pedidos",
+      "customers": "Clientes",
+      "products": "Productos",
+      "promo": "Códigos Promo",
+      "discounts": "Promociones",
+      "bonuses": "Bonificaciones",
+      "settings": "Configuración"
+    },
+    "quickLinks": {
+      "title": "Enlaces Rápidos",
+      "viewSite": "Ver Sitio",
+      "catalog": "Catálogo",
+      "b2b": "Página B2B",
+      "adaptation": "Adaptación",
+      "certificates": "Certificados",
+      "telegram": "Soporte Telegram"
+    },
+    "dashboard": {
+      "ordersToday": "Pedidos Hoy",
+      "revenueToday": "Ingresos Hoy",
+      "newCustomers": "Nuevos Clientes",
+      "avgCheck": "Ticket Promedio",
+      "vsYesterday": "vs ayer",
+      "weekSales": "Ventas Semanales",
+      "popularProducts": "Productos Populares",
+      "recentOrders": "Pedidos Recientes",
+      "days": {
+        "mon": "Lun",
+        "tue": "Mar",
+        "wed": "Mié",
+        "thu": "Jue",
+        "fri": "Vie",
+        "sat": "Sáb",
+        "sun": "Dom"
+      }
+    },
+    "orders": {
+      "title": "Todos los Pedidos",
+      "allStatuses": "Todos los Estados",
+      "new": "Nuevos",
+      "processing": "Procesando",
+      "shipped": "Enviados",
+      "delivered": "Entregados",
+      "searchPlaceholder": "Buscar...",
+      "emptyMessage": "Aquí aparecerá la lista de pedidos",
+      "id": "ID",
+      "customer": "Cliente",
+      "amount": "Monto",
+      "status": "Estado",
+      "date": "Fecha",
+      "minutesAgo": "min atrás",
+      "hoursAgo": "h atrás"
+    },
+    "customers": {
+      "title": "Base de Clientes",
+      "searchPlaceholder": "Buscar por nombre, email, teléfono...",
+      "allSegments": "Todos los Segmentos",
+      "exportCSV": "Exportar CSV",
+      "found": "Encontrados",
+      "customersCount": "clientes",
+      "columns": {
+        "id": "ID",
+        "customer": "Cliente",
+        "orders": "Pedidos",
+        "spent": "Gastado",
+        "bonus": "Bonificación",
+        "registration": "Registro",
+        "lastOrder": "Último Pedido",
+        "segment": "Segmento",
+        "actions": "Acciones"
+      },
+      "segments": {
+        "vip": "VIP",
+        "new": "Nuevo",
+        "inactive": "Inactivo",
+        "regular": "Regular"
+      },
+      "details": "Detalles",
+      "avgCheck": "Ticket Promedio",
+      "notes": "Notas",
+      "orderHistory": "Historial de Pedidos",
+      "bonusTransactions": "Transacciones de Bonificación",
+      "addBonus": "Agregar Bonificación",
+      "bonusAmount": "Monto de Bonificación",
+      "bonusReason": "Razón",
+      "bonusReasonPlaceholder": "Ej.: Compensación por retraso",
+      "charge": "Cargar"
+    },
+    "products": {
+      "title": "Gestión de Productos",
+      "searchPlaceholder": "Buscar por nombre o slug...",
+      "allCategories": "Todas las Categorías",
+      "addProduct": "Agregar Producto",
+      "categories": {
+        "concentrate": "Concentrado",
+        "accessory": "Accesorio",
+        "dry_tea": "Té Seco"
+      },
+      "subcategories": {
+        "thermos": "Termo",
+        "mug": "Taza",
+        "cup": "Copa",
+        "piala": "Piala",
+        "selectSubcategory": "Seleccionar Subcategoría"
+      },
+      "fields": {
+        "slug": "Slug (URL)",
+        "slugPlaceholder": "pu-erh",
+        "category": "Categoría",
+        "subcategory": "Subcategoría",
+        "name": "Nombre",
+        "namePlaceholder": "Ingresa el nombre",
+        "description": "Descripción",
+        "descriptionPlaceholder": "Ingresa la descripción del producto",
+        "price1l": "Precio por 1L",
+        "price025l": "Precio por 0.25L",
+        "image": "URL de Imagen",
+        "imagePlaceholder": "https://...",
+        "effects": "Efectos",
+        "effectsPlaceholder": "Impulso de energía, Concentración...",
+        "brewingTime": "Tiempo de Preparación (seg)",
+        "temperature": "Temperatura (°C)",
+        "origin": "Origen",
+        "isActive": "Activo"
+      },
+      "createTitle": "Agregar Nuevo Producto",
+      "editTitle": "Editar Producto",
+      "deleteTitle": "¿Eliminar Producto?",
+      "deleteConfirm": "Esta acción no se puede deshacer. El producto se eliminará permanentemente.",
+      "saveChanges": "Guardar Cambios",
+      "notFound": "No se encontraron productos"
+    },
+    "promo": {
+      "title": "Códigos Promocionales",
+      "subtitle": "Gestionar descuentos y promociones",
+      "createPromo": "Crear Código Promo",
+      "stats": {
+        "total": "Total",
+        "active": "Activos",
+        "used": "Usados",
+        "expired": "Expirados"
+      },
+      "fields": {
+        "code": "Código Promocional",
+        "codePlaceholder": "TEA20",
+        "discountType": "Tipo de Descuento",
+        "discountValue": "Valor del Descuento",
+        "minOrder": "Monto Mín. de Pedido",
+        "usageLimit": "Límite de Uso",
+        "expirationDate": "Válido Hasta",
+        "active": "Activo"
+      },
+      "discountTypes": {
+        "percentage": "Porcentaje (%)",
+        "fixed": "Monto Fijo (₴)",
+        "free_shipping": "Envío Gratis",
+        "free_product": "Producto Gratis"
+      },
+      "status": {
+        "active": "Activo",
+        "disabled": "Deshabilitado",
+        "expired": "Expirado"
+      },
+      "createTitle": "Crear Código Promo",
+      "editTitle": "Editar Código Promo",
+      "minAmount": "Mín.",
+      "validUntil": "Hasta",
+      "usage": "Usado",
+      "enable": "Habilitar",
+      "disable": "Deshabilitar"
+    },
+    "discounts": {
+      "title": "Calculadora de Promociones",
+      "subtitle": "Calcular descuentos y márgenes"
+    },
+    "bonuses": {
+      "rulesTitle": "Reglas del Sistema de Bonificación",
+      "rulesSubtitle": "Configura cómo los clientes ganan y gastan bonificaciones",
+      "signupBonus": "Bonificación de Registro",
+      "signupBonusDesc": "Otorgada a nuevos clientes",
+      "referralBonus": "Bonificación de Referido",
+      "referralBonusDesc": "Por cada amigo invitado",
+      "birthdayMultiplier": "Multiplicador de Cumpleaños",
+      "birthdayMultiplierDesc": "Multiplicador de bonificación en cumpleaños",
+      "pointsPerHryvnia": "Puntos por Grivna",
+      "pointsPerHryvniaDesc": "Ganados en cada compra",
+      "maxPaymentPercent": "Pago Máx. con Bonificación",
+      "maxPaymentPercentDesc": "Del total del pedido",
+      "manualAdjustment": "Ajuste Manual",
+      "manualAdjustmentDesc": "Agregar bonificaciones a cliente",
+      "historyTitle": "Historial de Transacciones de Bonificación",
+      "historySubtitle": "Operaciones recientes de bonificación",
+      "earnedToday": "Ganados Hoy",
+      "spentToday": "Gastados Hoy",
+      "totalInSystem": "Total en Sistema",
+      "avgPerCustomer": "Promedio por Cliente",
+      "columns": {
+        "date": "Fecha",
+        "customer": "Cliente",
+        "type": "Tipo",
+        "reason": "Razón",
+        "amount": "Monto"
+      },
+      "types": {
+        "earned": "Ganado",
+        "spent": "Gastado",
+        "manual": "Manual",
+        "signup": "Registro",
+        "referral": "Referido",
+        "birthday": "Cumpleaños"
+      },
+      "manualTitle": "Ajuste Manual de Bonificación",
+      "selectCustomer": "Seleccionar Cliente",
+      "amountHint": "Puede ser negativo para deducir",
+      "reasonPlaceholder": "Compensación / Regalo / Corrección",
+      "points": "puntos",
+      "multiplier": "multiplicador",
+      "bonusesPerHryvnia": "puntos por 1₴",
+      "percent": "%"
+    },
+    "settings": {
+      "title": "Configuración",
+      "notifications": {
+        "title": "Configuración de Notificaciones",
+        "telegram": {
+          "title": "Notificaciones de Telegram",
+          "subtitle": "Recibe notificaciones instantáneas sobre pedidos",
+          "botToken": "Token del Bot",
+          "botTokenHint": "Crea un bot con @BotFather para obtener el token",
+          "botTokenPlaceholder": "Pega el token del bot",
+          "chatId": "Chat ID",
+          "chatIdHint": "ID de chat, grupo o canal. Encuéntralo con @userinfobot",
+          "chatIdPlaceholder": "-1001234567890 o @channel_name",
+          "types": "Tipos de Notificación",
+          "newOrder": "Nuevo Pedido",
+          "newOrderDesc": "Notificación al crear pedido",
+          "paymentReceived": "Pago Recibido",
+          "paymentReceivedDesc": "Notificación después del pago",
+          "orderShipped": "Pedido Enviado",
+          "orderShippedDesc": "Notificación al enviar",
+          "save": "Guardar Configuración",
+          "saving": "Guardando...",
+          "test": "Probar",
+          "testing": "Enviando...",
+          "testSuccess": "¡Mensaje de prueba enviado!",
+          "testError": "Error al enviar",
+          "networkError": "Error de red",
+          "howToSetup": "Cómo configurar:",
+          "step1": "Crea un bot con @BotFather en Telegram",
+          "step2": "Copia el token del bot",
+          "step3": "Crea un grupo/canal y agrega el bot como admin",
+          "step4": "Encuentra el Chat ID con @userinfobot o @getidsbot",
+          "step5": "Ingresa los datos y haz clic en \"Probar\""
+        },
+        "history": {
+          "title": "Historial de Notificaciones",
+          "subtitle": "Mensajes enviados recientemente",
+          "refresh": "Actualizar",
+          "empty": "Sin notificaciones aún",
+          "types": {
+            "new_order": "📦 Nuevo Pedido",
+            "payment_received": "💳 Pago",
+            "order_shipped": "🚚 Enviado",
+            "test": "🧪 Prueba",
+            "manual": "✏️ Manual"
+          }
+        },
+        "browser": {
+          "title": "Notificaciones Push del Navegador",
+          "subtitle": "Notificaciones en tiempo real",
+          "enable": "Habilitar Notificaciones",
+          "test": "Notificación de Prueba",
+          "status": {
+            "notSupported": "No Soportado",
+            "enabled": "Habilitado",
+            "blocked": "Bloqueado",
+            "prompt": "Esperando Permiso"
+          },
+          "blockedHint": "Notificaciones bloqueadas en la configuración del navegador"
+        },
+        "email": {
+          "title": "Notificaciones por Email",
+          "comingSoon": "Próximamente",
+          "inDevelopment": "En Desarrollo"
+        }
+      }
+    },
+    "orderStatuses": {
+      "pending": "Nuevo",
+      "processing": "Procesando",
+      "shipped": "Enviado",
+      "delivered": "Entregado"
+    }
+  },
+  "legal": {
+    "lastUpdated": "Última Actualización",
+    "contact": {
+      "title": "Contacto",
+      "content": "Si tiene alguna pregunta sobre esta política, contáctenos."
+    },
+    "privacy": {
+      "title": "Política de Privacidad",
+      "description": "Conozca cómo recopilamos, usamos y protegemos sus datos personales.",
+      "section1": {
+        "title": "1. Disposiciones Generales",
+        "content": "BoosterTea LLC (en adelante — la Compañía) se compromete a proteger la privacidad de los datos personales de los visitantes del sitio web. Esta Política de Privacidad explica qué datos recopilamos, cómo los usamos y cómo los protegemos."
+      },
+      "section2": {
+        "title": "2. Datos que Recopilamos",
+        "content": "Podemos recopilar los siguientes datos personales:",
+        "item1": "Información de contacto (nombre, email, número de teléfono)",
+        "item2": "Dirección de entrega",
+        "item3": "Información de pedidos e historial de compras",
+        "item4": "Datos técnicos (dirección IP, tipo de navegador, cookies)"
+      },
+      "section3": {
+        "title": "3. Cómo Usamos los Datos",
+        "content": "Sus datos se utilizan exclusivamente para procesar pedidos, entregar productos, mejorar nuestro servicio y enviar información promocional (con su consentimiento)."
+      },
+      "section4": {
+        "title": "4. Protección de Datos",
+        "content": "Utilizamos métodos modernos de protección de datos, incluyendo cifrado SSL y almacenamiento seguro de datos. Sus datos no se comparten con terceros sin su consentimiento, excepto según lo requiera la ley ucraniana."
+      },
+      "section5": {
+        "title": "5. Sus Derechos",
+        "content": "De acuerdo con la ley ucraniana sobre Protección de Datos Personales, tiene derecho a acceder, corregir o eliminar sus datos. Para hacerlo, contáctenos usando la información de contacto proporcionada."
+      }
+    },
+    "terms": {
+      "title": "Términos de Servicio",
+      "description": "Reglas y condiciones para usar el sitio web y los servicios de BoosterTea.",
+      "section1": {
+        "title": "1. Términos Generales",
+        "content": "Al usar el sitio web boostertea.com.ua, acepta estos términos. El sitio web es propiedad de BoosterTea LLC, registrada en Ucrania."
+      },
+      "section2": {
+        "title": "2. Pedidos",
+        "content": "Pedido mínimo: 6 botellas de 1L, 12 botellas de 0.25L. Los precios están en grivnas ucranianas e incluyen IVA. Nos reservamos el derecho de cambiar los precios sin previo aviso."
+      },
+      "section3": {
+        "title": "3. Entrega",
+        "content": "La entrega se realiza por Nova Poshta en toda Ucrania.",
+        "item1": "Tiempo de entrega: 1-3 días hábiles",
+        "item2": "Entrega gratuita para pedidos superiores a 3000₴",
+        "item3": "Recogida disponible en nuestra oficina en Lviv"
+      },
+      "section4": {
+        "title": "4. Pago",
+        "content": "Aceptamos pagos en línea a través de Monobank (Visa, Mastercard, Apple Pay, Google Pay). El pago se realiza en grivnas ucranianas."
+      },
+      "section5": {
+        "title": "5. Propiedad Intelectual",
+        "content": "Todos los materiales del sitio web (textos, imágenes, logotipos) son propiedad de BoosterTea LLC y están protegidos por derechos de autor."
+      },
+      "haccp": {
+        "title": "Certificación HACCP",
+        "content": "Nuestra producción está certificada por HACCP, garantizando la seguridad y calidad del producto en todas las etapas de producción."
+      }
+    },
+    "return": {
+      "title": "Política de Devolución e Intercambio",
+      "description": "Términos para devolver e intercambiar productos según la legislación ucraniana.",
+      "guarantee": {
+        "title": "Garantía de Calidad",
+        "content": "Garantizamos la calidad de nuestros productos. Si el producto no coincide con la descripción o está dañado durante la entrega, lo cambiaremos o le devolveremos su dinero."
+      },
+      "section1": {
+        "title": "1. Condiciones de Devolución",
+        "content": "Según la Ley Ucraniana de Protección al Consumidor, tiene derecho a devolver productos de calidad adecuada dentro de los 14 días de la compra, siempre que:",
+        "item1": "El producto no haya sido utilizado",
+        "item2": "Se conserve la apariencia original y el embalaje",
+        "item3": "Tenga un recibo u otra prueba de compra"
+      },
+      "section2": {
+        "title": "2. Procedimiento de Devolución",
+        "content": "Para devolver un producto:",
+        "step1": "Contáctenos dentro de los 14 días de recibir el producto",
+        "step2": "Reciba un número de devolución",
+        "step3": "Envíe el producto por Nova Poshta",
+        "step4": "Reciba su reembolso dentro de 7 días después de que recibamos el producto"
+      },
+      "section3": {
+        "title": "3. Artículos No Retornables",
+        "content": "No se pueden devolver:",
+        "item1": "Botellas de concentrado abiertas",
+        "item2": "Productos con embalaje dañado por el comprador"
+      },
+      "section4": {
+        "title": "4. Reembolsos",
+        "content": "Los reembolsos se realizan usando el mismo método de pago utilizado para la compra original, dentro de 7 días hábiles de recibir el producto devuelto."
+      },
+      "contact": {
+        "title": "Soporte al Cliente",
+        "content": "Para preguntas sobre devoluciones o intercambios, contáctenos:"
+      }
+    }
+  },
+  "trust": {
+    "badge": "🛡️ Garantía de Calidad",
+    "title": "Confianza y",
+    "titleAccent": "Calidad",
+    "subtitle": "Nuestros productos están certificados según los estándares internacionales de seguridad alimentaria.",
+    "viewCertificates": "Ver certificados",
+    "haccp": {
+      "title": "Certificado HACCP"
+    },
+    "iso": {
+      "title": "Estándar ISO 22000"
+    },
+    "lab": {
+      "title": "Probado en Laboratorio",
+      "badge": "LAB"
+    },
+    "natural": {
+      "title": "Ingredientes Naturales"
+    },
+    "ukraine": {
+      "title": "Hecho en Ucrania"
+    }
+  },
+  "certificates": {
+    "breadcrumb": "Certificados",
+    "badge": "Calidad Garantizada",
+    "title": "Certificados de",
+    "titleAccent": "Calidad",
+    "subtitle": "BoosterTea pasa por un estricto control de calidad en todas las etapas de producción. Nuestros certificados confirman el cumplimiento de los estándares internacionales.",
+    "ourCertifications": "Nuestras Certificaciones",
+    "items": {
+      "haccp": {
+        "title": "Sistema HACCP",
+        "description": "Sistema de Análisis de Peligros y Puntos Críticos de Control. Garantiza la seguridad del producto en todas las etapas de producción desde las materias primas hasta el producto terminado."
+      },
+      "iso22000": {
+        "title": "ISO 22000",
+        "description": "Estándar internacional del sistema de gestión de seguridad alimentaria. Asegura el control de calidad según los requisitos globales."
+      },
+      "labTested": {
+        "title": "Pruebas de Laboratorio",
+        "description": "Cada lote de productos pasa por pruebas de laboratorio para sustancias nocivas, indicadores microbiológicos y conformidad con la composición declarada.",
+        "badge": "LAB"
+      },
+      "natural": {
+        "title": "100% Composición Natural",
+        "description": "Usamos exclusivamente materias primas naturales sin conservantes, colorantes artificiales ni saborizantes. Solo té real de las mejores regiones de China."
+      }
+    },
+    "trust": {
+      "madeInUkraine": "Hecho en Ucrania 🇺🇦",
+      "madeInUkraineDesc": "Producción propia en Lviv siguiendo todos los estándares de calidad",
+      "labTested": "Probado en Laboratorio",
+      "labTestedDesc": "Cada lote se verifica por seguridad y calidad",
+      "naturalIngredients": "100% Ingredientes Naturales",
+      "naturalIngredientsDesc": "Sin conservantes, colorantes ni aditivos artificiales"
+    },
+    "download": {
+      "title": "Descargar Documentos",
+      "subtitle": "Obtenga certificados y documentos oficiales para revisión",
+      "downloadPdf": "Descargar PDF",
+      "comingSoon": "Los documentos estarán disponibles pronto",
+      "note": "* Para copias oficiales de documentos, contacte a nuestro departamento de ventas"
+    },
+    "downloads": {
+      "haccp": {
+        "title": "Certificado HACCP",
+        "description": "Certificado oficial del sistema HACCP"
+      },
+      "iso": {
+        "title": "Certificado ISO 22000",
+        "description": "Certificado internacional de calidad"
+      },
+      "lab": {
+        "title": "Resultados de Laboratorio",
+        "description": "Protocolos de pruebas de laboratorio"
+      },
+      "declaration": {
+        "title": "Declaración de Conformidad",
+        "description": "Declaración de conformidad del producto"
+      }
+    },
+    "cta": {
+      "title": "Elige Calidad con BoosterTea",
+      "description": "¡Nuestros productos cumplen con los más altos estándares de seguridad y calidad. Pide con confianza!",
+      "shopNow": "Ir al Catálogo",
+      "contactUs": "Contáctenos"
+    }
+  }
+}

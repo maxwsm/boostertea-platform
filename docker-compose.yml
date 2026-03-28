@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  boostertea-web:
+    image: node:22-alpine
+    container_name: wsm-boostertea
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    working_dir: /app
+    ports:
+      - "3010:3000"
+    command: sh -c "corepack enable pnpm && cd apps/boostertea-web && pnpm run build && pnpm run start"
+    volumes:
+      - .:/app
+      - wsm_db_volume:/app/packages/wsm-db/prisma
+    restart: unless-stopped
+
+  wsm-dashboard:
+    image: node:22-alpine
+    container_name: wsm-dashboard
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    command: sh -c "corepack enable pnpm && cd apps/wsm-dashboard && pnpm run dev"
+    volumes:
+      - .:/app
+    restart: unless-stopped
+
+  dinoslush-web:
+    image: node:22-alpine
+    container_name: wsm-dinoslush
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    working_dir: /app
+    ports:
+      - "3004:3004"
+    command: sh -c "corepack enable pnpm && cd apps/dinoslush-web && pnpm run dev"
+    volumes:
+      - .:/app
+    restart: unless-stopped
+
+  funnydrops-web:
+    image: node:22-alpine
+    container_name: wsm-funnydrops
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    working_dir: /app
+    ports:
+      - "3005:3005"
+    command: sh -c "corepack enable pnpm && cd apps/funnydrops-web && pnpm run dev"
+    volumes:
+      - .:/app
+    restart: unless-stopped
+
+  tlab-web:
+    image: node:22-alpine
+    container_name: wsm-tlab
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    working_dir: /app
+    ports:
+      - "3006:3006"
+    command: sh -c "corepack enable pnpm && cd apps/tlab-web && pnpm run dev"
+    volumes:
+      - .:/app
+    restart: unless-stopped
+
+volumes:
+  wsm_db_volume:
+    name: wsm_db_persistent_storage

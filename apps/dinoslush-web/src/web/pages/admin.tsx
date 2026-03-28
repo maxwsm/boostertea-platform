@@ -1,0 +1,5258 @@
+import { useState, useMemo, useEffect } from 'react';
+import { Link, useLocation } from 'wouter';
+import { SEO, useSEOConfig } from '../components/SEO';
+import { useTranslation } from '../lib/i18n';
+import { useAuth } from '../lib/auth';
+
+// Types
+interface Customer {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  totalOrders: number;
+  totalSpent: number;
+  bonusPoints: number;
+  registrationDate: string;
+  lastOrderDate: string;
+  segment: 'vip' | 'new' | 'inactive' | 'regular';
+  notes: string;
+  orders: CustomerOrder[];
+  bonusTransactions: BonusTransaction[];
+}
+
+interface CustomerOrder {
+  id: string;
+  date: string;
+  amount: number;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered';
+}
+
+interface BonusTransaction {
+  id: string;
+  date: string;
+  amount: number;
+  type: 'earned' | 'spent' | 'manual' | 'signup' | 'referral' | 'birthday';
+  reason: string;
+}
+
+interface PromoCode {
+  id: string;
+  code: string;
+  discountType: 'percentage' | 'fixed' | 'free_shipping' | 'free_product';
+  discountValue: number;
+  freeProductId?: string;
+  minOrderAmount: number;
+  usageLimit: number;
+  usedCount: number;
+  expirationDate: string;
+  isActive: boolean;
+}
+
+interface BonusRules {
+  signupBonus: number;
+  referralBonus: number;
+  birthdayMultiplier: number;
+  pointsPerHryvnia: number;
+  maxPaymentPercent: number;
+}
+
+// Mock data
+const mockCustomers: Customer[] = [
+  {
+    id: 'C001',
+    name: 'Олена Коваленко',
+    email: 'olena.k@gmail.com',
+    phone: '+380 67 123 4567',
+    totalOrders: 12,
+    totalSpent: 45600,
+    bonusPoints: 2280,
+    registrationDate: '2024-06-15',
+    lastOrderDate: '2025-02-01',
+    segment: 'vip',
+    notes: 'Постійний клієнт, любить ГАБА чай',
+    orders: [
+      { id: 'BT-2025-015', date: '2025-02-01', amount: 5850, status: 'processing' },
+      { id: 'BT-2025-010', date: '2025-01-25', amount: 3900, status: 'delivered' },
+      { id: 'BT-2024-089', date: '2024-12-20', amount: 12240, status: 'delivered' },
+    ],
+    bonusTransactions: [
+      { id: 'BT001', date: '2025-02-01', amount: 292, type: 'earned', reason: 'Замовлення BT-2025-015' },
+      { id: 'BT002', date: '2025-01-25', amount: 195, type: 'earned', reason: 'Замовлення BT-2025-010' },
+      { id: 'BT003', date: '2025-01-15', amount: -500, type: 'spent', reason: 'Оплата замовлення' },
+    ],
+  },
+  {
+    id: 'C002',
+    name: 'Андрій Мельник',
+    email: 'andrii.m@ukr.net',
+    phone: '+380 96 234 5678',
+    totalOrders: 3,
+    totalSpent: 8940,
+    bonusPoints: 447,
+    registrationDate: '2025-01-10',
+    lastOrderDate: '2025-01-28',
+    segment: 'new',
+    notes: '',
+    orders: [
+      { id: 'BT-2025-012', date: '2025-01-28', amount: 3060, status: 'shipped' },
+      { id: 'BT-2025-008', date: '2025-01-18', amount: 2940, status: 'delivered' },
+    ],
+    bonusTransactions: [
+      { id: 'BT004', date: '2025-01-28', amount: 153, type: 'earned', reason: 'Замовлення BT-2025-012' },
+      { id: 'BT005', date: '2025-01-10', amount: 100, type: 'signup', reason: 'Бонус за реєстрацію' },
+    ],
+  },
+  {
+    id: 'C003',
+    name: 'Марія Петренко',
+    email: 'maria.p@gmail.com',
+    phone: '+380 50 345 6789',
+    totalOrders: 8,
+    totalSpent: 32400,
+    bonusPoints: 1620,
+    registrationDate: '2024-08-20',
+    lastOrderDate: '2024-11-15',
+    segment: 'inactive',
+    notes: 'Не замовляла більше 2 місяців',
+    orders: [
+      { id: 'BT-2024-078', date: '2024-11-15', amount: 5850, status: 'delivered' },
+      { id: 'BT-2024-065', date: '2024-10-28', amount: 3900, status: 'delivered' },
+    ],
+    bonusTransactions: [
+      { id: 'BT006', date: '2024-11-15', amount: 292, type: 'earned', reason: 'Замовлення BT-2024-078' },
+    ],
+  },
+  {
+    id: 'C004',
+    name: 'Іван Бондаренко',
+    email: 'ivan.b@outlook.com',
+    phone: '+380 63 456 7890',
+    totalOrders: 5,
+    totalSpent: 19500,
+    bonusPoints: 975,
+    registrationDate: '2024-09-05',
+    lastOrderDate: '2025-01-30',
+    segment: 'regular',
+    notes: '',
+    orders: [
+      { id: 'BT-2025-014', date: '2025-01-30', amount: 12240, status: 'processing' },
+    ],
+    bonusTransactions: [
+      { id: 'BT007', date: '2025-01-30', amount: 612, type: 'earned', reason: 'Замовлення BT-2025-014' },
+      { id: 'BT008', date: '2025-01-01', amount: 200, type: 'birthday', reason: 'Бонус до дня народження' },
+    ],
+  },
+  {
+    id: 'C005',
+    name: 'Софія Шевченко',
+    email: 'sofia.sh@gmail.com',
+    phone: '+380 97 567 8901',
+    totalOrders: 15,
+    totalSpent: 58500,
+    bonusPoints: 3425,
+    registrationDate: '2024-04-10',
+    lastOrderDate: '2025-02-02',
+    segment: 'vip',
+    notes: 'VIP клієнт, замовляє для кафе',
+    orders: [
+      { id: 'BT-2025-016', date: '2025-02-02', amount: 15600, status: 'pending' },
+      { id: 'BT-2025-011', date: '2025-01-26', amount: 7800, status: 'delivered' },
+    ],
+    bonusTransactions: [
+      { id: 'BT009', date: '2025-02-02', amount: 780, type: 'earned', reason: 'Замовлення BT-2025-016' },
+      { id: 'BT010', date: '2025-01-20', amount: 500, type: 'referral', reason: 'Реферал: Олена К.' },
+    ],
+  },
+];
+
+const mockPromoCodes: PromoCode[] = [
+  {
+    id: 'P001',
+    code: 'FIRST10',
+    discountType: 'percentage',
+    discountValue: 10,
+    minOrderAmount: 1000,
+    usageLimit: 100,
+    usedCount: 45,
+    expirationDate: '2025-06-30',
+    isActive: true,
+  },
+  {
+    id: 'P002',
+    code: 'TEA20',
+    discountType: 'percentage',
+    discountValue: 20,
+    minOrderAmount: 5000,
+    usageLimit: 50,
+    usedCount: 12,
+    expirationDate: '2025-03-31',
+    isActive: true,
+  },
+  {
+    id: 'P003',
+    code: 'FREESHIP',
+    discountType: 'free_shipping',
+    discountValue: 0,
+    minOrderAmount: 2000,
+    usageLimit: 200,
+    usedCount: 89,
+    expirationDate: '2025-12-31',
+    isActive: true,
+  },
+  {
+    id: 'P004',
+    code: 'BOOST15',
+    discountType: 'percentage',
+    discountValue: 15,
+    minOrderAmount: 3000,
+    usageLimit: 100,
+    usedCount: 100,
+    expirationDate: '2025-01-31',
+    isActive: false,
+  },
+  {
+    id: 'P005',
+    code: 'FLAT200',
+    discountType: 'fixed',
+    discountValue: 200,
+    minOrderAmount: 2500,
+    usageLimit: 75,
+    usedCount: 23,
+    expirationDate: '2025-04-15',
+    isActive: true,
+  },
+];
+
+const mockBonusRules: BonusRules = {
+  signupBonus: 100,
+  referralBonus: 500,
+  birthdayMultiplier: 2,
+  pointsPerHryvnia: 0.05,
+  maxPaymentPercent: 30,
+};
+
+const mockAllBonusTransactions: (BonusTransaction & { customerName: string })[] = [
+  { id: 'BT001', date: '2025-02-02', amount: 780, type: 'earned', reason: 'Замовлення BT-2025-016', customerName: 'Софія Шевченко' },
+  { id: 'BT002', date: '2025-02-01', amount: 292, type: 'earned', reason: 'Замовлення BT-2025-015', customerName: 'Олена Коваленко' },
+  { id: 'BT003', date: '2025-01-30', amount: 612, type: 'earned', reason: 'Замовлення BT-2025-014', customerName: 'Іван Бондаренко' },
+  { id: 'BT004', date: '2025-01-28', amount: 153, type: 'earned', reason: 'Замовлення BT-2025-012', customerName: 'Андрій Мельник' },
+  { id: 'BT005', date: '2025-01-20', amount: 500, type: 'referral', reason: 'Реферал: Олена К.', customerName: 'Софія Шевченко' },
+  { id: 'BT006', date: '2025-01-15', amount: -500, type: 'spent', reason: 'Оплата замовлення', customerName: 'Олена Коваленко' },
+  { id: 'BT007', date: '2025-01-10', amount: 100, type: 'signup', reason: 'Бонус за реєстрацію', customerName: 'Андрій Мельник' },
+  { id: 'BT008', date: '2025-01-01', amount: 200, type: 'birthday', reason: 'Бонус до дня народження', customerName: 'Іван Бондаренко' },
+];
+
+// Visitor Stats Component (inline to avoid build complexity)
+const VisitorsDashboard = ({ language }: { language: 'uk' | 'en' }) => {
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [timeRange, setTimeRange] = useState<'today' | 'week' | 'month'>('today');
+
+  useEffect(() => {
+    fetchStats();
+    const interval = setInterval(fetchStats, 30000);
+    return () => clearInterval(interval);
+  }, [timeRange]);
+
+  const fetchStats = async () => {
+    try {
+      const response = await fetch(`/api/analytics/visitors?range=${timeRange}`);
+      if (!response.ok) throw new Error('Failed to fetch');
+      setStats(await response.json());
+    } catch {
+      setStats({
+        activeUsers: 12,
+        totalVisitors: { today: 847, yesterday: 923, week: 5432, month: 21456 },
+        pageViews: { today: 2341, week: 15678 },
+        avgSessionDuration: '3:24',
+        bounceRate: 42.5,
+        topPages: [
+          { page: '/', views: 1234 },
+          { page: '/products', views: 892 },
+          { page: '/products/pu-erh', views: 654 },
+          { page: '/cart', views: 432 },
+          { page: '/b2b', views: 321 },
+        ],
+        trafficSources: [
+          { source: 'Instagram', visitors: 342, percentage: 40.4 },
+          { source: 'Google', visitors: 256, percentage: 30.2 },
+          { source: 'Direct', visitors: 156, percentage: 18.4 },
+          { source: 'TikTok', visitors: 67, percentage: 7.9 },
+          { source: 'Facebook', visitors: 26, percentage: 3.1 },
+        ],
+        devices: [
+          { device: 'Mobile', percentage: 68 },
+          { device: 'Desktop', percentage: 28 },
+          { device: 'Tablet', percentage: 4 },
+        ],
+        countries: [
+          { country: '🇺🇦 Україна', visitors: 756 },
+          { country: '🇵🇱 Польща', visitors: 45 },
+          { country: '🇩🇪 Німеччина', visitors: 23 },
+        ],
+        realtimeVisitors: 12,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) return <div className="flex justify-center py-12"><div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>;
+  if (!stats) return null;
+
+  const t = (uk: string, en: string) => language === 'uk' ? uk : en;
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-heading)' }}>📊 {t('Відвідувачі сайту', 'Website Visitors')}</h2>
+          <p className="text-[var(--text-muted)] text-sm mt-1">{t('Дані з Google Analytics', 'Data from Google Analytics')}</p>
+        </div>
+        <div className="flex gap-2">
+          {(['today', 'week', 'month'] as const).map((range) => (
+            <button key={range} onClick={() => setTimeRange(range)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${timeRange === range ? 'bg-[var(--accent)] text-[#0D0D0D]' : 'bg-[var(--bg-primary)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}>
+              {range === 'today' ? t('Сьогодні', 'Today') : range === 'week' ? t('Тиждень', 'Week') : t('Місяць', 'Month')}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Realtime */}
+      <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/5 rounded-xl border border-green-500/20">
+        <div className="relative"><div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" /><div className="absolute inset-0 w-3 h-3 bg-green-500 rounded-full animate-ping opacity-75" /></div>
+        <span className="text-green-400 font-medium">{stats.realtimeVisitors} {t('на сайті зараз', 'online now')}</span>
+      </div>
+
+      {/* KPIs */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-[var(--bg-secondary)] rounded-xl p-5 border border-[var(--card-border)]">
+          <p className="text-[var(--text-muted)] text-xs mb-1">{t('Відвідувачів сьогодні', 'Visitors Today')}</p>
+          <p className="text-3xl font-bold text-[var(--accent)]" style={{ fontFamily: 'var(--font-heading)' }}>{stats.totalVisitors.today.toLocaleString()}</p>
+          <p className={`text-xs mt-1 ${stats.totalVisitors.today > stats.totalVisitors.yesterday ? 'text-green-400' : 'text-red-400'}`}>
+            {stats.totalVisitors.today > stats.totalVisitors.yesterday ? '↑' : '↓'} {Math.abs(Math.round((stats.totalVisitors.today - stats.totalVisitors.yesterday) / stats.totalVisitors.yesterday * 100))}%
+          </p>
+        </div>
+        <div className="bg-[var(--bg-secondary)] rounded-xl p-5 border border-[var(--card-border)]">
+          <p className="text-[var(--text-muted)] text-xs mb-1">{t('Перегляди', 'Page Views')}</p>
+          <p className="text-3xl font-bold text-[#C9A962]" style={{ fontFamily: 'var(--font-heading)' }}>{stats.pageViews.today.toLocaleString()}</p>
+        </div>
+        <div className="bg-[var(--bg-secondary)] rounded-xl p-5 border border-[var(--card-border)]">
+          <p className="text-[var(--text-muted)] text-xs mb-1">{t('Сер. час', 'Avg Session')}</p>
+          <p className="text-3xl font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-heading)' }}>{stats.avgSessionDuration}</p>
+        </div>
+        <div className="bg-[var(--bg-secondary)] rounded-xl p-5 border border-[var(--card-border)]">
+          <p className="text-[var(--text-muted)] text-xs mb-1">{t('Відмови', 'Bounce Rate')}</p>
+          <p className="text-3xl font-bold text-[#E07B2D]" style={{ fontFamily: 'var(--font-heading)' }}>{stats.bounceRate}%</p>
+        </div>
+      </div>
+
+      {/* Traffic & Pages */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        <div className="bg-[var(--bg-secondary)] rounded-xl p-5 border border-[var(--card-border)]">
+          <h3 className="text-[var(--text-primary)] font-medium mb-4">{t('Джерела трафіку', 'Traffic Sources')}</h3>
+          <div className="space-y-3">
+            {stats.trafficSources.map((source: any, idx: number) => (
+              <div key={idx} className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-lg" style={{ backgroundColor: source.source === 'Instagram' ? '#E4405F20' : source.source === 'Google' ? '#4285F420' : source.source === 'TikTok' ? '#00000020' : '#6B8E2320' }}>
+                  {source.source === 'Instagram' ? '📸' : source.source === 'Google' ? '🔍' : source.source === 'TikTok' ? '🎵' : '🔗'}
+                </div>
+                <div className="flex-1">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[var(--text-primary)] text-sm">{source.source}</span>
+                    <span className="text-[var(--text-muted)] text-xs">{source.visitors} ({source.percentage}%)</span>
+                  </div>
+                  <div className="h-1.5 bg-[#F5F0E8]/10 rounded-full overflow-hidden"><div className="h-full bg-[var(--accent)] rounded-full" style={{ width: `${source.percentage}%` }} /></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="bg-[var(--bg-secondary)] rounded-xl p-5 border border-[var(--card-border)]">
+          <h3 className="text-[var(--text-primary)] font-medium mb-4">{t('Популярні сторінки', 'Top Pages')}</h3>
+          <div className="space-y-2">
+            {stats.topPages.map((page: any, idx: number) => (
+              <div key={idx} className="flex items-center justify-between py-2 border-b border-[var(--border)]/50 last:border-0">
+                <span className="text-[var(--text-primary)] text-sm font-mono">{page.page}</span>
+                <span className="text-[var(--accent)] font-medium">{page.views.toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Devices & Geography */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        <div className="bg-[var(--bg-secondary)] rounded-xl p-5 border border-[var(--card-border)]">
+          <h3 className="text-[var(--text-primary)] font-medium mb-4">{t('Пристрої', 'Devices')}</h3>
+          <div className="flex gap-4">
+            {stats.devices.map((device: any, idx: number) => (
+              <div key={idx} className="flex-1 text-center">
+                <div className="text-3xl mb-2">{device.device === 'Mobile' ? '📱' : device.device === 'Desktop' ? '💻' : '📱'}</div>
+                <p className="text-2xl font-bold text-[var(--text-primary)]">{device.percentage}%</p>
+                <p className="text-xs text-[var(--text-muted)]">{device.device}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="bg-[var(--bg-secondary)] rounded-xl p-5 border border-[var(--card-border)]">
+          <h3 className="text-[var(--text-primary)] font-medium mb-4">{t('Географія', 'Geography')}</h3>
+          <div className="space-y-2">
+            {stats.countries.map((country: any, idx: number) => (
+              <div key={idx} className="flex items-center justify-between py-1">
+                <span className="text-[var(--text-primary)] text-sm">{country.country}</span>
+                <span className="text-[var(--text-muted)] text-sm">{country.visitors}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Social Media Component
+const SocialMediaDashboard = ({ language }: { language: 'uk' | 'en' }) => {
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      const response = await fetch('/api/social/stats');
+      if (!response.ok) throw new Error('Failed to fetch');
+      setStats(await response.json());
+    } catch {
+      setStats({
+        instagram: { followers: 4521, followersChange: 127, posts: 156, engagement: 4.8, reach: 12450 },
+        tiktok: { followers: 8934, followersChange: 342, videos: 67, likes: 45600, views: 234500 },
+        telegram: { subscribers: 2156, subscribersChange: 45, messages: 89, views: 34500, engagement: 68 },
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) return <div className="flex justify-center py-12"><div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>;
+  if (!stats) return null;
+
+  const t = (uk: string, en: string) => language === 'uk' ? uk : en;
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-heading)' }}>📱 {t('Соціальні мережі', 'Social Media')}</h2>
+        <p className="text-[var(--text-muted)] text-sm mt-1">{t('Статистика та аналітика', 'Statistics & Analytics')}</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Instagram */}
+        <div className="bg-gradient-to-br from-[#E4405F]/10 to-[#F77737]/5 rounded-2xl p-6 border border-[#E4405F]/20">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#E4405F] to-[#F77737] flex items-center justify-center">
+              <span className="text-2xl text-white">📸</span>
+            </div>
+            <div>
+              <h3 className="text-[var(--text-primary)] font-medium">Instagram</h3>
+              <a href="https://instagram.com/booster_tea_ua" target="_blank" rel="noopener" className="text-[var(--text-muted)] text-xs hover:text-[#E4405F]">@booster_tea_ua</a>
+            </div>
+          </div>
+          <p className="text-4xl font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-heading)' }}>{stats.instagram.followers.toLocaleString()}</p>
+          <p className="text-sm text-[var(--text-muted)]">{t('підписників', 'followers')} <span className="text-green-400 ml-2">+{stats.instagram.followersChange}</span></p>
+          <div className="grid grid-cols-3 gap-2 mt-4 text-center">
+            <div className="bg-[#0D0D0D]/30 rounded-lg p-2">
+              <p className="text-lg font-bold text-[#E4405F]">{stats.instagram.engagement}%</p>
+              <p className="text-xs text-[var(--text-muted)]">ER</p>
+            </div>
+            <div className="bg-[#0D0D0D]/30 rounded-lg p-2">
+              <p className="text-lg font-bold text-[var(--text-primary)]">{stats.instagram.posts}</p>
+              <p className="text-xs text-[var(--text-muted)]">{t('постів', 'posts')}</p>
+            </div>
+            <div className="bg-[#0D0D0D]/30 rounded-lg p-2">
+              <p className="text-lg font-bold text-[var(--text-primary)]">{(stats.instagram.reach / 1000).toFixed(1)}K</p>
+              <p className="text-xs text-[var(--text-muted)]">{t('охоплення', 'reach')}</p>
+            </div>
+          </div>
+          <a href="https://instagram.com/booster_tea_ua" target="_blank" rel="noopener" className="block w-full py-2 mt-4 text-center bg-gradient-to-r from-[#E4405F] to-[#F77737] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
+            {t('Відкрити профіль', 'Open Profile')} →
+          </a>
+        </div>
+
+        {/* TikTok */}
+        <div className="bg-gradient-to-br from-[#000000]/20 to-[#25F4EE]/5 rounded-2xl p-6 border border-[#FE2C55]/20">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-xl bg-black flex items-center justify-center">
+              <span className="text-2xl text-white">🎵</span>
+            </div>
+            <div>
+              <h3 className="text-[var(--text-primary)] font-medium">TikTok</h3>
+              <a href="https://tiktok.com/@booster_tea" target="_blank" rel="noopener" className="text-[var(--text-muted)] text-xs hover:text-[#FE2C55]">@booster_tea</a>
+            </div>
+          </div>
+          <p className="text-4xl font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-heading)' }}>{stats.tiktok.followers.toLocaleString()}</p>
+          <p className="text-sm text-[var(--text-muted)]">{t('підписників', 'followers')} <span className="text-green-400 ml-2">+{stats.tiktok.followersChange}</span></p>
+          <div className="grid grid-cols-3 gap-2 mt-4 text-center">
+            <div className="bg-[#0D0D0D]/30 rounded-lg p-2">
+              <p className="text-lg font-bold text-[#FE2C55]">{(stats.tiktok.views / 1000).toFixed(0)}K</p>
+              <p className="text-xs text-[var(--text-muted)]">{t('переглядів', 'views')}</p>
+            </div>
+            <div className="bg-[#0D0D0D]/30 rounded-lg p-2">
+              <p className="text-lg font-bold text-[var(--text-primary)]">{(stats.tiktok.likes / 1000).toFixed(1)}K</p>
+              <p className="text-xs text-[var(--text-muted)]">{t('лайків', 'likes')}</p>
+            </div>
+            <div className="bg-[#0D0D0D]/30 rounded-lg p-2">
+              <p className="text-lg font-bold text-[var(--text-primary)]">{stats.tiktok.videos}</p>
+              <p className="text-xs text-[var(--text-muted)]">{t('відео', 'videos')}</p>
+            </div>
+          </div>
+          <a href="https://tiktok.com/@booster_tea" target="_blank" rel="noopener" className="block w-full py-2 mt-4 text-center bg-black text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
+            {t('Відкрити профіль', 'Open Profile')} →
+          </a>
+        </div>
+
+        {/* Telegram */}
+        <div className="bg-gradient-to-br from-[#0088cc]/10 to-[#0088cc]/5 rounded-2xl p-6 border border-[#0088cc]/20">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-xl bg-[#0088cc] flex items-center justify-center">
+              <span className="text-2xl text-white">✈️</span>
+            </div>
+            <div>
+              <h3 className="text-[var(--text-primary)] font-medium">Telegram</h3>
+              <a href="https://t.me/boostertea_bot" target="_blank" rel="noopener" className="text-[var(--text-muted)] text-xs hover:text-[#0088cc]">@boostertea_bot</a>
+            </div>
+          </div>
+          <p className="text-4xl font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-heading)' }}>{stats.telegram.subscribers.toLocaleString()}</p>
+          <p className="text-sm text-[var(--text-muted)]">{t('підписників', 'subscribers')} <span className="text-green-400 ml-2">+{stats.telegram.subscribersChange}</span></p>
+          <div className="grid grid-cols-3 gap-2 mt-4 text-center">
+            <div className="bg-[#0D0D0D]/30 rounded-lg p-2">
+              <p className="text-lg font-bold text-[#0088cc]">{stats.telegram.engagement}%</p>
+              <p className="text-xs text-[var(--text-muted)]">ER</p>
+            </div>
+            <div className="bg-[#0D0D0D]/30 rounded-lg p-2">
+              <p className="text-lg font-bold text-[var(--text-primary)]">{(stats.telegram.views / 1000).toFixed(1)}K</p>
+              <p className="text-xs text-[var(--text-muted)]">{t('переглядів', 'views')}</p>
+            </div>
+            <div className="bg-[#0D0D0D]/30 rounded-lg p-2">
+              <p className="text-lg font-bold text-[var(--text-primary)]">{stats.telegram.messages}</p>
+              <p className="text-xs text-[var(--text-muted)]">{t('постів', 'posts')}</p>
+            </div>
+          </div>
+          <a href="https://t.me/boostertea_bot" target="_blank" rel="noopener" className="block w-full py-2 mt-4 text-center bg-[#0088cc] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
+            {t('Відкрити канал', 'Open Channel')} →
+          </a>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="bg-[var(--bg-secondary)] rounded-xl p-5 border border-[var(--card-border)]">
+        <h3 className="text-[var(--text-primary)] font-medium mb-4">{t('Швидкі дії', 'Quick Actions')}</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <a href="https://business.instagram.com/" target="_blank" rel="noopener" className="flex items-center gap-3 p-3 bg-[var(--bg-primary)] rounded-lg hover:bg-[#E4405F]/10 transition-colors">
+            <span className="text-xl">📊</span>
+            <span className="text-sm text-[var(--text-primary)]">Instagram Insights</span>
+          </a>
+          <a href="https://www.tiktok.com/analytics" target="_blank" rel="noopener" className="flex items-center gap-3 p-3 bg-[var(--bg-primary)] rounded-lg hover:bg-[#000]/10 transition-colors">
+            <span className="text-xl">📈</span>
+            <span className="text-sm text-[var(--text-primary)]">TikTok Analytics</span>
+          </a>
+          <a href="https://t.me/boostertea_bot" target="_blank" rel="noopener" className="flex items-center gap-3 p-3 bg-[var(--bg-primary)] rounded-lg hover:bg-[#0088cc]/10 transition-colors">
+            <span className="text-xl">✏️</span>
+            <span className="text-sm text-[var(--text-primary)]">{t('Новий пост TG', 'New TG Post')}</span>
+          </a>
+          <button onClick={() => fetchStats()} className="flex items-center gap-3 p-3 bg-[var(--bg-primary)] rounded-lg hover:bg-[var(--accent)]/10 transition-colors">
+            <span className="text-xl">🔄</span>
+            <span className="text-sm text-[var(--text-primary)]">{t('Оновити дані', 'Refresh Data')}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// KeyCRM Component
+const KeyCRMDashboard = ({ language }: { language: 'uk' | 'en' }) => {
+  const [stats, setStats] = useState<any>(null);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isConfigured, setIsConfigured] = useState(true);
+  const [apiKey, setApiKey] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    checkConfiguration();
+  }, []);
+
+  const checkConfiguration = async () => {
+    try {
+      const response = await fetch('/api/keycrm/status');
+      const data = await response.json();
+      setIsConfigured(data.configured);
+      if (data.configured) fetchData();
+      else setLoading(false);
+    } catch {
+      setIsConfigured(false);
+      setLoading(false);
+    }
+  };
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [statsRes, ordersRes] = await Promise.all([
+        fetch('/api/keycrm/stats'),
+        fetch('/api/keycrm/orders?limit=20'),
+      ]);
+      if (statsRes.ok) setStats(await statsRes.json());
+      if (ordersRes.ok) {
+        const data = await ordersRes.json();
+        setOrders(data.data || []);
+      }
+    } catch {
+      setStats({
+        totalOrders: 156, totalRevenue: 287450, ordersToday: 8, revenueToday: 12890,
+        ordersByStatus: {
+          'Новий': { count: 12, color: '#3B82F6' },
+          'В обробці': { count: 8, color: '#F59E0B' },
+          'Відправлено': { count: 5, color: '#8B5CF6' },
+          'Виконано': { count: 125, color: '#10B981' },
+          'Скасовано': { count: 6, color: '#EF4444' },
+        },
+        topProducts: [
+          { name: 'Пуер 1L', quantity: 89, revenue: 86775 },
+          { name: 'ГАБА 1L', quantity: 67, revenue: 80400 },
+          { name: 'Да Хун Пао 1L', quantity: 54, revenue: 55080 },
+        ],
+      });
+      setOrders([
+        { id: 1234, source_uuid: 'BT-2025-034', status_name: 'Новий', status_color: '#3B82F6', grand_total: 2940, buyer_name: 'Олена Коваленко', buyer_phone: '+380671234567', created_at: '2025-03-01T14:30:00Z', products_count: 3, payment_status: 'not_paid' },
+        { id: 1233, source_uuid: 'BT-2025-033', status_name: 'В обробці', status_color: '#F59E0B', grand_total: 5850, buyer_name: 'Андрій Мельник', buyer_phone: '+380962345678', created_at: '2025-03-01T12:15:00Z', products_count: 6, payment_status: 'paid' },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveApiKey = async () => {
+    if (!apiKey.trim()) return;
+    setSaving(true);
+    try {
+      const response = await fetch('/api/keycrm/configure', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey }),
+      });
+      if (response.ok) { setIsConfigured(true); fetchData(); }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const t = (uk: string, en: string) => language === 'uk' ? uk : en;
+  const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  const filteredOrders = orders.filter(order => {
+    if (statusFilter !== 'all' && order.status_name !== statusFilter) return false;
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return order.source_uuid?.toLowerCase().includes(query) || order.buyer_name.toLowerCase().includes(query) || order.buyer_phone.includes(query);
+    }
+    return true;
+  });
+
+  // Config screen
+  if (!isConfigured) {
+    return (
+      <div className="bg-[var(--bg-secondary)] rounded-2xl p-8 border border-[var(--card-border)]">
+        <div className="max-w-lg mx-auto text-center">
+          <div className="w-20 h-20 mx-auto mb-6 bg-[var(--accent)]/20 rounded-2xl flex items-center justify-center"><span className="text-4xl">🔗</span></div>
+          <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2" style={{ fontFamily: 'var(--font-heading)' }}>{t('Підключення KeyCRM', 'Connect KeyCRM')}</h2>
+          <p className="text-[var(--text-muted)] mb-6">{t('Введіть API ключ для синхронізації замовлень', 'Enter API key to sync orders')}</p>
+          <div className="space-y-4 text-left">
+            <div>
+              <label className="block text-[var(--text-muted)] text-sm mb-2">API Key <a href="https://help.keycrm.app/uk/process-automation-api-and-more/where-to-get-an-api-key" target="_blank" rel="noopener" className="text-[var(--accent)] ml-2 text-xs hover:underline">{t('Де отримати?', 'Where to get?')}</a></label>
+              <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="Вставте ваш API ключ..." className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30 focus:border-[var(--accent)] focus:outline-none" />
+            </div>
+            <button onClick={saveApiKey} disabled={saving || !apiKey.trim()} className="w-full py-3 bg-[var(--accent)] text-[#0D0D0D] font-bold rounded-xl hover:bg-[var(--accent-hover)] transition-colors disabled:opacity-50">
+              {saving ? t('Збереження...', 'Saving...') : t('Підключити', 'Connect')}
+            </button>
+          </div>
+          <div className="mt-6 p-4 bg-blue-500/10 rounded-xl border border-blue-500/20 text-left">
+            <p className="text-blue-300 text-sm"><strong>💡</strong> {t('API ключ можна знайти в налаштуваннях KeyCRM → Інтеграції → API', 'API key can be found in KeyCRM settings → Integrations → API')}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) return <div className="flex justify-center py-12"><div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" /></div>;
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] rounded-xl flex items-center justify-center"><span className="text-2xl">📦</span></div>
+          <div>
+            <h2 className="text-xl font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-heading)' }}>KeyCRM</h2>
+            <p className="text-[var(--text-muted)] text-sm">{t('Синхронізація замовлень', 'Orders Synchronization')}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <a href="https://app.keycrm.app" target="_blank" rel="noopener" className="px-4 py-2 bg-[var(--bg-primary)] text-[var(--text-primary)] rounded-lg text-sm hover:bg-[var(--accent)]/10 transition-colors">{t('Відкрити KeyCRM', 'Open KeyCRM')} →</a>
+          <button onClick={fetchData} className="px-4 py-2 bg-[var(--accent)] text-[#0D0D0D] rounded-lg text-sm font-medium hover:bg-[var(--accent-hover)] transition-colors">🔄 {t('Оновити', 'Refresh')}</button>
+        </div>
+      </div>
+
+      {/* Stats */}
+      {stats && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-[var(--bg-secondary)] rounded-xl p-5 border border-[var(--card-border)]">
+            <p className="text-[var(--text-muted)] text-xs mb-1">{t('Замовлень сьогодні', 'Orders Today')}</p>
+            <p className="text-3xl font-bold text-[var(--accent)]" style={{ fontFamily: 'var(--font-heading)' }}>{stats.ordersToday}</p>
+          </div>
+          <div className="bg-[var(--bg-secondary)] rounded-xl p-5 border border-[var(--card-border)]">
+            <p className="text-[var(--text-muted)] text-xs mb-1">{t('Виручка сьогодні', 'Revenue Today')}</p>
+            <p className="text-3xl font-bold text-[#C9A962]" style={{ fontFamily: 'var(--font-heading)' }}>{stats.revenueToday.toLocaleString()}₴</p>
+          </div>
+          <div className="bg-[var(--bg-secondary)] rounded-xl p-5 border border-[var(--card-border)]">
+            <p className="text-[var(--text-muted)] text-xs mb-1">{t('Всього замовлень', 'Total Orders')}</p>
+            <p className="text-3xl font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-heading)' }}>{stats.totalOrders}</p>
+          </div>
+          <div className="bg-[var(--bg-secondary)] rounded-xl p-5 border border-[var(--card-border)]">
+            <p className="text-[var(--text-muted)] text-xs mb-1">{t('Загальна виручка', 'Total Revenue')}</p>
+            <p className="text-3xl font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-heading)' }}>{(stats.totalRevenue / 1000).toFixed(0)}K₴</p>
+          </div>
+        </div>
+      )}
+
+      {/* Status filter */}
+      {stats && (
+        <div className="bg-[var(--bg-secondary)] rounded-xl p-5 border border-[var(--card-border)]">
+          <h3 className="text-[var(--text-primary)] font-medium mb-4">{t('Замовлення по статусах', 'Orders by Status')}</h3>
+          <div className="flex flex-wrap gap-3">
+            {Object.entries(stats.ordersByStatus).map(([status, data]: [string, any]) => (
+              <button key={status} onClick={() => setStatusFilter(statusFilter === status ? 'all' : status)} className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${statusFilter === status ? 'ring-2 ring-[var(--accent)]' : ''}`} style={{ backgroundColor: `${data.color}20` }}>
+                <span className="w-3 h-3 rounded-full" style={{ backgroundColor: data.color }} />
+                <span className="text-[var(--text-primary)] text-sm">{status}</span>
+                <span className="text-[var(--text-muted)] text-sm font-medium">{data.count}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Orders table */}
+      <div className="bg-[var(--bg-secondary)] rounded-xl border border-[var(--card-border)] overflow-hidden">
+        <div className="p-4 border-b border-[var(--border)]">
+          <div className="flex items-center gap-4">
+            <div className="relative flex-1">
+              <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={t('Пошук за номером, ім\'ям, телефоном...', 'Search by order ID, name, phone...')} className="w-full pl-10 pr-4 py-2 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] placeholder-[#F5F0E8]/30 focus:border-[var(--accent)] focus:outline-none" />
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">🔍</span>
+            </div>
+            {statusFilter !== 'all' && <button onClick={() => setStatusFilter('all')} className="px-3 py-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)]">✕ {t('Скинути', 'Clear')}</button>}
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-[var(--border)]">
+                <th className="text-left p-4 text-[var(--text-muted)] text-sm font-medium">№</th>
+                <th className="text-left p-4 text-[var(--text-muted)] text-sm font-medium">{t('Клієнт', 'Customer')}</th>
+                <th className="text-left p-4 text-[var(--text-muted)] text-sm font-medium">{t('Статус', 'Status')}</th>
+                <th className="text-right p-4 text-[var(--text-muted)] text-sm font-medium">{t('Сума', 'Total')}</th>
+                <th className="text-left p-4 text-[var(--text-muted)] text-sm font-medium">{t('Дата', 'Date')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredOrders.map((order) => (
+                <tr key={order.id} className="border-b border-[var(--border)]/50 hover:bg-[var(--bg-primary)]/50">
+                  <td className="p-4"><span className="font-mono text-[var(--accent)]">{order.source_uuid || `#${order.id}`}</span></td>
+                  <td className="p-4"><p className="text-[var(--text-primary)] font-medium">{order.buyer_name}</p><p className="text-[var(--text-muted)] text-xs">{order.buyer_phone}</p></td>
+                  <td className="p-4"><span className="px-3 py-1 rounded-full text-xs font-medium" style={{ backgroundColor: `${order.status_color}20`, color: order.status_color }}>{order.status_name}</span></td>
+                  <td className="p-4 text-right"><p className="text-[var(--text-primary)] font-medium">{order.grand_total.toLocaleString()}₴</p></td>
+                  <td className="p-4 text-[var(--text-muted)] text-sm">{formatDate(order.created_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {filteredOrders.length === 0 && <div className="p-12 text-center text-[var(--text-muted)]"><span className="text-4xl block mb-3">📭</span><p>{t('Замовлень не знайдено', 'No orders found')}</p></div>}
+      </div>
+    </div>
+  );
+};
+const Admin = () => {
+  const [activeSection, setActiveSection] = useState('dashboard');
+  const seoConfig = useSEOConfig('admin');
+  const { t, language } = useTranslation();
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const [, setLocation] = useLocation();
+
+  // Admin protection - redirect if not admin
+  useEffect(() => {
+    if (!isLoading && (!isAuthenticated || !user?.isAdmin)) {
+      setLocation('/');
+    }
+  }, [isLoading, isAuthenticated, user, setLocation]);
+
+  // Show loading while checking auth
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[var(--accent)] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-[var(--text-muted)]">Завантаження...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If not admin, show nothing (redirect will happen)
+  if (!isAuthenticated || !user?.isAdmin) {
+    return null;
+  }
+
+  const menuItems = [
+    { id: 'dashboard', label: t('admin.menu.dashboard'), icon: '📊' },
+    { id: 'visitors', label: language === 'uk' ? 'Відвідувачі' : 'Visitors', icon: '👥' },
+    { id: 'social', label: language === 'uk' ? 'Соцмережі' : 'Social', icon: '📱' },
+    { id: 'keycrm', label: 'KeyCRM', icon: '🔗' },
+    { id: 'orders', label: t('admin.menu.orders'), icon: '📦', badge: 5 },
+    { id: 'customers', label: t('admin.menu.customers'), icon: '👥' },
+    { id: 'products', label: t('admin.menu.products'), icon: '🍵' },
+    { id: 'banners', label: language === 'uk' ? 'Банери' : 'Banners', icon: '🖼️' },
+    { id: 'blog', label: language === 'uk' ? 'Блог' : 'Blog', icon: '📝' },
+    { id: 'promo', label: t('admin.menu.promo'), icon: '🏷️' },
+    { id: 'discounts', label: t('admin.menu.discounts'), icon: '🎁' },
+    { id: 'bonuses', label: t('admin.menu.bonuses'), icon: '💰' },
+    { id: 'reports', label: language === 'uk' ? 'Звіти' : 'Reports', icon: '📈' },
+    { id: 'settings', label: t('admin.menu.settings'), icon: '⚙️' },
+  ];
+
+  return (
+    <div className="min-h-screen bg-[var(--bg-primary)] flex">
+      <SEO 
+        title={seoConfig.title}
+        description={seoConfig.description}
+        noIndex={true}
+      />
+      {/* Sidebar */}
+      <aside className="w-64 bg-[var(--bg-tertiary)] border-r border-[var(--border)] flex flex-col fixed h-screen">
+        {/* Logo */}
+        <div className="p-6 border-b border-[var(--border)]">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#9FD356] to-[#7FB030] flex items-center justify-center">
+              <span className="text-[#0D0D0D] font-bold text-lg" style={{ fontFamily: 'var(--font-heading)' }}>B</span>
+            </div>
+            <div>
+              <span className="text-[var(--text-primary)] font-semibold">BoosterTea</span>
+              <p className="text-[var(--text-primary)]/var(--text-subtle) text-xs">Admin Panel</p>
+            </div>
+          </Link>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 p-4 overflow-y-auto">
+          <ul className="space-y-1">
+            {menuItems.map(item => (
+              <li key={item.id}>
+                <button
+                  onClick={() => setActiveSection(item.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    activeSection === item.id
+                      ? 'bg-[var(--accent)]/20 text-[var(--accent)]'
+                      : 'text-[var(--text-primary)]/var(--text-muted) hover:bg-[#F5F0E8]/5 hover:text-[var(--text-primary)]'
+                  }`}
+                >
+                  <span className="text-lg">{item.icon}</span>
+                  <span className="flex-1 text-left text-sm font-medium">{item.label}</span>
+                  {item.badge && (
+                    <span className="w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+          
+          {/* Quick Links Section */}
+          <div className="mt-6 pt-6 border-t border-[var(--border)]">
+            <p className="text-[var(--text-muted)] text-xs uppercase tracking-wider mb-3 px-2">{t('admin.quickLinks.title')}</p>
+            <ul className="space-y-1">
+              <li>
+                <Link 
+                  href="/" 
+                  className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/5 transition-colors text-sm"
+                >
+                  <span>🏠</span>
+                  <span>{t('admin.quickLinks.viewSite')}</span>
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  href="/products" 
+                  className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/5 transition-colors text-sm"
+                >
+                  <span>🛒</span>
+                  <span>{t('admin.quickLinks.catalog')}</span>
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  href="/b2b" 
+                  className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/5 transition-colors text-sm"
+                >
+                  <span>🤝</span>
+                  <span>{t('admin.quickLinks.b2b')}</span>
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  href="/adaptation" 
+                  className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/5 transition-colors text-sm"
+                >
+                  <span>📚</span>
+                  <span>{t('admin.quickLinks.adaptation')}</span>
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  href="/certificates" 
+                  className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/5 transition-colors text-sm"
+                >
+                  <span>📜</span>
+                  <span>{t('admin.quickLinks.certificates')}</span>
+                </Link>
+              </li>
+              <li>
+                <a 
+                  href="https://t.me/boostertea_b2b_bot" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/5 transition-colors text-sm"
+                >
+                  <span>✈️</span>
+                  <span>{t('admin.quickLinks.telegram')}</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+
+        {/* User */}
+        <div className="p-4 border-t border-[var(--border)]">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-[#8B7355] rounded-full flex items-center justify-center">
+              <span className="text-[var(--text-primary)] font-medium">A</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[var(--text-primary)] text-sm font-medium truncate">Admin</p>
+              <p className="text-[var(--text-primary)]/var(--text-subtle) text-xs">admin@boostertea.com.ua</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main content */}
+      <main className="flex-1 ml-64 overflow-auto">
+        {/* Header */}
+        <header className="h-16 bg-[var(--bg-tertiary)]/var(--text-muted) border-b border-[var(--border)] flex items-center justify-between px-8 sticky top-0 z-10 backdrop-blur-sm">
+          <h1 className="text-[var(--text-primary)] text-lg font-medium" style={{ fontFamily: 'var(--font-heading)' }}>
+            {menuItems.find(m => m.id === activeSection)?.label}
+          </h1>
+          <div className="flex items-center gap-4">
+            <button className="relative p-2 text-[var(--text-primary)]/var(--text-muted) hover:text-[var(--text-primary)] transition-colors">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+            </button>
+          </div>
+        </header>
+
+        {/* Content */}
+        <div className="p-8">
+          {activeSection === 'dashboard' && <DashboardContent />}
+          {activeSection === 'visitors' && <VisitorsDashboard language={language as 'uk' | 'en'} />}
+          {activeSection === 'social' && <SocialMediaDashboard language={language as 'uk' | 'en'} />}
+          {activeSection === 'keycrm' && <KeyCRMDashboard language={language as 'uk' | 'en'} />}
+          {activeSection === 'orders' && <OrdersContent />}
+          {activeSection === 'customers' && <CustomersContent />}
+          {activeSection === 'products' && <ProductsContent />}
+          {activeSection === 'banners' && <BannersContent />}
+          {activeSection === 'blog' && <BlogContent />}
+          {activeSection === 'promo' && <PromoContent />}
+          {activeSection === 'discounts' && <DiscountsContent />}
+          {activeSection === 'bonuses' && <BonusesContent />}
+          {activeSection === 'reports' && <ReportsContent />}
+          {activeSection === 'settings' && <SettingsContent />}
+        </div>
+      </main>
+    </div>
+  );
+};
+
+const DashboardContent = () => {
+  const { t } = useTranslation();
+  
+  const stats = [
+    { label: t('admin.dashboard.ordersToday'), value: '12', change: '+23%', color: '#9FD356' },
+    { label: t('admin.dashboard.revenueToday'), value: '45,600₴', change: '+15%', color: '#C9A55C' },
+    { label: t('admin.dashboard.newCustomers'), value: '8', change: '+12%', color: '#8B7355' },
+    { label: t('admin.dashboard.avgCheck'), value: '3,800₴', change: '+5%', color: '#9FD356' },
+  ];
+
+  const days = [
+    t('admin.dashboard.days.mon'),
+    t('admin.dashboard.days.tue'),
+    t('admin.dashboard.days.wed'),
+    t('admin.dashboard.days.thu'),
+    t('admin.dashboard.days.fri'),
+    t('admin.dashboard.days.sat'),
+    t('admin.dashboard.days.sun'),
+  ];
+
+  return (
+    <div className="space-y-8">
+      {/* Stats */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat, index) => (
+          <div 
+            key={index}
+            className="bg-[var(--bg-secondary)] rounded-2xl p-6 border border-[var(--card-border)]"
+          >
+            <p className="text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">{stat.label}</p>
+            <p className="text-3xl font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-heading)' }}>
+              {stat.value}
+            </p>
+            <p className="text-sm mt-2" style={{ color: stat.color }}>
+              {stat.change} {t('admin.dashboard.vsYesterday')}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Charts placeholder */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 border border-[var(--card-border)]">
+          <h3 className="text-[var(--text-primary)] font-medium mb-4">{t('admin.dashboard.weekSales')}</h3>
+          <div className="h-64 flex items-end justify-between gap-2">
+            {days.map((day, i) => {
+              const heights = [120, 90, 140, 110, 180, 200, 150];
+              return (
+                <div key={day} className="flex-1 flex flex-col items-center gap-2">
+                  <div 
+                    className="w-full bg-gradient-to-t from-[#9FD356]/var(--text-subtle) to-[#9FD356]/80 rounded-t transition-all hover:from-[#9FD356]/var(--text-muted) hover:to-[#9FD356]"
+                    style={{ height: `${heights[i]}px` }}
+                  />
+                  <span className="text-[var(--text-primary)]/var(--text-subtle) text-xs">{day}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 border border-[var(--card-border)]">
+          <h3 className="text-[var(--text-primary)] font-medium mb-4">{t('admin.dashboard.popularProducts')}</h3>
+          <div className="space-y-4">
+            {[
+              { name: 'Пуер 1л', sales: 156, percent: 45 },
+              { name: 'Да Хун Пао 1л', sales: 98, percent: 30 },
+              { name: 'ГАБА 1л', sales: 82, percent: 25 },
+            ].map((product, i) => (
+              <div key={i}>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-[var(--text-primary)]">{product.name}</span>
+                  <span className="text-[var(--text-primary)]/var(--text-muted)">{product.sales} {t('common.pcs')}</span>
+                </div>
+                <div className="h-2 bg-[#F5F0E8]/10 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-[var(--accent)] rounded-full"
+                    style={{ width: `${product.percent}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Recent orders */}
+      <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 border border-[var(--card-border)]">
+        <h3 className="text-[var(--text-primary)] font-medium mb-4">{t('admin.dashboard.recentOrders')}</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="text-[var(--text-primary)]/var(--text-subtle) text-sm">
+                <th className="text-left pb-4">{t('admin.orders.id')}</th>
+                <th className="text-left pb-4">{t('admin.orders.customer')}</th>
+                <th className="text-left pb-4">{t('admin.orders.amount')}</th>
+                <th className="text-left pb-4">{t('admin.orders.status')}</th>
+                <th className="text-left pb-4">{t('admin.orders.date')}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#F5F0E8]/5">
+              {[
+                { id: 'BT-2025-015', customer: 'Олена К.', amount: '5,850₴', statusKey: 'pending', date: `2 ${t('admin.orders.minutesAgo')}` },
+                { id: 'BT-2025-014', customer: 'Андрій М.', amount: '12,240₴', statusKey: 'processing', date: `15 ${t('admin.orders.minutesAgo')}` },
+                { id: 'BT-2025-013', customer: 'Марія П.', amount: '3,900₴', statusKey: 'shipped', date: `1 ${t('admin.orders.hoursAgo')}` },
+              ].map((order, i) => (
+                <tr key={i} className="text-sm">
+                  <td className="py-4 text-[var(--accent)]">{order.id}</td>
+                  <td className="py-4 text-[var(--text-primary)]">{order.customer}</td>
+                  <td className="py-4 text-[var(--text-primary)]">{order.amount}</td>
+                  <td className="py-4">
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      order.statusKey === 'pending' ? 'bg-[var(--accent)]/20 text-[var(--accent)]' :
+                      order.statusKey === 'processing' ? 'bg-[#C9A55C]/20 text-[#C9A55C]' :
+                      'bg-blue-500/20 text-blue-400'
+                    }`}>
+                      {t(`admin.orderStatuses.${order.statusKey}`)}
+                    </span>
+                  </td>
+                  <td className="py-4 text-[var(--text-primary)]/var(--text-muted)">{order.date}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const OrdersContent = () => {
+  const { t } = useTranslation();
+  
+  return (
+    <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 border border-[var(--card-border)]">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-[var(--text-primary)] font-medium">{t('admin.orders.title')}</h3>
+        <div className="flex gap-2">
+          <select className="px-4 py-2 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm">
+            <option>{t('admin.orders.allStatuses')}</option>
+            <option>{t('admin.orders.new')}</option>
+            <option>{t('admin.orders.processing')}</option>
+            <option>{t('admin.orders.shipped')}</option>
+            <option>{t('admin.orders.delivered')}</option>
+          </select>
+          <input 
+            type="text" 
+            placeholder={t('admin.orders.searchPlaceholder')}
+            className="px-4 py-2 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)] text-sm placeholder-[#F5F0E8]/30"
+          />
+        </div>
+      </div>
+      <p className="text-[var(--text-primary)]/var(--text-muted) text-center py-12">{t('admin.orders.emptyMessage')}</p>
+    </div>
+  );
+};
+
+// ===============================================
+// CUSTOMERS CONTENT - Complete Customer Management
+// ===============================================
+const CustomersContent = () => {
+  const { t } = useTranslation();
+  const [customers, setCustomers] = useState<Customer[]>(mockCustomers);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [segmentFilter, setSegmentFilter] = useState<string>('all');
+  const [sortField, setSortField] = useState<keyof Customer>('lastOrderDate');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [showAddBonusModal, setShowAddBonusModal] = useState(false);
+  const [bonusAmount, setBonusAmount] = useState('');
+  const [bonusReason, setBonusReason] = useState('');
+
+  const filteredAndSortedCustomers = useMemo(() => {
+    return customers
+      .filter(c => {
+        const matchesSearch = 
+          c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          c.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          c.phone.includes(searchQuery);
+        const matchesSegment = segmentFilter === 'all' || c.segment === segmentFilter;
+        return matchesSearch && matchesSegment;
+      })
+      .sort((a, b) => {
+        const aVal = a[sortField];
+        const bVal = b[sortField];
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+        return sortDirection === 'asc' 
+          ? String(aVal).localeCompare(String(bVal))
+          : String(bVal).localeCompare(String(aVal));
+      });
+  }, [customers, searchQuery, segmentFilter, sortField, sortDirection]);
+
+  const handleSort = (field: keyof Customer) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
+  const getSegmentBadge = (segment: Customer['segment']) => {
+    const styles = {
+      vip: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+      new: 'bg-[var(--accent)]/20 text-[var(--accent)] border-[var(--border-accent)]',
+      inactive: 'bg-red-500/20 text-red-400 border-red-500/30',
+      regular: 'bg-[#F5F0E8]/10 text-[var(--text-primary)]/var(--text-muted) border-[#F5F0E8]/20',
+    };
+    return (
+      <span className={`px-2 py-0.5 rounded-full text-xs border ${styles[segment]}`}>
+        {t(`admin.customers.segments.${segment}`)}
+      </span>
+    );
+  };
+
+  const exportToCSV = () => {
+    const headers = [
+      t('admin.customers.columns.id'),
+      t('common.name'),
+      'Email',
+      t('contacts.phone'),
+      t('admin.customers.columns.orders'),
+      t('admin.customers.columns.spent'),
+      t('admin.customers.columns.bonus'),
+      t('admin.customers.columns.registration'),
+      t('admin.customers.columns.lastOrder'),
+      t('admin.customers.columns.segment'),
+    ];
+    const rows = filteredAndSortedCustomers.map(c => [
+      c.id,
+      c.name,
+      c.email,
+      c.phone,
+      c.totalOrders,
+      c.totalSpent,
+      c.bonusPoints,
+      c.registrationDate,
+      c.lastOrderDate,
+      c.segment,
+    ]);
+    
+    const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `boostertea_customers_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleAddBonus = () => {
+    if (!selectedCustomer || !bonusAmount || !bonusReason) return;
+    
+    const amount = parseInt(bonusAmount);
+    setCustomers(prev => prev.map(c => {
+      if (c.id === selectedCustomer.id) {
+        return {
+          ...c,
+          bonusPoints: c.bonusPoints + amount,
+          bonusTransactions: [
+            {
+              id: `BT${Date.now()}`,
+              date: new Date().toISOString().split('T')[0],
+              amount,
+              type: 'manual' as const,
+              reason: bonusReason,
+            },
+            ...c.bonusTransactions,
+          ],
+        };
+      }
+      return c;
+    }));
+    
+    setSelectedCustomer(prev => prev ? {
+      ...prev,
+      bonusPoints: prev.bonusPoints + amount,
+      bonusTransactions: [
+        {
+          id: `BT${Date.now()}`,
+          date: new Date().toISOString().split('T')[0],
+          amount,
+          type: 'manual' as const,
+          reason: bonusReason,
+        },
+        ...prev.bonusTransactions,
+      ],
+    } : null);
+    
+    setShowAddBonusModal(false);
+    setBonusAmount('');
+    setBonusReason('');
+  };
+
+  const SortIcon = ({ field }: { field: keyof Customer }) => {
+    if (sortField !== field) return <span className="text-[var(--text-primary)]/20 ml-1">↕</span>;
+    return <span className="text-[var(--accent)] ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>;
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header with search, filter, export */}
+      <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 border border-[var(--card-border)]">
+        <div className="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center mb-6">
+          <h3 className="text-[var(--text-primary)] font-medium text-lg">База клієнтів</h3>
+          <div className="flex flex-wrap gap-3">
+            <input 
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Пошук за ім'ям, email, телефоном..."
+              className="px-4 py-2 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] text-sm placeholder-[#F5F0E8]/30 w-64"
+            />
+            <select
+              value={segmentFilter}
+              onChange={(e) => setSegmentFilter(e.target.value)}
+              className="px-4 py-2 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] text-sm"
+            >
+              <option value="all">Всі сегменти</option>
+              <option value="vip">VIP</option>
+              <option value="new">Нові</option>
+              <option value="regular">Звичайні</option>
+              <option value="inactive">Неактивні</option>
+            </select>
+            <button
+              onClick={exportToCSV}
+              className="px-4 py-2 bg-[#8B7355] text-[var(--text-primary)] rounded-xl text-sm font-medium hover:bg-[#9F8465] transition-colors flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Експорт CSV
+            </button>
+          </div>
+        </div>
+
+        {/* Customer count */}
+        <p className="text-[var(--text-primary)]/var(--text-muted) text-sm mb-4">
+          Знайдено: {filteredAndSortedCustomers.length} клієнтів
+        </p>
+
+        {/* Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="text-[var(--text-primary)]/var(--text-muted) text-sm border-b border-[var(--border)]">
+                <th className="text-left pb-4 cursor-pointer hover:text-[var(--text-primary)]" onClick={() => handleSort('id')}>
+                  ID <SortIcon field="id" />
+                </th>
+                <th className="text-left pb-4 cursor-pointer hover:text-[var(--text-primary)]" onClick={() => handleSort('name')}>
+                  Клієнт <SortIcon field="name" />
+                </th>
+                <th className="text-left pb-4 cursor-pointer hover:text-[var(--text-primary)]" onClick={() => handleSort('totalOrders')}>
+                  Замовлень <SortIcon field="totalOrders" />
+                </th>
+                <th className="text-left pb-4 cursor-pointer hover:text-[var(--text-primary)]" onClick={() => handleSort('totalSpent')}>
+                  Витрачено <SortIcon field="totalSpent" />
+                </th>
+                <th className="text-left pb-4 cursor-pointer hover:text-[var(--text-primary)]" onClick={() => handleSort('bonusPoints')}>
+                  Бонуси <SortIcon field="bonusPoints" />
+                </th>
+                <th className="text-left pb-4 cursor-pointer hover:text-[var(--text-primary)]" onClick={() => handleSort('registrationDate')}>
+                  Реєстрація <SortIcon field="registrationDate" />
+                </th>
+                <th className="text-left pb-4 cursor-pointer hover:text-[var(--text-primary)]" onClick={() => handleSort('lastOrderDate')}>
+                  Останнє замовлення <SortIcon field="lastOrderDate" />
+                </th>
+                <th className="text-left pb-4">Сегмент</th>
+                <th className="text-left pb-4">Дії</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#F5F0E8]/5">
+              {filteredAndSortedCustomers.map((customer) => (
+                <tr key={customer.id} className="text-sm hover:bg-[#F5F0E8]/5 transition-colors">
+                  <td className="py-4 text-[var(--accent)] font-mono">{customer.id}</td>
+                  <td className="py-4">
+                    <div>
+                      <p className="text-[var(--text-primary)] font-medium">{customer.name}</p>
+                      <p className="text-[var(--text-primary)]/var(--text-muted) text-xs">{customer.email}</p>
+                      <p className="text-[var(--text-primary)]/var(--text-subtle) text-xs">{customer.phone}</p>
+                    </div>
+                  </td>
+                  <td className="py-4 text-[var(--text-primary)]">{customer.totalOrders}</td>
+                  <td className="py-4 text-[var(--text-primary)]">{customer.totalSpent.toLocaleString()}₴</td>
+                  <td className="py-4 text-[var(--accent)] font-medium">{customer.bonusPoints.toLocaleString()}</td>
+                  <td className="py-4 text-[var(--text-primary)]/var(--text-muted)">{customer.registrationDate}</td>
+                  <td className="py-4 text-[var(--text-primary)]/var(--text-muted)">{customer.lastOrderDate}</td>
+                  <td className="py-4">{getSegmentBadge(customer.segment)}</td>
+                  <td className="py-4">
+                    <button
+                      onClick={() => setSelectedCustomer(customer)}
+                      className="px-3 py-1.5 bg-[#F5F0E8]/10 text-[var(--text-primary)] rounded-lg text-xs hover:bg-[#F5F0E8]/20 transition-colors"
+                    >
+                      Детальніше
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Customer Detail Modal */}
+      {selectedCustomer && (
+        <div className="fixed inset-0 bg-black/var(--text-secondary) backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSelectedCustomer(null)}>
+          <div 
+            className="bg-[var(--bg-secondary)] rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-[var(--border)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-6 border-b border-[var(--border)] flex justify-between items-start sticky top-0 bg-[var(--bg-secondary)] z-10">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#9FD356] to-[#7FB030] flex items-center justify-center">
+                  <span className="text-[#0D0D0D] text-2xl font-bold">{selectedCustomer.name.charAt(0)}</span>
+                </div>
+                <div>
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-[var(--text-primary)] text-xl font-semibold" style={{ fontFamily: 'var(--font-heading)' }}>
+                      {selectedCustomer.name}
+                    </h2>
+                    {getSegmentBadge(selectedCustomer.segment)}
+                  </div>
+                  <p className="text-[var(--text-primary)]/var(--text-muted) text-sm">{selectedCustomer.email}</p>
+                  <p className="text-[var(--text-primary)]/var(--text-muted) text-sm">{selectedCustomer.phone}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectedCustomer(null)}
+                className="text-[var(--text-primary)]/var(--text-muted) hover:text-[var(--text-primary)] transition-colors text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6">
+              {/* Stats Row */}
+              <div className="grid grid-cols-4 gap-4">
+                <div className="bg-[var(--bg-primary)] rounded-xl p-4">
+                  <p className="text-[var(--text-primary)]/var(--text-muted) text-xs mb-1">Замовлень</p>
+                  <p className="text-[var(--text-primary)] text-2xl font-bold">{selectedCustomer.totalOrders}</p>
+                </div>
+                <div className="bg-[var(--bg-primary)] rounded-xl p-4">
+                  <p className="text-[var(--text-primary)]/var(--text-muted) text-xs mb-1">Витрачено</p>
+                  <p className="text-[var(--text-primary)] text-2xl font-bold">{selectedCustomer.totalSpent.toLocaleString()}₴</p>
+                </div>
+                <div className="bg-[var(--bg-primary)] rounded-xl p-4">
+                  <p className="text-[var(--text-primary)]/var(--text-muted) text-xs mb-1">Бонусів</p>
+                  <p className="text-[var(--accent)] text-2xl font-bold">{selectedCustomer.bonusPoints.toLocaleString()}</p>
+                </div>
+                <div className="bg-[var(--bg-primary)] rounded-xl p-4">
+                  <p className="text-[var(--text-primary)]/var(--text-muted) text-xs mb-1">Середній чек</p>
+                  <p className="text-[var(--text-primary)] text-2xl font-bold">
+                    {Math.round(selectedCustomer.totalSpent / selectedCustomer.totalOrders).toLocaleString()}₴
+                  </p>
+                </div>
+              </div>
+
+              {/* Notes */}
+              {selectedCustomer.notes && (
+                <div className="bg-[#8B7355]/20 border border-[#8B7355]/30 rounded-xl p-4">
+                  <p className="text-[var(--secondary)] text-sm font-medium mb-1">📝 Нотатки</p>
+                  <p className="text-[var(--text-primary)]/80">{selectedCustomer.notes}</p>
+                </div>
+              )}
+
+              {/* Orders */}
+              <div>
+                <h3 className="text-[var(--text-primary)] font-medium mb-3">Історія замовлень</h3>
+                <div className="space-y-2">
+                  {selectedCustomer.orders.map((order) => (
+                    <div key={order.id} className="bg-[var(--bg-primary)] rounded-xl p-4 flex justify-between items-center">
+                      <div>
+                        <p className="text-[var(--accent)] font-mono text-sm">{order.id}</p>
+                        <p className="text-[var(--text-primary)]/var(--text-muted) text-xs">{order.date}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[var(--text-primary)] font-medium">{order.amount.toLocaleString()}₴</p>
+                        <span className={`px-2 py-0.5 rounded-full text-xs ${
+                          order.status === 'pending' ? 'bg-[var(--accent)]/20 text-[var(--accent)]' :
+                          order.status === 'processing' ? 'bg-amber-500/20 text-amber-400' :
+                          order.status === 'shipped' ? 'bg-blue-500/20 text-blue-400' :
+                          'bg-[#F5F0E8]/10 text-[var(--text-primary)]/var(--text-muted)'
+                        }`}>
+                          {order.status === 'pending' && 'Новий'}
+                          {order.status === 'processing' && 'В обробці'}
+                          {order.status === 'shipped' && 'Відправлено'}
+                          {order.status === 'delivered' && 'Доставлено'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Bonus Transactions */}
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-[var(--text-primary)] font-medium">Бонусні транзакції</h3>
+                  <button
+                    onClick={() => setShowAddBonusModal(true)}
+                    className="px-3 py-1.5 bg-[var(--accent)] text-[#0D0D0D] rounded-lg text-sm font-medium hover:bg-[var(--accent-hover)] transition-colors"
+                  >
+                    + Нарахувати бонуси
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {selectedCustomer.bonusTransactions.map((tx) => (
+                    <div key={tx.id} className="bg-[var(--bg-primary)] rounded-xl p-4 flex justify-between items-center">
+                      <div>
+                        <p className="text-[var(--text-primary)]/80 text-sm">{tx.reason}</p>
+                        <p className="text-[var(--text-primary)]/var(--text-subtle) text-xs">{tx.date}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-bold ${tx.amount > 0 ? 'text-[var(--accent)]' : 'text-red-400'}`}>
+                          {tx.amount > 0 ? '+' : ''}{tx.amount}
+                        </p>
+                        <span className={`px-2 py-0.5 rounded-full text-xs ${
+                          tx.type === 'earned' ? 'bg-[var(--accent)]/20 text-[var(--accent)]' :
+                          tx.type === 'spent' ? 'bg-red-500/20 text-red-400' :
+                          tx.type === 'manual' ? 'bg-purple-500/20 text-purple-400' :
+                          tx.type === 'signup' ? 'bg-blue-500/20 text-blue-400' :
+                          tx.type === 'referral' ? 'bg-amber-500/20 text-amber-400' :
+                          'bg-pink-500/20 text-pink-400'
+                        }`}>
+                          {tx.type === 'earned' && 'Нараховано'}
+                          {tx.type === 'spent' && 'Витрачено'}
+                          {tx.type === 'manual' && 'Ручне'}
+                          {tx.type === 'signup' && 'Реєстрація'}
+                          {tx.type === 'referral' && 'Реферал'}
+                          {tx.type === 'birthday' && 'День народження'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Bonus Modal */}
+      {showAddBonusModal && selectedCustomer && (
+        <div className="fixed inset-0 bg-black/var(--text-secondary) backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowAddBonusModal(false)}>
+          <div 
+            className="bg-[var(--bg-secondary)] rounded-2xl max-w-md w-full border border-[var(--border)] p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-[var(--text-primary)] text-lg font-medium mb-4">Нарахувати бонуси</h3>
+            <p className="text-[var(--text-primary)]/var(--text-muted) text-sm mb-6">Клієнт: {selectedCustomer.name}</p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">Кількість бонусів</label>
+                <input
+                  type="number"
+                  value={bonusAmount}
+                  onChange={(e) => setBonusAmount(e.target.value)}
+                  placeholder="Введіть кількість (можна від'ємне)"
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30"
+                />
+              </div>
+              <div>
+                <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">Причина</label>
+                <input
+                  type="text"
+                  value={bonusReason}
+                  onChange={(e) => setBonusReason(e.target.value)}
+                  placeholder="Наприклад: Компенсація за затримку"
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowAddBonusModal(false)}
+                className="flex-1 px-4 py-3 bg-[#F5F0E8]/10 text-[var(--text-primary)] rounded-xl font-medium hover:bg-[#F5F0E8]/20 transition-colors"
+              >
+                Скасувати
+              </button>
+              <button
+                onClick={handleAddBonus}
+                disabled={!bonusAmount || !bonusReason}
+                className="flex-1 px-4 py-3 bg-[var(--accent)] text-[#0D0D0D] rounded-xl font-medium hover:bg-[var(--accent-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Нарахувати
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ===============================================
+// PRODUCTS CONTENT - Full CMS for Product Management
+// ===============================================
+
+interface AdminProduct {
+  id: string;
+  slug: string;
+  nameUk: string;
+  nameEn: string;
+  nameEs: string;
+  descriptionUk: string;
+  descriptionEn: string;
+  descriptionEs: string;
+  category: 'concentrate' | 'accessory' | 'dry_tea';
+  subcategory?: string;
+  // Prices per volume
+  price1l: number;
+  price05l: number;
+  price025l: number;
+  // Wholesale prices (10+ boxes)
+  wholesalePrice1l?: number;
+  wholesalePrice05l?: number;
+  wholesalePrice025l?: number;
+  // Separate images per volume
+  image1l: string;
+  image05l: string;
+  image025l: string;
+  // Volume availability
+  is1lActive: boolean;
+  is05lActive: boolean;
+  is025lActive: boolean;
+  // Stock per volume
+  stock1l: number;
+  stock05l: number;
+  stock025l: number;
+  // Box quantities
+  boxQty1l: number;    // Default 6
+  boxQty05l: number;   // Default 12
+  boxQty025l: number;  // Default 12
+  effectsUk: string;
+  effectsEn: string;
+  effectsEs: string;
+  brewingTime?: number;
+  temperature?: number;
+  origin?: string;
+  // SKU and logistics fields
+  sku?: string;
+  weightGrams?: number;
+  dimensions?: string;
+  barcode?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+const mockAdminProducts: AdminProduct[] = [
+  {
+    id: '1',
+    slug: 'pu-erh',
+    nameUk: 'Пуер',
+    nameEn: 'PU-ERH',
+    nameEs: 'PU-ERH',
+    descriptionUk: 'Преміальний витриманий чайний концентрат з глибокими земляними нотами та природним енергетичним зарядом.',
+    descriptionEn: 'Premium aged tea concentrate with deep earthy notes and natural energy boost.',
+    descriptionEs: 'Concentrado de té premium añejo con profundas notas terrosas y energía natural.',
+    category: 'concentrate',
+    price1l: 975,
+    price05l: 550,
+    price025l: 170,
+    wholesalePrice1l: 880,
+    wholesalePrice05l: 495,
+    wholesalePrice025l: 153,
+    image1l: './puerh-tea-concentrate-premium.png',
+    image05l: '',
+    image025l: '',
+    is1lActive: true,
+    is05lActive: false,
+    is025lActive: true,
+    stock1l: 120,
+    stock05l: 0,
+    stock025l: 240,
+    boxQty1l: 6,
+    boxQty05l: 12,
+    boxQty025l: 12,
+    effectsUk: 'Заряд енергії, Покращення концентрації, Підтримка метаболізму',
+    effectsEn: 'Energy boost, Focus enhancement, Metabolism support',
+    effectsEs: 'Impulso de energía, Mejora del enfoque, Apoyo metabólico',
+    brewingTime: 15,
+    temperature: 90,
+    origin: 'Юньнань, Китай',
+    sku: 'BT-PU-1L-001',
+    weightGrams: 1150,
+    dimensions: '8x8x25cm',
+    barcode: '4820012345678',
+    isActive: true,
+    createdAt: '2024-01-15'
+  },
+  {
+    id: '2',
+    slug: 'da-hong-pao',
+    nameUk: 'Да Хун Пао',
+    nameEn: 'DA HONG PAO',
+    nameEs: 'DA HONG PAO',
+    descriptionUk: 'Легендарний улун "Великий Червоний Халат" з насиченим смаком обсмаження та зігріваючими властивостями.',
+    descriptionEn: 'The legendary "Big Red Robe" oolong tea concentrate with rich roasted flavor.',
+    descriptionEs: 'El legendario concentrado de té oolong "Gran Robe Rojo" con rico sabor tostado.',
+    category: 'concentrate',
+    price1l: 1020,
+    price05l: 580,
+    price025l: 178,
+    wholesalePrice1l: 920,
+    wholesalePrice05l: 520,
+    wholesalePrice025l: 160,
+    image1l: './dahongpao-tea-concentrate-premium.png',
+    image05l: '',
+    image025l: '',
+    is1lActive: true,
+    is05lActive: false,
+    is025lActive: true,
+    stock1l: 85,
+    stock05l: 0,
+    stock025l: 180,
+    boxQty1l: 6,
+    boxQty05l: 12,
+    boxQty025l: 12,
+    effectsUk: 'Зігріваючий ефект, Зняття стресу, Комфорт травлення',
+    effectsEn: 'Warming sensation, Stress relief, Digestive comfort',
+    effectsEs: 'Sensación de calor, Alivio del estrés, Comodidad digestiva',
+    brewingTime: 15,
+    temperature: 95,
+    origin: 'Уішань, Китай',
+    sku: 'BT-DHP-1L-001',
+    weightGrams: 1150,
+    dimensions: '8x8x25cm',
+    barcode: '4820012345679',
+    isActive: true,
+    createdAt: '2024-01-15'
+  },
+  {
+    id: '3',
+    slug: 'gaba',
+    nameUk: 'ГАБА',
+    nameEn: 'GABA',
+    nameEs: 'GABA',
+    descriptionUk: 'Унікальний чайний концентрат збагачений ГАМК для розслаблення без сонливості.',
+    descriptionEn: 'Unique GABA-enriched tea concentrate for relaxation without drowsiness.',
+    descriptionEs: 'Concentrado de té único enriquecido con GABA para relajación sin somnolencia.',
+    category: 'concentrate',
+    price1l: 1200,
+    price05l: 680,
+    price025l: 210,
+    wholesalePrice1l: 1080,
+    wholesalePrice05l: 610,
+    wholesalePrice025l: 189,
+    image1l: './gaba-tea-concentrate-premium.png',
+    image05l: '',
+    image025l: '',
+    is1lActive: true,
+    is05lActive: false,
+    is025lActive: true,
+    stock1l: 65,
+    stock05l: 0,
+    stock025l: 150,
+    boxQty1l: 6,
+    boxQty05l: 12,
+    boxQty025l: 12,
+    effectsUk: 'Глибоке розслаблення, Кращий сон, Зниження тривожності',
+    effectsEn: 'Deep relaxation, Better sleep, Anxiety reduction',
+    effectsEs: 'Relajación profunda, Mejor sueño, Reducción de la ansiedad',
+    brewingTime: 15,
+    temperature: 85,
+    origin: 'Тайвань',
+    sku: 'BT-GB-1L-001',
+    weightGrams: 1150,
+    dimensions: '8x8x25cm',
+    barcode: '4820012345680',
+    isActive: true,
+    createdAt: '2024-01-15'
+  },
+  {
+    id: 'acc-1',
+    slug: 'thermos-boostertea-500',
+    nameUk: 'Термос BoosterTea 500ml',
+    nameEn: 'BoosterTea Thermos 500ml',
+    nameEs: 'Termo BoosterTea 500ml',
+    descriptionUk: 'Преміальний термос з подвійними стінками та вакуумною ізоляцією.',
+    descriptionEn: 'Premium double-walled vacuum insulated thermos.',
+    descriptionEs: 'Termo premium de doble pared con aislamiento al vacío.',
+    category: 'accessory',
+    subcategory: 'thermos',
+    price1l: 899,
+    price05l: 0,
+    price025l: 0,
+    image1l: '',
+    image05l: '',
+    image025l: '',
+    is1lActive: true,
+    is05lActive: false,
+    is025lActive: false,
+    stock1l: 50,
+    stock05l: 0,
+    stock025l: 0,
+    boxQty1l: 1,
+    boxQty05l: 1,
+    boxQty025l: 1,
+    effectsUk: '',
+    effectsEn: '',
+    effectsEs: '',
+    sku: 'BT-ACC-TH-500',
+    weightGrams: 350,
+    dimensions: '7x7x25cm',
+    barcode: '4820012345681',
+    isActive: true,
+    createdAt: '2024-06-01'
+  },
+  {
+    id: 'acc-2',
+    slug: 'thermal-mug-travel',
+    nameUk: 'Термокружка Travel',
+    nameEn: 'Travel Thermal Mug',
+    nameEs: 'Taza Térmica de Viaje',
+    descriptionUk: 'Стильна термокружка для автомобіля та офісу.',
+    descriptionEn: 'Stylish thermal mug for car and office.',
+    descriptionEs: 'Elegante taza térmica para coche y oficina.',
+    category: 'accessory',
+    subcategory: 'mug',
+    price1l: 549,
+    price05l: 0,
+    price025l: 0,
+    image1l: '',
+    image05l: '',
+    image025l: '',
+    is1lActive: true,
+    is05lActive: false,
+    is025lActive: false,
+    stock1l: 80,
+    stock05l: 0,
+    stock025l: 0,
+    boxQty1l: 1,
+    boxQty05l: 1,
+    boxQty025l: 1,
+    effectsUk: '',
+    effectsEn: '',
+    effectsEs: '',
+    sku: 'BT-ACC-MG-350',
+    weightGrams: 280,
+    dimensions: '8x8x18cm',
+    barcode: '4820012345682',
+    isActive: true,
+    createdAt: '2024-06-01'
+  },
+  {
+    id: 'acc-5',
+    slug: 'dry-puerh-100',
+    nameUk: 'Сухий чай Пуер 100г',
+    nameEn: 'Dry Pu-erh Tea 100g',
+    nameEs: 'Té Pu-erh Seco 100g',
+    descriptionUk: 'Справжній витриманий пуер з провінції Юньнань.',
+    descriptionEn: 'Authentic aged pu-erh from Yunnan province.',
+    descriptionEs: 'Auténtico pu-erh añejo de la provincia de Yunnan.',
+    category: 'dry_tea',
+    price1l: 450,
+    price05l: 0,
+    price025l: 0,
+    image1l: '',
+    image05l: '',
+    image025l: '',
+    is1lActive: true,
+    is05lActive: false,
+    is025lActive: false,
+    stock1l: 30,
+    stock05l: 0,
+    stock025l: 0,
+    boxQty1l: 1,
+    boxQty05l: 1,
+    boxQty025l: 1,
+    effectsUk: '',
+    effectsEn: '',
+    effectsEs: '',
+    sku: 'BT-DRY-PU-100',
+    weightGrams: 120,
+    dimensions: '10x5x15cm',
+    barcode: '4820012345683',
+    isActive: true,
+    createdAt: '2024-06-01'
+  }
+];
+
+const ProductsContent = () => {
+  const [products, setProducts] = useState<AdminProduct[]>(mockAdminProducts);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<AdminProduct | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'uk' | 'en' | 'es'>('uk');
+  
+  const [newProduct, setNewProduct] = useState<Partial<AdminProduct>>({
+    slug: '',
+    nameUk: '',
+    nameEn: '',
+    nameEs: '',
+    descriptionUk: '',
+    descriptionEn: '',
+    descriptionEs: '',
+    category: 'concentrate',
+    subcategory: '',
+    price1l: 0,
+    price05l: 0,
+    price025l: 0,
+    wholesalePrice1l: 0,
+    wholesalePrice05l: 0,
+    wholesalePrice025l: 0,
+    image1l: '',
+    image05l: '',
+    image025l: '',
+    is1lActive: true,
+    is05lActive: false,
+    is025lActive: true,
+    stock1l: 0,
+    stock05l: 0,
+    stock025l: 0,
+    boxQty1l: 6,
+    boxQty05l: 12,
+    boxQty025l: 12,
+    effectsUk: '',
+    effectsEn: '',
+    effectsEs: '',
+    brewingTime: 15,
+    temperature: 90,
+    origin: '',
+    isActive: true
+  });
+
+  const filteredProducts = products.filter(p => {
+    const matchesSearch = 
+      p.nameUk.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.nameEn.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.slug.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = categoryFilter === 'all' || p.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
+
+  const getCategoryLabel = (cat: string) => {
+    switch (cat) {
+      case 'concentrate': return 'Концентрат';
+      case 'accessory': return 'Аксесуар';
+      case 'dry_tea': return 'Сухий чай';
+      default: return cat;
+    }
+  };
+
+  const getCategoryColor = (cat: string) => {
+    switch (cat) {
+      case 'concentrate': return 'bg-[var(--accent)]/20 text-[var(--accent)]';
+      case 'accessory': return 'bg-[#8B7355]/20 text-[var(--secondary)]';
+      case 'dry_tea': return 'bg-amber-500/20 text-amber-400';
+      default: return 'bg-[#F5F0E8]/10 text-[var(--text-primary)]/var(--text-muted)';
+    }
+  };
+
+  const handleCreateProduct = () => {
+    if (!newProduct.slug || !newProduct.nameUk || !newProduct.price1l) return;
+    
+    const product: AdminProduct = {
+      id: `prod-${Date.now()}`,
+      slug: newProduct.slug!,
+      nameUk: newProduct.nameUk!,
+      nameEn: newProduct.nameEn || newProduct.nameUk!,
+      nameEs: newProduct.nameEs || newProduct.nameUk!,
+      descriptionUk: newProduct.descriptionUk || '',
+      descriptionEn: newProduct.descriptionEn || '',
+      descriptionEs: newProduct.descriptionEs || '',
+      category: newProduct.category || 'concentrate',
+      subcategory: newProduct.subcategory,
+      price1l: newProduct.price1l!,
+      price05l: newProduct.price05l || 0,
+      price025l: newProduct.price025l || 0,
+      wholesalePrice1l: newProduct.wholesalePrice1l || 0,
+      wholesalePrice05l: newProduct.wholesalePrice05l || 0,
+      wholesalePrice025l: newProduct.wholesalePrice025l || 0,
+      image1l: newProduct.image1l || '',
+      image05l: newProduct.image05l || '',
+      image025l: newProduct.image025l || '',
+      is1lActive: newProduct.is1lActive ?? true,
+      is05lActive: newProduct.is05lActive ?? false,
+      is025lActive: newProduct.is025lActive ?? true,
+      stock1l: newProduct.stock1l || 0,
+      stock05l: newProduct.stock05l || 0,
+      stock025l: newProduct.stock025l || 0,
+      boxQty1l: newProduct.boxQty1l ?? 6,
+      boxQty05l: newProduct.boxQty05l ?? 12,
+      boxQty025l: newProduct.boxQty025l ?? 12,
+      effectsUk: newProduct.effectsUk || '',
+      effectsEn: newProduct.effectsEn || '',
+      effectsEs: newProduct.effectsEs || '',
+      brewingTime: newProduct.brewingTime,
+      temperature: newProduct.temperature,
+      origin: newProduct.origin,
+      isActive: newProduct.isActive ?? true,
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+    
+    setProducts(prev => [product, ...prev]);
+    setShowCreateModal(false);
+    setNewProduct({
+      slug: '', nameUk: '', nameEn: '', nameEs: '', descriptionUk: '', descriptionEn: '', descriptionEs: '',
+      category: 'concentrate', subcategory: '', 
+      price1l: 0, price05l: 0, price025l: 0,
+      wholesalePrice1l: 0, wholesalePrice05l: 0, wholesalePrice025l: 0,
+      image1l: '', image05l: '', image025l: '',
+      is1lActive: true, is05lActive: false, is025lActive: true,
+      stock1l: 0, stock05l: 0, stock025l: 0,
+      boxQty1l: 6, boxQty05l: 12, boxQty025l: 12,
+      effectsUk: '', effectsEn: '', effectsEs: '', brewingTime: 15, temperature: 90, origin: '', isActive: true
+    });
+  };
+
+  const handleUpdateProduct = () => {
+    if (!editingProduct) return;
+    
+    setProducts(prev => prev.map(p => p.id === editingProduct.id ? editingProduct : p));
+    setEditingProduct(null);
+  };
+
+  const handleDeleteProduct = (id: string) => {
+    setProducts(prev => prev.filter(p => p.id !== id));
+    setDeleteConfirm(null);
+  };
+
+  const toggleProductStatus = (id: string) => {
+    setProducts(prev => prev.map(p => p.id === id ? { ...p, isActive: !p.isActive } : p));
+  };
+
+  const ProductFormFields = ({ product, setProduct, isNew = false }: { 
+    product: Partial<AdminProduct>, 
+    setProduct: (p: Partial<AdminProduct>) => void,
+    isNew?: boolean 
+  }) => (
+    <div className="space-y-6">
+      {/* Language Tabs */}
+      <div className="flex gap-2 border-b border-[var(--border)] pb-3">
+        {(['uk', 'en', 'es'] as const).map(lang => (
+          <button
+            key={lang}
+            onClick={() => setActiveTab(lang)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === lang 
+                ? 'bg-[var(--accent)] text-[#0D0D0D]' 
+                : 'text-[var(--text-primary)]/var(--text-muted) hover:text-[var(--text-primary)]'
+            }`}
+          >
+            {lang === 'uk' ? '🇺🇦 UK' : lang === 'en' ? '🇬🇧 EN' : '🇪🇸 ES'}
+          </button>
+        ))}
+      </div>
+
+      {/* Basic Info */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">Slug (URL)</label>
+          <input
+            type="text"
+            value={product.slug || ''}
+            onChange={(e) => setProduct({ ...product, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
+            placeholder="pu-erh"
+            className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30"
+          />
+        </div>
+        <div>
+          <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">Категорія</label>
+          <select
+            value={product.category || 'concentrate'}
+            onChange={(e) => setProduct({ ...product, category: e.target.value as AdminProduct['category'] })}
+            className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+          >
+            <option value="concentrate">Концентрат</option>
+            <option value="accessory">Аксесуар</option>
+            <option value="dry_tea">Сухий чай</option>
+          </select>
+        </div>
+      </div>
+
+      {product.category === 'accessory' && (
+        <div>
+          <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">Підкатегорія</label>
+          <select
+            value={product.subcategory || ''}
+            onChange={(e) => setProduct({ ...product, subcategory: e.target.value })}
+            className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+          >
+            <option value="">Оберіть підкатегорію</option>
+            <option value="thermos">Термос</option>
+            <option value="mug">Кружка</option>
+            <option value="cup">Чашка</option>
+            <option value="piala">Піала</option>
+          </select>
+        </div>
+      )}
+
+      {/* Multilingual Name */}
+      <div>
+        <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">
+          Назва {activeTab === 'uk' ? '(українською)' : activeTab === 'en' ? '(English)' : '(Español)'}
+        </label>
+        <input
+          type="text"
+          value={activeTab === 'uk' ? (product.nameUk || '') : activeTab === 'en' ? (product.nameEn || '') : (product.nameEs || '')}
+          onChange={(e) => setProduct({ 
+            ...product, 
+            [activeTab === 'uk' ? 'nameUk' : activeTab === 'en' ? 'nameEn' : 'nameEs']: e.target.value 
+          })}
+          placeholder="Назва продукту"
+          className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30"
+        />
+      </div>
+
+      {/* Multilingual Description */}
+      <div>
+        <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">
+          Опис {activeTab === 'uk' ? '(українською)' : activeTab === 'en' ? '(English)' : '(Español)'}
+        </label>
+        <textarea
+          value={activeTab === 'uk' ? (product.descriptionUk || '') : activeTab === 'en' ? (product.descriptionEn || '') : (product.descriptionEs || '')}
+          onChange={(e) => setProduct({ 
+            ...product, 
+            [activeTab === 'uk' ? 'descriptionUk' : activeTab === 'en' ? 'descriptionEn' : 'descriptionEs']: e.target.value 
+          })}
+          placeholder="Опис продукту"
+          rows={3}
+          className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30 resize-none"
+        />
+      </div>
+
+      {/* Volume-specific Images and Prices for Concentrates */}
+      {product.category === 'concentrate' && (
+        <div className="space-y-4 p-4 bg-[var(--bg-primary)] rounded-xl border border-[var(--border)]">
+          <h4 className="text-[var(--text-primary)] font-medium flex items-center gap-2">
+            <span className="text-lg">📦</span>
+            Об'єми, ціни та фото
+          </h4>
+          
+          {/* Volume Cards */}
+          <div className="grid grid-cols-3 gap-4">
+            {/* 1L */}
+            <div className="p-3 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border)]">
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-medium text-[var(--text-primary)]">1 Літр</span>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={product.is1lActive ?? true}
+                    onChange={(e) => setProduct({ ...product, is1lActive: e.target.checked })}
+                    className="w-4 h-4 rounded accent-[var(--accent)]"
+                  />
+                  <span className="text-xs text-[var(--text-muted)]">Активний</span>
+                </label>
+              </div>
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={product.image1l || ''}
+                  onChange={(e) => setProduct({ ...product, image1l: e.target.value })}
+                  placeholder="URL фото 1л"
+                  className="w-full px-3 py-2 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)] placeholder-[#F5F0E8]/30"
+                />
+                {product.image1l && (
+                  <div className="w-full h-24 bg-[var(--bg-primary)] rounded-lg overflow-hidden border border-[var(--border)]">
+                    <img src={product.image1l} alt="1L" className="w-full h-full object-contain" />
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] text-[var(--text-muted)] mb-1">Роздріб ₴</label>
+                    <input
+                      type="number"
+                      value={product.price1l || ''}
+                      onChange={(e) => setProduct({ ...product, price1l: parseInt(e.target.value) || 0 })}
+                      className="w-full px-2 py-1.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-[var(--text-muted)] mb-1">Опт ₴</label>
+                    <input
+                      type="number"
+                      value={product.wholesalePrice1l || ''}
+                      onChange={(e) => setProduct({ ...product, wholesalePrice1l: parseInt(e.target.value) || 0 })}
+                      className="w-full px-2 py-1.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)]"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] text-[var(--text-muted)] mb-1">Залишок</label>
+                    <input
+                      type="number"
+                      value={product.stock1l || ''}
+                      onChange={(e) => setProduct({ ...product, stock1l: parseInt(e.target.value) || 0 })}
+                      className="w-full px-2 py-1.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-[var(--text-muted)] mb-1">Шт/ящик</label>
+                    <input
+                      type="number"
+                      value={product.boxQty1l ?? 6}
+                      onChange={(e) => setProduct({ ...product, boxQty1l: parseInt(e.target.value) || 6 })}
+                      className="w-full px-2 py-1.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)]"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 0.5L */}
+            <div className="p-3 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border)]">
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-medium text-[var(--text-primary)]">0.5 Літра</span>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={product.is05lActive ?? false}
+                    onChange={(e) => setProduct({ ...product, is05lActive: e.target.checked })}
+                    className="w-4 h-4 rounded accent-[var(--accent)]"
+                  />
+                  <span className="text-xs text-[var(--text-muted)]">Активний</span>
+                </label>
+              </div>
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={product.image05l || ''}
+                  onChange={(e) => setProduct({ ...product, image05l: e.target.value })}
+                  placeholder="URL фото 0.5л"
+                  className="w-full px-3 py-2 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)] placeholder-[#F5F0E8]/30"
+                />
+                {product.image05l && (
+                  <div className="w-full h-24 bg-[var(--bg-primary)] rounded-lg overflow-hidden border border-[var(--border)]">
+                    <img src={product.image05l} alt="0.5L" className="w-full h-full object-contain" />
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] text-[var(--text-muted)] mb-1">Роздріб ₴</label>
+                    <input
+                      type="number"
+                      value={product.price05l || ''}
+                      onChange={(e) => setProduct({ ...product, price05l: parseInt(e.target.value) || 0 })}
+                      className="w-full px-2 py-1.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-[var(--text-muted)] mb-1">Опт ₴</label>
+                    <input
+                      type="number"
+                      value={product.wholesalePrice05l || ''}
+                      onChange={(e) => setProduct({ ...product, wholesalePrice05l: parseInt(e.target.value) || 0 })}
+                      className="w-full px-2 py-1.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)]"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] text-[var(--text-muted)] mb-1">Залишок</label>
+                    <input
+                      type="number"
+                      value={product.stock05l || ''}
+                      onChange={(e) => setProduct({ ...product, stock05l: parseInt(e.target.value) || 0 })}
+                      className="w-full px-2 py-1.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-[var(--text-muted)] mb-1">Шт/ящик</label>
+                    <input
+                      type="number"
+                      value={product.boxQty05l ?? 12}
+                      onChange={(e) => setProduct({ ...product, boxQty05l: parseInt(e.target.value) || 12 })}
+                      className="w-full px-2 py-1.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)]"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 0.25L */}
+            <div className="p-3 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border)]">
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-medium text-[var(--text-primary)]">0.25 Літра</span>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={product.is025lActive ?? true}
+                    onChange={(e) => setProduct({ ...product, is025lActive: e.target.checked })}
+                    className="w-4 h-4 rounded accent-[var(--accent)]"
+                  />
+                  <span className="text-xs text-[var(--text-muted)]">Активний</span>
+                </label>
+              </div>
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={product.image025l || ''}
+                  onChange={(e) => setProduct({ ...product, image025l: e.target.value })}
+                  placeholder="URL фото 0.25л"
+                  className="w-full px-3 py-2 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)] placeholder-[#F5F0E8]/30"
+                />
+                {product.image025l && (
+                  <div className="w-full h-24 bg-[var(--bg-primary)] rounded-lg overflow-hidden border border-[var(--border)]">
+                    <img src={product.image025l} alt="0.25L" className="w-full h-full object-contain" />
+                  </div>
+                )}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] text-[var(--text-muted)] mb-1">Роздріб ₴</label>
+                    <input
+                      type="number"
+                      value={product.price025l || ''}
+                      onChange={(e) => setProduct({ ...product, price025l: parseInt(e.target.value) || 0 })}
+                      className="w-full px-2 py-1.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-[var(--text-muted)] mb-1">Опт ₴</label>
+                    <input
+                      type="number"
+                      value={product.wholesalePrice025l || ''}
+                      onChange={(e) => setProduct({ ...product, wholesalePrice025l: parseInt(e.target.value) || 0 })}
+                      className="w-full px-2 py-1.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)]"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] text-[var(--text-muted)] mb-1">Залишок</label>
+                    <input
+                      type="number"
+                      value={product.stock025l || ''}
+                      onChange={(e) => setProduct({ ...product, stock025l: parseInt(e.target.value) || 0 })}
+                      className="w-full px-2 py-1.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-[var(--text-muted)] mb-1">Шт/ящик</label>
+                    <input
+                      type="number"
+                      value={product.boxQty025l ?? 12}
+                      onChange={(e) => setProduct({ ...product, boxQty025l: parseInt(e.target.value) || 12 })}
+                      className="w-full px-2 py-1.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-primary)]"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image for Accessories */}
+      {product.category !== 'concentrate' && (
+        <div>
+          <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">URL зображення</label>
+          <div className="flex gap-3">
+            <input
+              type="text"
+              value={product.image1l || ''}
+              onChange={(e) => setProduct({ ...product, image1l: e.target.value })}
+              placeholder="./image.png або https://..."
+              className="flex-1 px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30"
+            />
+            {product.image1l && (
+              <div className="w-12 h-12 bg-[var(--bg-primary)] rounded-xl overflow-hidden border border-[var(--border)]">
+                <img src={product.image1l} alt="Preview" className="w-full h-full object-cover" />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Concentrate-specific fields */}
+      {product.category === 'concentrate' && (
+        <>
+          {/* Effects */}
+          <div>
+            <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">
+              Ефекти {activeTab === 'uk' ? '(українською)' : activeTab === 'en' ? '(English)' : '(Español)'} 
+              <span className="text-[var(--text-primary)]/30 ml-2">(через кому)</span>
+            </label>
+            <input
+              type="text"
+              value={activeTab === 'uk' ? (product.effectsUk || '') : activeTab === 'en' ? (product.effectsEn || '') : (product.effectsEs || '')}
+              onChange={(e) => setProduct({ 
+                ...product, 
+                [activeTab === 'uk' ? 'effectsUk' : activeTab === 'en' ? 'effectsEn' : 'effectsEs']: e.target.value 
+              })}
+              placeholder="Заряд енергії, Покращення концентрації"
+              className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30"
+            />
+          </div>
+
+          {/* Brewing Info */}
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">Час приготування (сек)</label>
+              <input
+                type="number"
+                value={product.brewingTime || ''}
+                onChange={(e) => setProduct({ ...product, brewingTime: parseInt(e.target.value) || 0 })}
+                placeholder="15"
+                className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30"
+              />
+            </div>
+            <div>
+              <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">Температура (°C)</label>
+              <input
+                type="number"
+                value={product.temperature || ''}
+                onChange={(e) => setProduct({ ...product, temperature: parseInt(e.target.value) || 0 })}
+                placeholder="90"
+                className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30"
+              />
+            </div>
+            <div>
+              <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">Походження</label>
+              <input
+                type="text"
+                value={product.origin || ''}
+                onChange={(e) => setProduct({ ...product, origin: e.target.value })}
+                placeholder="Юньнань, Китай"
+                className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30"
+              />
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* SKU & Logistics Section */}
+      <div className="pt-4 border-t border-[var(--border)]">
+        <h4 className="text-[var(--text-primary)] font-medium mb-4 flex items-center gap-2">
+          <svg className="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+          SKU та логістика
+        </h4>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">
+              SKU (артикул)
+              <span className="text-[var(--text-primary)]/30 ml-2">напр. BT-PU-1L-001</span>
+            </label>
+            <input
+              type="text"
+              value={product.sku || ''}
+              onChange={(e) => setProduct({ ...product, sku: e.target.value.toUpperCase().replace(/\s+/g, '-') })}
+              placeholder="BT-PU-1L-001"
+              className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30 font-mono"
+            />
+          </div>
+          <div>
+            <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">
+              Штрих-код (EAN/UPC)
+            </label>
+            <input
+              type="text"
+              value={product.barcode || ''}
+              onChange={(e) => setProduct({ ...product, barcode: e.target.value.replace(/\D/g, '') })}
+              placeholder="4820012345678"
+              maxLength={13}
+              className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30 font-mono"
+            />
+          </div>
+          <div>
+            <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">
+              Вага (грам)
+            </label>
+            <input
+              type="number"
+              value={product.weightGrams || ''}
+              onChange={(e) => setProduct({ ...product, weightGrams: parseInt(e.target.value) || 0 })}
+              placeholder="1150"
+              className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30"
+            />
+          </div>
+          <div>
+            <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">
+              Розміри (ШxГxВ см)
+            </label>
+            <input
+              type="text"
+              value={product.dimensions || ''}
+              onChange={(e) => setProduct({ ...product, dimensions: e.target.value })}
+              placeholder="8x8x25cm"
+              className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Active Toggle */}
+      <div className="flex items-center gap-3 pt-4 border-t border-[var(--border)]">
+        <button
+          type="button"
+          onClick={() => setProduct({ ...product, isActive: !product.isActive })}
+          className={`w-12 h-6 rounded-full transition-colors ${product.isActive ? 'bg-[var(--accent)]' : 'bg-[#F5F0E8]/20'}`}
+        >
+          <span className={`block w-5 h-5 bg-white rounded-full shadow transition-transform ${product.isActive ? 'translate-x-6' : 'translate-x-0.5'}`} />
+        </button>
+        <span className="text-[var(--text-primary)]/var(--text-muted) text-sm">Активний (показувати на сайті)</span>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 border border-[var(--card-border)]">
+        <div className="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center mb-6">
+          <div>
+            <h3 className="text-[var(--text-primary)] font-medium text-lg">Управління продуктами</h3>
+            <p className="text-[var(--text-primary)]/var(--text-muted) text-sm mt-1">Додавайте, редагуйте та видаляйте продукти</p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <input 
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Пошук за назвою або slug..."
+              className="px-4 py-2 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] text-sm placeholder-[#F5F0E8]/30 w-64"
+            />
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="px-4 py-2 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] text-sm"
+            >
+              <option value="all">Всі категорії</option>
+              <option value="concentrate">Концентрати</option>
+              <option value="accessory">Аксесуари</option>
+              <option value="dry_tea">Сухий чай</option>
+            </select>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="px-4 py-2 bg-[var(--accent)] text-[#0D0D0D] rounded-xl text-sm font-medium hover:bg-[var(--accent-hover)] transition-colors flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Додати продукт
+            </button>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="bg-[var(--bg-primary)] rounded-xl p-4">
+            <p className="text-[var(--text-primary)]/var(--text-muted) text-xs mb-1">Всього</p>
+            <p className="text-[var(--text-primary)] text-2xl font-bold">{products.length}</p>
+          </div>
+          <div className="bg-[var(--bg-primary)] rounded-xl p-4">
+            <p className="text-[var(--text-primary)]/var(--text-muted) text-xs mb-1">Концентрати</p>
+            <p className="text-[var(--accent)] text-2xl font-bold">{products.filter(p => p.category === 'concentrate').length}</p>
+          </div>
+          <div className="bg-[var(--bg-primary)] rounded-xl p-4">
+            <p className="text-[var(--text-primary)]/var(--text-muted) text-xs mb-1">Аксесуари</p>
+            <p className="text-[var(--secondary)] text-2xl font-bold">{products.filter(p => p.category === 'accessory').length}</p>
+          </div>
+          <div className="bg-[var(--bg-primary)] rounded-xl p-4">
+            <p className="text-[var(--text-primary)]/var(--text-muted) text-xs mb-1">Активних</p>
+            <p className="text-[var(--text-primary)] text-2xl font-bold">{products.filter(p => p.isActive).length}</p>
+          </div>
+        </div>
+
+        {/* Results count */}
+        <p className="text-[var(--text-primary)]/var(--text-muted) text-sm mb-4">
+          Знайдено: {filteredProducts.length} продуктів
+        </p>
+
+        {/* Products Grid */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredProducts.map((product) => (
+            <div 
+              key={product.id}
+              className={`bg-[var(--bg-primary)] rounded-xl p-4 border transition-all ${
+                product.isActive 
+                  ? 'border-[var(--border)] hover:border-[var(--border-accent)]' 
+                  : 'border-[var(--card-border)] opacity-60'
+              }`}
+            >
+              <div className="flex gap-4">
+                {/* Image */}
+                <div className="w-20 h-20 bg-[var(--bg-secondary)] rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
+                  {product.image1l ? (
+                    <img src={product.image1l} alt={product.nameUk} className="w-full h-full object-contain" />
+                  ) : (
+                    <span className="text-3xl opacity-30">
+                      {product.category === 'concentrate' ? '🍵' : product.category === 'accessory' ? '🛍️' : '🍃'}
+                    </span>
+                  )}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`px-2 py-0.5 rounded-full text-xs ${getCategoryColor(product.category)}`}>
+                      {getCategoryLabel(product.category)}
+                    </span>
+                    {!product.isActive && (
+                      <span className="px-2 py-0.5 rounded-full text-xs bg-red-500/20 text-red-400">
+                        Вимкнено
+                      </span>
+                    )}
+                  </div>
+                  <h4 className="text-[var(--text-primary)] font-medium truncate">{product.nameUk}</h4>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[var(--text-primary)]/var(--text-subtle) text-xs truncate">{product.slug}</p>
+                    {product.sku && (
+                      <span className="text-[var(--accent)]/70 text-xs font-mono">SKU: {product.sku}</span>
+                    )}
+                  </div>
+                  <p className="text-[var(--accent)] font-bold mt-1">
+                    {product.price1l}₴
+                    {product.category === 'concentrate' && product.price025l > 0 && (
+                      <span className="text-[var(--text-primary)]/var(--text-subtle) font-normal text-xs ml-2">
+                        / {product.price025l}₴ за 0.25L
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-2 mt-4 pt-3 border-t border-[var(--card-border)]">
+                <button
+                  onClick={() => toggleProductStatus(product.id)}
+                  className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                    product.isActive 
+                      ? 'bg-[var(--accent)]/20 text-[var(--accent)] hover:bg-[var(--accent)]/30' 
+                      : 'bg-[#F5F0E8]/10 text-[var(--text-primary)]/var(--text-muted) hover:text-[var(--text-primary)]'
+                  }`}
+                >
+                  {product.isActive ? '✓ Активний' : '○ Вимкнено'}
+                </button>
+                <button
+                  onClick={() => setEditingProduct(product)}
+                  className="px-3 py-2 bg-[#F5F0E8]/10 text-[var(--text-primary)]/var(--text-muted) rounded-lg text-xs hover:bg-[#F5F0E8]/20 hover:text-[var(--text-primary)] transition-colors"
+                >
+                  ✎ Редагувати
+                </button>
+                <button
+                  onClick={() => setDeleteConfirm(product.id)}
+                  className="px-3 py-2 bg-red-500/10 text-red-400 rounded-lg text-xs hover:bg-red-500/20 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {filteredProducts.length === 0 && (
+          <div className="text-center py-12">
+            <span className="text-4xl mb-4 block">🫖</span>
+            <p className="text-[var(--text-primary)]/var(--text-muted)">Продукти не знайдено</p>
+          </div>
+        )}
+      </div>
+
+      {/* Create Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/var(--text-secondary) backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowCreateModal(false)}>
+          <div 
+            className="bg-[var(--bg-secondary)] rounded-2xl max-w-2xl w-full border border-[var(--border)] max-h-[90vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-[var(--border)]">
+              <h3 className="text-[var(--text-primary)] text-lg font-medium">Додати новий продукт</h3>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1">
+              <ProductFormFields product={newProduct} setProduct={setNewProduct} isNew />
+            </div>
+            <div className="p-6 border-t border-[var(--border)] flex gap-3">
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="flex-1 px-4 py-3 bg-[#F5F0E8]/10 text-[var(--text-primary)] rounded-xl font-medium hover:bg-[#F5F0E8]/20 transition-colors"
+              >
+                Скасувати
+              </button>
+              <button
+                onClick={handleCreateProduct}
+                disabled={!newProduct.slug || !newProduct.nameUk || !newProduct.price1l}
+                className="flex-1 px-4 py-3 bg-[var(--accent)] text-[#0D0D0D] rounded-xl font-medium hover:bg-[var(--accent-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Створити продукт
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editingProduct && (
+        <div className="fixed inset-0 bg-black/var(--text-secondary) backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setEditingProduct(null)}>
+          <div 
+            className="bg-[var(--bg-secondary)] rounded-2xl max-w-2xl w-full border border-[var(--border)] max-h-[90vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-[var(--border)]">
+              <h3 className="text-[var(--text-primary)] text-lg font-medium">Редагувати продукт</h3>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1">
+              <ProductFormFields product={editingProduct} setProduct={(p) => setEditingProduct({ ...editingProduct, ...p } as AdminProduct)} />
+            </div>
+            <div className="p-6 border-t border-[var(--border)] flex gap-3">
+              <button
+                onClick={() => setEditingProduct(null)}
+                className="flex-1 px-4 py-3 bg-[#F5F0E8]/10 text-[var(--text-primary)] rounded-xl font-medium hover:bg-[#F5F0E8]/20 transition-colors"
+              >
+                Скасувати
+              </button>
+              <button
+                onClick={handleUpdateProduct}
+                className="flex-1 px-4 py-3 bg-[var(--accent)] text-[#0D0D0D] rounded-xl font-medium hover:bg-[var(--accent-hover)] transition-colors"
+              >
+                Зберегти зміни
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/var(--text-secondary) backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setDeleteConfirm(null)}>
+          <div 
+            className="bg-[var(--bg-secondary)] rounded-2xl max-w-md w-full border border-[var(--border)] p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center mb-6">
+              <span className="text-4xl mb-4 block">⚠️</span>
+              <h3 className="text-[var(--text-primary)] text-lg font-medium mb-2">Видалити продукт?</h3>
+              <p className="text-[var(--text-primary)]/var(--text-muted) text-sm">
+                Цю дію неможливо скасувати. Продукт буде видалено назавжди.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="flex-1 px-4 py-3 bg-[#F5F0E8]/10 text-[var(--text-primary)] rounded-xl font-medium hover:bg-[#F5F0E8]/20 transition-colors"
+              >
+                Скасувати
+              </button>
+              <button
+                onClick={() => handleDeleteProduct(deleteConfirm)}
+                className="flex-1 px-4 py-3 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-colors"
+              >
+                Видалити
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ===============================================
+// PROMO CONTENT - Enhanced Promo Code Management
+// ===============================================
+const PromoContent = () => {
+  const [promoCodes, setPromoCodes] = useState<PromoCode[]>(mockPromoCodes);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingPromo, setEditingPromo] = useState<PromoCode | null>(null);
+  const [newPromo, setNewPromo] = useState<Partial<PromoCode>>({
+    code: '',
+    discountType: 'percentage',
+    discountValue: 10,
+    minOrderAmount: 1000,
+    usageLimit: 100,
+    expirationDate: '',
+    isActive: true,
+  });
+
+  const getDiscountTypeLabel = (type: PromoCode['discountType']) => {
+    const labels = {
+      percentage: 'Відсоток',
+      fixed: 'Фіксована сума',
+      free_shipping: 'Безкоштовна доставка',
+      free_product: 'Безкоштовний продукт',
+    };
+    return labels[type];
+  };
+
+  const getDiscountDisplay = (promo: PromoCode) => {
+    switch (promo.discountType) {
+      case 'percentage':
+        return `${promo.discountValue}%`;
+      case 'fixed':
+        return `${promo.discountValue}₴`;
+      case 'free_shipping':
+        return 'Безкоштовна доставка';
+      case 'free_product':
+        return 'Безкоштовний продукт';
+    }
+  };
+
+  const handleCreatePromo = () => {
+    if (!newPromo.code || !newPromo.expirationDate) return;
+    
+    const promo: PromoCode = {
+      id: `P${Date.now()}`,
+      code: newPromo.code!.toUpperCase(),
+      discountType: newPromo.discountType || 'percentage',
+      discountValue: newPromo.discountValue || 10,
+      minOrderAmount: newPromo.minOrderAmount || 0,
+      usageLimit: newPromo.usageLimit || 100,
+      usedCount: 0,
+      expirationDate: newPromo.expirationDate!,
+      isActive: newPromo.isActive ?? true,
+    };
+    
+    setPromoCodes(prev => [promo, ...prev]);
+    setShowCreateModal(false);
+    setNewPromo({
+      code: '',
+      discountType: 'percentage',
+      discountValue: 10,
+      minOrderAmount: 1000,
+      usageLimit: 100,
+      expirationDate: '',
+      isActive: true,
+    });
+  };
+
+  const handleUpdatePromo = () => {
+    if (!editingPromo) return;
+    
+    setPromoCodes(prev => prev.map(p => 
+      p.id === editingPromo.id ? editingPromo : p
+    ));
+    setEditingPromo(null);
+  };
+
+  const handleDeletePromo = (id: string) => {
+    if (confirm('Ви впевнені, що хочете видалити цей промокод?')) {
+      setPromoCodes(prev => prev.filter(p => p.id !== id));
+    }
+  };
+
+  const togglePromoStatus = (id: string) => {
+    setPromoCodes(prev => prev.map(p => 
+      p.id === id ? { ...p, isActive: !p.isActive } : p
+    ));
+  };
+
+  const PromoFormFields = ({ promo, setPromo }: { promo: Partial<PromoCode>, setPromo: (p: Partial<PromoCode>) => void }) => (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">Код промокоду</label>
+        <input
+          type="text"
+          value={promo.code || ''}
+          onChange={(e) => setPromo({ ...promo, code: e.target.value.toUpperCase() })}
+          placeholder="SUMMER20"
+          className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] font-mono uppercase placeholder-[#F5F0E8]/30"
+        />
+      </div>
+
+      <div>
+        <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">Тип знижки</label>
+        <select
+          value={promo.discountType || 'percentage'}
+          onChange={(e) => setPromo({ ...promo, discountType: e.target.value as PromoCode['discountType'] })}
+          className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+        >
+          <option value="percentage">Відсоток (%)</option>
+          <option value="fixed">Фіксована сума (₴)</option>
+          <option value="free_shipping">Безкоштовна доставка</option>
+          <option value="free_product">Безкоштовний продукт</option>
+        </select>
+      </div>
+
+      {(promo.discountType === 'percentage' || promo.discountType === 'fixed') && (
+        <div>
+          <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">
+            Розмір знижки {promo.discountType === 'percentage' ? '(%)' : '(₴)'}
+          </label>
+          <input
+            type="number"
+            value={promo.discountValue || ''}
+            onChange={(e) => setPromo({ ...promo, discountValue: parseInt(e.target.value) })}
+            placeholder={promo.discountType === 'percentage' ? '10' : '200'}
+            className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30"
+          />
+        </div>
+      )}
+
+      <div>
+        <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">Мінімальна сума замовлення (₴)</label>
+        <input
+          type="number"
+          value={promo.minOrderAmount || ''}
+          onChange={(e) => setPromo({ ...promo, minOrderAmount: parseInt(e.target.value) })}
+          placeholder="1000"
+          className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30"
+        />
+      </div>
+
+      <div>
+        <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">Ліміт використань</label>
+        <input
+          type="number"
+          value={promo.usageLimit || ''}
+          onChange={(e) => setPromo({ ...promo, usageLimit: parseInt(e.target.value) })}
+          placeholder="100"
+          className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30"
+        />
+      </div>
+
+      <div>
+        <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">Дійсний до</label>
+        <input
+          type="date"
+          value={promo.expirationDate || ''}
+          onChange={(e) => setPromo({ ...promo, expirationDate: e.target.value })}
+          className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+        />
+      </div>
+
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => setPromo({ ...promo, isActive: !promo.isActive })}
+          className={`w-12 h-6 rounded-full transition-colors ${promo.isActive ? 'bg-[var(--accent)]' : 'bg-[#F5F0E8]/20'}`}
+        >
+          <span className={`block w-5 h-5 bg-white rounded-full shadow transition-transform ${promo.isActive ? 'translate-x-6' : 'translate-x-0.5'}`} />
+        </button>
+        <span className="text-[var(--text-primary)]/var(--text-muted) text-sm">Активний</span>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 border border-[var(--card-border)]">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-[var(--text-primary)] font-medium text-lg">Промокоди</h3>
+            <p className="text-[var(--text-primary)]/var(--text-muted) text-sm mt-1">Управління знижками та акціями</p>
+          </div>
+          <button 
+            onClick={() => setShowCreateModal(true)}
+            className="px-4 py-2 bg-[var(--accent)] text-[#0D0D0D] rounded-xl text-sm font-medium hover:bg-[var(--accent-hover)] transition-colors flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Створити промокод
+          </button>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="bg-[var(--bg-primary)] rounded-xl p-4">
+            <p className="text-[var(--text-primary)]/var(--text-muted) text-xs mb-1">Всього</p>
+            <p className="text-[var(--text-primary)] text-2xl font-bold">{promoCodes.length}</p>
+          </div>
+          <div className="bg-[var(--bg-primary)] rounded-xl p-4">
+            <p className="text-[var(--text-primary)]/var(--text-muted) text-xs mb-1">Активних</p>
+            <p className="text-[var(--accent)] text-2xl font-bold">{promoCodes.filter(p => p.isActive).length}</p>
+          </div>
+          <div className="bg-[var(--bg-primary)] rounded-xl p-4">
+            <p className="text-[var(--text-primary)]/var(--text-muted) text-xs mb-1">Використано</p>
+            <p className="text-[var(--text-primary)] text-2xl font-bold">{promoCodes.reduce((acc, p) => acc + p.usedCount, 0)}</p>
+          </div>
+          <div className="bg-[var(--bg-primary)] rounded-xl p-4">
+            <p className="text-[var(--text-primary)]/var(--text-muted) text-xs mb-1">Прострочених</p>
+            <p className="text-red-400 text-2xl font-bold">{promoCodes.filter(p => new Date(p.expirationDate) < new Date()).length}</p>
+          </div>
+        </div>
+
+        {/* Promo List */}
+        <div className="space-y-3">
+          {promoCodes.map((promo) => {
+            const isExpired = new Date(promo.expirationDate) < new Date();
+            const usagePercent = (promo.usedCount / promo.usageLimit) * 100;
+            
+            return (
+              <div 
+                key={promo.id} 
+                className={`bg-[var(--bg-primary)] rounded-xl p-5 border transition-colors ${
+                  !promo.isActive || isExpired 
+                    ? 'border-[var(--card-border)] opacity-60' 
+                    : 'border-[var(--border)] hover:border-[var(--border-accent)]'
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <p className="text-[var(--accent)] font-mono font-bold text-lg">{promo.code}</p>
+                      <span className={`px-2 py-0.5 rounded-full text-xs ${
+                        !promo.isActive ? 'bg-[#F5F0E8]/10 text-[var(--text-primary)]/var(--text-subtle)' :
+                        isExpired ? 'bg-red-500/20 text-red-400' :
+                        'bg-[var(--accent)]/20 text-[var(--accent)]'
+                      }`}>
+                        {!promo.isActive ? 'Вимкнено' : isExpired ? 'Прострочено' : 'Активний'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-4 text-sm text-[var(--text-primary)]/var(--text-muted)">
+                      <span className="flex items-center gap-1.5">
+                        <span className="text-[var(--accent)]">🏷️</span>
+                        {getDiscountDisplay(promo)}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="text-[var(--secondary)]">💰</span>
+                        Мін. {promo.minOrderAmount.toLocaleString()}₴
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="text-[#C9A55C]">📅</span>
+                        До {promo.expirationDate}
+                      </span>
+                    </div>
+
+                    <div className="mt-3">
+                      <div className="flex justify-between text-xs text-[var(--text-primary)]/var(--text-subtle) mb-1">
+                        <span>Використано</span>
+                        <span>{promo.usedCount} / {promo.usageLimit}</span>
+                      </div>
+                      <div className="h-1.5 bg-[#F5F0E8]/10 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full ${usagePercent >= 90 ? 'bg-red-400' : usagePercent >= 70 ? 'bg-amber-400' : 'bg-[var(--accent)]'}`}
+                          style={{ width: `${Math.min(usagePercent, 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 ml-4">
+                    <button
+                      onClick={() => togglePromoStatus(promo.id)}
+                      className={`p-2 rounded-lg transition-colors ${
+                        promo.isActive 
+                          ? 'bg-[var(--accent)]/20 text-[var(--accent)] hover:bg-[var(--accent)]/30' 
+                          : 'bg-[#F5F0E8]/10 text-[var(--text-primary)]/var(--text-subtle) hover:text-[var(--text-primary)]'
+                      }`}
+                      title={promo.isActive ? 'Вимкнути' : 'Увімкнути'}
+                    >
+                      {promo.isActive ? '✓' : '○'}
+                    </button>
+                    <button
+                      onClick={() => setEditingPromo(promo)}
+                      className="p-2 bg-[#F5F0E8]/10 text-[var(--text-primary)]/var(--text-muted) rounded-lg hover:bg-[#F5F0E8]/20 hover:text-[var(--text-primary)] transition-colors"
+                      title="Редагувати"
+                    >
+                      ✎
+                    </button>
+                    <button
+                      onClick={() => handleDeletePromo(promo.id)}
+                      className="p-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors"
+                      title="Видалити"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Create Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/var(--text-secondary) backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowCreateModal(false)}>
+          <div 
+            className="bg-[var(--bg-secondary)] rounded-2xl max-w-md w-full border border-[var(--border)] p-6 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-[var(--text-primary)] text-lg font-medium mb-6">Створити промокод</h3>
+            
+            <PromoFormFields promo={newPromo} setPromo={setNewPromo} />
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="flex-1 px-4 py-3 bg-[#F5F0E8]/10 text-[var(--text-primary)] rounded-xl font-medium hover:bg-[#F5F0E8]/20 transition-colors"
+              >
+                Скасувати
+              </button>
+              <button
+                onClick={handleCreatePromo}
+                disabled={!newPromo.code || !newPromo.expirationDate}
+                className="flex-1 px-4 py-3 bg-[var(--accent)] text-[#0D0D0D] rounded-xl font-medium hover:bg-[var(--accent-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Створити
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editingPromo && (
+        <div className="fixed inset-0 bg-black/var(--text-secondary) backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setEditingPromo(null)}>
+          <div 
+            className="bg-[var(--bg-secondary)] rounded-2xl max-w-md w-full border border-[var(--border)] p-6 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-[var(--text-primary)] text-lg font-medium mb-6">Редагувати промокод</h3>
+            
+            <PromoFormFields promo={editingPromo} setPromo={(p) => setEditingPromo({ ...editingPromo, ...p } as PromoCode)} />
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setEditingPromo(null)}
+                className="flex-1 px-4 py-3 bg-[#F5F0E8]/10 text-[var(--text-primary)] rounded-xl font-medium hover:bg-[#F5F0E8]/20 transition-colors"
+              >
+                Скасувати
+              </button>
+              <button
+                onClick={handleUpdatePromo}
+                className="flex-1 px-4 py-3 bg-[var(--accent)] text-[#0D0D0D] rounded-xl font-medium hover:bg-[var(--accent-hover)] transition-colors"
+              >
+                Зберегти
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const DiscountsContent = () => {
+  const [cupsPerDay, setCupsPerDay] = useState(50);
+  const [discountPercent, setDiscountPercent] = useState(10);
+  
+  const regularRevenue = cupsPerDay * 65 * 30;
+  const potentialExtraCustomers = Math.round(cupsPerDay * (discountPercent / 100) * 1.5);
+  const withExtraRevenue = (cupsPerDay + potentialExtraCustomers) * 65 * (1 - discountPercent / 100) * 30;
+  
+  return (
+    <div className="space-y-6">
+      <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 border border-[var(--card-border)]">
+        <h3 className="text-[var(--text-primary)] font-medium mb-6">Калькулятор акцій</h3>
+        
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="space-y-6">
+            <div>
+              <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-3">
+                Продажі на день (чашок): {cupsPerDay}
+              </label>
+              <input
+                type="range"
+                min="10"
+                max="200"
+                value={cupsPerDay}
+                onChange={(e) => setCupsPerDay(Number(e.target.value))}
+                className="w-full h-2 bg-[#F5F0E8]/10 rounded-lg appearance-none cursor-pointer accent-[#9FD356]"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-3">
+                Знижка (%): {discountPercent}%
+              </label>
+              <input
+                type="range"
+                min="5"
+                max="50"
+                value={discountPercent}
+                onChange={(e) => setDiscountPercent(Number(e.target.value))}
+                className="w-full h-2 bg-[#F5F0E8]/10 rounded-lg appearance-none cursor-pointer accent-[#9FD356]"
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="p-4 bg-[var(--bg-primary)] rounded-xl">
+              <p className="text-[var(--text-primary)]/var(--text-muted) text-sm mb-1">Виручка без акції (місяць)</p>
+              <p className="text-[var(--text-primary)] text-2xl font-bold">{regularRevenue.toLocaleString()}₴</p>
+            </div>
+            <div className="p-4 bg-[var(--bg-primary)] rounded-xl">
+              <p className="text-[var(--text-primary)]/var(--text-muted) text-sm mb-1">Прогноз з акцією (з урахуванням нових клієнтів)</p>
+              <p className="text-[var(--accent)] text-2xl font-bold">{Math.round(withExtraRevenue).toLocaleString()}₴</p>
+              <p className="text-[var(--text-primary)]/var(--text-subtle) text-xs mt-1">+{potentialExtraCustomers} потенційних клієнтів/день</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ===============================================
+// BONUSES CONTENT - Enhanced Bonus Management
+// ===============================================
+const BonusesContent = () => {
+  const [bonusRules, setBonusRules] = useState<BonusRules>(mockBonusRules);
+  const [transactions] = useState(mockAllBonusTransactions);
+  const [showManualAdjustment, setShowManualAdjustment] = useState(false);
+  const [manualCustomerId, setManualCustomerId] = useState('');
+  const [manualAmount, setManualAmount] = useState('');
+  const [manualReason, setManualReason] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSaveRules = async () => {
+    setIsSaving(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 800));
+    setIsSaving(false);
+  };
+
+  const getTransactionTypeIcon = (type: BonusTransaction['type']) => {
+    const icons = {
+      earned: '💰',
+      spent: '💳',
+      manual: '✋',
+      signup: '🎉',
+      referral: '🤝',
+      birthday: '🎂',
+    };
+    return icons[type];
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Bonus Rules Configuration */}
+      <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 border border-[var(--card-border)]">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h3 className="text-[var(--text-primary)] font-medium text-lg">Налаштування бонусної програми</h3>
+            <p className="text-[var(--text-primary)]/var(--text-muted) text-sm mt-1">Правила нарахування та використання бонусів</p>
+          </div>
+          <button
+            onClick={handleSaveRules}
+            disabled={isSaving}
+            className="px-4 py-2 bg-[var(--accent)] text-[#0D0D0D] rounded-xl text-sm font-medium hover:bg-[var(--accent-hover)] transition-colors disabled:opacity-50 flex items-center gap-2"
+          >
+            {isSaving ? (
+              <>
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Збереження...
+              </>
+            ) : (
+              <>✓ Зберегти</>
+            )}
+          </button>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="bg-[var(--bg-primary)] rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-[var(--accent)]/20 rounded-xl flex items-center justify-center">
+                <span className="text-xl">🎉</span>
+              </div>
+              <div>
+                <p className="text-[var(--text-primary)] font-medium">Бонус за реєстрацію</p>
+                <p className="text-[var(--text-primary)]/var(--text-subtle) text-xs">Одноразово при реєстрації</p>
+              </div>
+            </div>
+            <input
+              type="number"
+              value={bonusRules.signupBonus}
+              onChange={(e) => setBonusRules({ ...bonusRules, signupBonus: parseInt(e.target.value) || 0 })}
+              className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] text-lg font-bold"
+            />
+            <p className="text-[var(--text-primary)]/var(--text-subtle) text-xs mt-2">бонусів</p>
+          </div>
+
+          <div className="bg-[var(--bg-primary)] rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-amber-500/20 rounded-xl flex items-center justify-center">
+                <span className="text-xl">🤝</span>
+              </div>
+              <div>
+                <p className="text-[var(--text-primary)] font-medium">Реферальний бонус</p>
+                <p className="text-[var(--text-primary)]/var(--text-subtle) text-xs">За кожного запрошеного друга</p>
+              </div>
+            </div>
+            <input
+              type="number"
+              value={bonusRules.referralBonus}
+              onChange={(e) => setBonusRules({ ...bonusRules, referralBonus: parseInt(e.target.value) || 0 })}
+              className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] text-lg font-bold"
+            />
+            <p className="text-[var(--text-primary)]/var(--text-subtle) text-xs mt-2">бонусів</p>
+          </div>
+
+          <div className="bg-[var(--bg-primary)] rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-pink-500/20 rounded-xl flex items-center justify-center">
+                <span className="text-xl">🎂</span>
+              </div>
+              <div>
+                <p className="text-[var(--text-primary)] font-medium">Множник до дня народження</p>
+                <p className="text-[var(--text-primary)]/var(--text-subtle) text-xs">На бонуси протягом тижня</p>
+              </div>
+            </div>
+            <input
+              type="number"
+              step="0.5"
+              min="1"
+              value={bonusRules.birthdayMultiplier}
+              onChange={(e) => setBonusRules({ ...bonusRules, birthdayMultiplier: parseFloat(e.target.value) || 1 })}
+              className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] text-lg font-bold"
+            />
+            <p className="text-[var(--text-primary)]/var(--text-subtle) text-xs mt-2">× множник</p>
+          </div>
+
+          <div className="bg-[var(--bg-primary)] rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-[#8B7355]/20 rounded-xl flex items-center justify-center">
+                <span className="text-xl">💰</span>
+              </div>
+              <div>
+                <p className="text-[var(--text-primary)] font-medium">Бонуси за гривню</p>
+                <p className="text-[var(--text-primary)]/var(--text-subtle) text-xs">Нараховується з кожної покупки</p>
+              </div>
+            </div>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              max="1"
+              value={bonusRules.pointsPerHryvnia}
+              onChange={(e) => setBonusRules({ ...bonusRules, pointsPerHryvnia: parseFloat(e.target.value) || 0 })}
+              className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] text-lg font-bold"
+            />
+            <p className="text-[var(--text-primary)]/var(--text-subtle) text-xs mt-2">бонусів за 1₴</p>
+          </div>
+
+          <div className="bg-[var(--bg-primary)] rounded-xl p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                <span className="text-xl">📊</span>
+              </div>
+              <div>
+                <p className="text-[var(--text-primary)] font-medium">Макс. оплата бонусами</p>
+                <p className="text-[var(--text-primary)]/var(--text-subtle) text-xs">Від суми замовлення</p>
+              </div>
+            </div>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={bonusRules.maxPaymentPercent}
+              onChange={(e) => setBonusRules({ ...bonusRules, maxPaymentPercent: parseInt(e.target.value) || 0 })}
+              className="w-full px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] text-lg font-bold"
+            />
+            <p className="text-[var(--text-primary)]/var(--text-subtle) text-xs mt-2">%</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-[#9FD356]/10 to-[#7FB030]/10 rounded-xl p-5 border border-[#9FD356]/20">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-[var(--accent)]/30 rounded-xl flex items-center justify-center">
+                <span className="text-xl">✋</span>
+              </div>
+              <div>
+                <p className="text-[var(--text-primary)] font-medium">Ручне коригування</p>
+                <p className="text-[var(--text-primary)]/var(--text-subtle) text-xs">Нарахувати бонуси клієнту</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowManualAdjustment(true)}
+              className="w-full px-4 py-3 bg-[var(--accent)] text-[#0D0D0D] rounded-xl font-medium hover:bg-[var(--accent-hover)] transition-colors"
+            >
+              + Нарахувати бонуси
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Bonus Transactions Log */}
+      <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 border border-[var(--card-border)]">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h3 className="text-[var(--text-primary)] font-medium text-lg">Історія бонусних транзакцій</h3>
+            <p className="text-[var(--text-primary)]/var(--text-muted) text-sm mt-1">Останні операції з бонусами</p>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="bg-[var(--bg-primary)] rounded-xl p-4">
+            <p className="text-[var(--text-primary)]/var(--text-muted) text-xs mb-1">Нараховано сьогодні</p>
+            <p className="text-[var(--accent)] text-2xl font-bold">+1,837</p>
+          </div>
+          <div className="bg-[var(--bg-primary)] rounded-xl p-4">
+            <p className="text-[var(--text-primary)]/var(--text-muted) text-xs mb-1">Витрачено сьогодні</p>
+            <p className="text-red-400 text-2xl font-bold">-500</p>
+          </div>
+          <div className="bg-[var(--bg-primary)] rounded-xl p-4">
+            <p className="text-[var(--text-primary)]/var(--text-muted) text-xs mb-1">Всього в системі</p>
+            <p className="text-[var(--text-primary)] text-2xl font-bold">47,235</p>
+          </div>
+          <div className="bg-[var(--bg-primary)] rounded-xl p-4">
+            <p className="text-[var(--text-primary)]/var(--text-muted) text-xs mb-1">Середнє на клієнта</p>
+            <p className="text-[var(--text-primary)] text-2xl font-bold">1,574</p>
+          </div>
+        </div>
+
+        {/* Transactions Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="text-[var(--text-primary)]/var(--text-muted) text-sm border-b border-[var(--border)]">
+                <th className="text-left pb-4">Дата</th>
+                <th className="text-left pb-4">Клієнт</th>
+                <th className="text-left pb-4">Тип</th>
+                <th className="text-left pb-4">Причина</th>
+                <th className="text-right pb-4">Сума</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#F5F0E8]/5">
+              {transactions.map((tx) => (
+                <tr key={tx.id} className="text-sm hover:bg-[#F5F0E8]/5 transition-colors">
+                  <td className="py-4 text-[var(--text-primary)]/var(--text-muted)">{tx.date}</td>
+                  <td className="py-4 text-[var(--text-primary)]">{tx.customerName}</td>
+                  <td className="py-4">
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs ${
+                      tx.type === 'earned' ? 'bg-[var(--accent)]/20 text-[var(--accent)]' :
+                      tx.type === 'spent' ? 'bg-red-500/20 text-red-400' :
+                      tx.type === 'manual' ? 'bg-purple-500/20 text-purple-400' :
+                      tx.type === 'signup' ? 'bg-blue-500/20 text-blue-400' :
+                      tx.type === 'referral' ? 'bg-amber-500/20 text-amber-400' :
+                      'bg-pink-500/20 text-pink-400'
+                    }`}>
+                      <span>{getTransactionTypeIcon(tx.type)}</span>
+                      {tx.type === 'earned' && 'Нараховано'}
+                      {tx.type === 'spent' && 'Витрачено'}
+                      {tx.type === 'manual' && 'Ручне'}
+                      {tx.type === 'signup' && 'Реєстрація'}
+                      {tx.type === 'referral' && 'Реферал'}
+                      {tx.type === 'birthday' && 'День народження'}
+                    </span>
+                  </td>
+                  <td className="py-4 text-[var(--text-primary)]/var(--text-secondary)">{tx.reason}</td>
+                  <td className={`py-4 text-right font-bold ${tx.amount > 0 ? 'text-[var(--accent)]' : 'text-red-400'}`}>
+                    {tx.amount > 0 ? '+' : ''}{tx.amount}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Manual Adjustment Modal */}
+      {showManualAdjustment && (
+        <div className="fixed inset-0 bg-black/var(--text-secondary) backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowManualAdjustment(false)}>
+          <div 
+            className="bg-[var(--bg-secondary)] rounded-2xl max-w-md w-full border border-[var(--border)] p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-[var(--text-primary)] text-lg font-medium mb-6">Ручне нарахування бонусів</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">ID клієнта</label>
+                <select
+                  value={manualCustomerId}
+                  onChange={(e) => setManualCustomerId(e.target.value)}
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                >
+                  <option value="">Оберіть клієнта</option>
+                  {mockCustomers.map(c => (
+                    <option key={c.id} value={c.id}>{c.name} ({c.email})</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">Кількість бонусів</label>
+                <input
+                  type="number"
+                  value={manualAmount}
+                  onChange={(e) => setManualAmount(e.target.value)}
+                  placeholder="100 або -50"
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30"
+                />
+                <p className="text-[var(--text-primary)]/var(--text-subtle) text-xs mt-1">Можна від'ємне значення для списання</p>
+              </div>
+              <div>
+                <label className="block text-[var(--text-primary)]/var(--text-muted) text-sm mb-2">Причина</label>
+                <input
+                  type="text"
+                  value={manualReason}
+                  onChange={(e) => setManualReason(e.target.value)}
+                  placeholder="Компенсація / Подарунок / Корекція"
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowManualAdjustment(false)}
+                className="flex-1 px-4 py-3 bg-[#F5F0E8]/10 text-[var(--text-primary)] rounded-xl font-medium hover:bg-[#F5F0E8]/20 transition-colors"
+              >
+                Скасувати
+              </button>
+              <button
+                onClick={() => {
+                  // Handle bonus adjustment
+                  setShowManualAdjustment(false);
+                  setManualCustomerId('');
+                  setManualAmount('');
+                  setManualReason('');
+                }}
+                disabled={!manualCustomerId || !manualAmount || !manualReason}
+                className="flex-1 px-4 py-3 bg-[var(--accent)] text-[#0D0D0D] rounded-xl font-medium hover:bg-[var(--accent-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Нарахувати
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ===============================================
+// BROWSER PUSH NOTIFICATIONS COMPONENT
+// ===============================================
+const BrowserPushNotifications = () => {
+  const [permission, setPermission] = useState<NotificationPermission>('default');
+  const [isSupported, setIsSupported] = useState(false);
+  const [testSent, setTestSent] = useState(false);
+
+  useEffect(() => {
+    // Check if push notifications are supported
+    const supported = 'Notification' in window;
+    setIsSupported(supported);
+    
+    if (supported) {
+      setPermission(Notification.permission);
+    }
+  }, []);
+
+  const requestPermission = async () => {
+    if (!isSupported) return;
+    
+    try {
+      const result = await Notification.requestPermission();
+      setPermission(result);
+      
+      if (result === 'granted') {
+        // Show a test notification
+        showTestNotification();
+      }
+    } catch (error) {
+      console.error('Error requesting notification permission:', error);
+    }
+  };
+
+  const showTestNotification = () => {
+    if (permission !== 'granted') return;
+    
+    const notification = new Notification('🍵 BoosterTea', {
+      body: 'Push-сповіщення працюють! Ви отримуватимете сповіщення про важливі події.',
+      icon: '/favicon.ico',
+      badge: '/favicon.ico',
+      tag: 'boostertea-test',
+      requireInteraction: false,
+    });
+
+    notification.onclick = () => {
+      window.focus();
+      notification.close();
+    };
+
+    setTestSent(true);
+    setTimeout(() => setTestSent(false), 3000);
+  };
+
+  const getStatusBadge = () => {
+    if (!isSupported) {
+      return (
+        <span className="px-3 py-1.5 bg-[#F5F0E8]/10 text-[var(--text-primary)]/50 rounded-lg text-sm">
+          Не підтримується
+        </span>
+      );
+    }
+
+    switch (permission) {
+      case 'granted':
+        return (
+          <span className="px-3 py-1.5 bg-green-500/20 text-green-400 rounded-lg text-sm flex items-center gap-2">
+            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+            Увімкнено
+          </span>
+        );
+      case 'denied':
+        return (
+          <span className="px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg text-sm">
+            Заблоковано
+          </span>
+        );
+      default:
+        return (
+          <button
+            onClick={requestPermission}
+            className="px-4 py-2 bg-[var(--accent)]/20 text-[var(--accent)] rounded-lg text-sm font-medium hover:bg-[var(--accent)]/30 transition-colors"
+          >
+            Увімкнути
+          </button>
+        );
+    }
+  };
+
+  return (
+    <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 border border-[var(--card-border)]">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-orange-500/20 rounded-xl flex items-center justify-center">
+            <svg className="w-6 h-6 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-[var(--text-primary)] font-medium text-lg">Push-сповіщення браузера</h3>
+            <p className="text-[var(--text-primary)]/60 text-sm">
+              {isSupported 
+                ? 'Сповіщення на робочому столі' 
+                : 'Ваш браузер не підтримує push-сповіщення'}
+            </p>
+          </div>
+        </div>
+        
+        {getStatusBadge()}
+      </div>
+
+      {/* Additional info and actions for granted permission */}
+      {permission === 'granted' && (
+        <div className="mt-5 pt-5 border-t border-[var(--border)]">
+          <div className="flex items-center justify-between">
+            <p className="text-[var(--text-primary)]/60 text-sm">
+              Ви отримуватимете сповіщення про нові замовлення та зміни статусу навіть коли вкладка закрита.
+            </p>
+            <button
+              onClick={showTestNotification}
+              disabled={testSent}
+              className="px-4 py-2 bg-[var(--bg-primary)] border border-[var(--border)] rounded-lg text-[var(--text-primary)]/80 text-sm hover:border-[var(--accent)] transition-colors disabled:opacity-50"
+            >
+              {testSent ? '✓ Надіслано' : '🔔 Тест'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Info for denied permission */}
+      {permission === 'denied' && (
+        <div className="mt-5 p-4 bg-red-500/10 rounded-xl border border-red-500/20">
+          <div className="flex items-start gap-3">
+            <span className="text-red-400">⚠️</span>
+            <div className="text-red-300/80 text-sm">
+              <p className="font-medium">Push-сповіщення заблоковано</p>
+              <p className="text-red-300/60 mt-1">
+                Щоб увімкнути сповіщення, натисніть на іконку замка 🔒 біля адресної строки 
+                та дозвольте сповіщення для цього сайту.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Info for default permission */}
+      {permission === 'default' && isSupported && (
+        <div className="mt-5 p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
+          <div className="flex items-start gap-3">
+            <span className="text-blue-400">💡</span>
+            <div className="text-blue-300/80 text-sm">
+              <p>Увімкніть push-сповіщення, щоб отримувати миттєві сповіщення про:</p>
+              <ul className="mt-2 space-y-1 text-blue-300/60">
+                <li>📦 Нові замовлення</li>
+                <li>💳 Отримані платежі</li>
+                <li>🚚 Зміни статусу доставки</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ===============================================
+// BANNERS CONTENT - Homepage Banner Management
+// ===============================================
+interface Banner {
+  id: string;
+  position: 'hero' | 'promo' | 'popup';
+  title: string;
+  subtitle?: string;
+  imageUrl: string;
+  linkUrl: string;
+  buttonText?: string;
+  isActive: boolean;
+  startDate: string;
+  endDate: string;
+}
+
+const mockBanners: Banner[] = [
+  {
+    id: 'banner-1',
+    position: 'hero',
+    title: '15 секунд — і готово!',
+    subtitle: 'Преміальний чай без зайвих зусиль',
+    imageUrl: '/lifestyle-cafe.png',
+    linkUrl: '/products',
+    buttonText: 'Дізнатися більше',
+    isActive: true,
+    startDate: '2025-01-01',
+    endDate: '2025-12-31',
+  },
+  {
+    id: 'banner-2',
+    position: 'promo',
+    title: '-20% на Матчу',
+    subtitle: 'Тільки до кінця місяця',
+    imageUrl: '/lifestyle-minimal.png',
+    linkUrl: '/products/matcha',
+    buttonText: 'Замовити',
+    isActive: true,
+    startDate: '2025-02-01',
+    endDate: '2025-02-28',
+  },
+  {
+    id: 'banner-3',
+    position: 'popup',
+    title: 'Підпишіться на розсилку',
+    subtitle: 'Отримайте -10% на перше замовлення',
+    imageUrl: '',
+    linkUrl: '',
+    buttonText: 'Підписатися',
+    isActive: false,
+    startDate: '2025-01-01',
+    endDate: '2025-12-31',
+  },
+];
+
+const BannersContent = () => {
+  const { language } = useTranslation();
+  const [banners, setBanners] = useState<Banner[]>(mockBanners);
+  const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newBanner, setNewBanner] = useState<Partial<Banner>>({
+    position: 'hero',
+    title: '',
+    subtitle: '',
+    imageUrl: '',
+    linkUrl: '',
+    buttonText: '',
+    isActive: true,
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: '',
+  });
+
+  const getPositionLabel = (pos: string) => {
+    const labels: Record<string, string> = {
+      hero: language === 'uk' ? 'Головний слайдер' : 'Hero Slider',
+      promo: language === 'uk' ? 'Промо-банер' : 'Promo Banner',
+      popup: language === 'uk' ? 'Popup вікно' : 'Popup Window',
+    };
+    return labels[pos] || pos;
+  };
+
+  const handleCreateBanner = () => {
+    if (!newBanner.title || !newBanner.position) return;
+    const banner: Banner = {
+      id: `banner-${Date.now()}`,
+      position: newBanner.position as Banner['position'],
+      title: newBanner.title!,
+      subtitle: newBanner.subtitle || '',
+      imageUrl: newBanner.imageUrl || '',
+      linkUrl: newBanner.linkUrl || '',
+      buttonText: newBanner.buttonText || '',
+      isActive: newBanner.isActive ?? true,
+      startDate: newBanner.startDate || new Date().toISOString().split('T')[0],
+      endDate: newBanner.endDate || '',
+    };
+    setBanners(prev => [...prev, banner]);
+    setShowCreateModal(false);
+    setNewBanner({ position: 'hero', title: '', subtitle: '', imageUrl: '', linkUrl: '', buttonText: '', isActive: true, startDate: new Date().toISOString().split('T')[0], endDate: '' });
+  };
+
+  const handleUpdateBanner = () => {
+    if (!editingBanner) return;
+    setBanners(prev => prev.map(b => b.id === editingBanner.id ? editingBanner : b));
+    setEditingBanner(null);
+  };
+
+  const handleDeleteBanner = (id: string) => {
+    setBanners(prev => prev.filter(b => b.id !== id));
+  };
+
+  const toggleBannerStatus = (id: string) => {
+    setBanners(prev => prev.map(b => b.id === id ? { ...b, isActive: !b.isActive } : b));
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-heading)' }}>
+            {language === 'uk' ? 'Управління банерами' : 'Banner Management'}
+          </h2>
+          <p className="text-[var(--text-muted)] text-sm mt-1">
+            {language === 'uk' ? 'Налаштуйте слайдер, промо-банери та popup вікна' : 'Configure slider, promo banners and popups'}
+          </p>
+        </div>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="px-4 py-2 bg-[var(--accent)] text-[#0D0D0D] rounded-xl font-medium hover:bg-[var(--accent-hover)] transition-colors flex items-center gap-2"
+        >
+          <span>+</span>
+          {language === 'uk' ? 'Додати банер' : 'Add Banner'}
+        </button>
+      </div>
+
+      {/* Banners Grid */}
+      <div className="grid gap-4">
+        {banners.map(banner => (
+          <div key={banner.id} className="bg-[var(--bg-secondary)] rounded-2xl border border-[var(--card-border)] overflow-hidden">
+            <div className="flex">
+              {/* Preview */}
+              <div className="w-48 h-32 bg-[var(--bg-primary)] flex-shrink-0">
+                {banner.imageUrl ? (
+                  <img src={banner.imageUrl} alt={banner.title} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)]">
+                    <span className="text-3xl">🖼️</span>
+                  </div>
+                )}
+              </div>
+              
+              {/* Info */}
+              <div className="flex-1 p-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`px-2 py-0.5 rounded-full text-xs ${
+                        banner.position === 'hero' ? 'bg-[var(--accent)]/20 text-[var(--accent)]' :
+                        banner.position === 'promo' ? 'bg-blue-500/20 text-blue-400' :
+                        'bg-purple-500/20 text-purple-400'
+                      }`}>
+                        {getPositionLabel(banner.position)}
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-xs ${banner.isActive ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                        {banner.isActive ? (language === 'uk' ? 'Активний' : 'Active') : (language === 'uk' ? 'Неактивний' : 'Inactive')}
+                      </span>
+                    </div>
+                    <h3 className="text-[var(--text-primary)] font-medium">{banner.title}</h3>
+                    {banner.subtitle && <p className="text-[var(--text-muted)] text-sm">{banner.subtitle}</p>}
+                    <p className="text-[var(--text-muted)] text-xs mt-2">
+                      {banner.startDate} — {banner.endDate || '∞'}
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => toggleBannerStatus(banner.id)}
+                      className={`p-2 rounded-lg transition-colors ${banner.isActive ? 'bg-green-500/10 text-green-400 hover:bg-green-500/20' : 'bg-[#F5F0E8]/10 text-[var(--text-muted)] hover:bg-[#F5F0E8]/20'}`}
+                    >
+                      {banner.isActive ? '👁️' : '👁️‍🗨️'}
+                    </button>
+                    <button
+                      onClick={() => setEditingBanner(banner)}
+                      className="p-2 bg-[#F5F0E8]/10 rounded-lg text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={() => handleDeleteBanner(banner.id)}
+                      className="p-2 bg-[#F5F0E8]/10 rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Create Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-4">{language === 'uk' ? 'Новий банер' : 'New Banner'}</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'Позиція' : 'Position'}</label>
+                <select
+                  value={newBanner.position}
+                  onChange={(e) => setNewBanner({ ...newBanner, position: e.target.value as Banner['position'] })}
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                >
+                  <option value="hero">{getPositionLabel('hero')}</option>
+                  <option value="promo">{getPositionLabel('promo')}</option>
+                  <option value="popup">{getPositionLabel('popup')}</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'Заголовок' : 'Title'}</label>
+                <input
+                  type="text"
+                  value={newBanner.title || ''}
+                  onChange={(e) => setNewBanner({ ...newBanner, title: e.target.value })}
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                />
+              </div>
+              <div>
+                <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'Підзаголовок' : 'Subtitle'}</label>
+                <input
+                  type="text"
+                  value={newBanner.subtitle || ''}
+                  onChange={(e) => setNewBanner({ ...newBanner, subtitle: e.target.value })}
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                />
+              </div>
+              <div>
+                <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'URL зображення' : 'Image URL'}</label>
+                <input
+                  type="text"
+                  value={newBanner.imageUrl || ''}
+                  onChange={(e) => setNewBanner({ ...newBanner, imageUrl: e.target.value })}
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                />
+              </div>
+              <div>
+                <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'Посилання' : 'Link URL'}</label>
+                <input
+                  type="text"
+                  value={newBanner.linkUrl || ''}
+                  onChange={(e) => setNewBanner({ ...newBanner, linkUrl: e.target.value })}
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'Дата початку' : 'Start Date'}</label>
+                  <input
+                    type="date"
+                    value={newBanner.startDate || ''}
+                    onChange={(e) => setNewBanner({ ...newBanner, startDate: e.target.value })}
+                    className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'Дата кінця' : 'End Date'}</label>
+                  <input
+                    type="date"
+                    value={newBanner.endDate || ''}
+                    onChange={(e) => setNewBanner({ ...newBanner, endDate: e.target.value })}
+                    className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="flex-1 px-4 py-3 bg-[#F5F0E8]/10 text-[var(--text-primary)] rounded-xl font-medium"
+              >
+                {language === 'uk' ? 'Скасувати' : 'Cancel'}
+              </button>
+              <button
+                onClick={handleCreateBanner}
+                className="flex-1 px-4 py-3 bg-[var(--accent)] text-[#0D0D0D] rounded-xl font-medium"
+              >
+                {language === 'uk' ? 'Створити' : 'Create'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editingBanner && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-4">{language === 'uk' ? 'Редагувати банер' : 'Edit Banner'}</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'Позиція' : 'Position'}</label>
+                <select
+                  value={editingBanner.position}
+                  onChange={(e) => setEditingBanner({ ...editingBanner, position: e.target.value as Banner['position'] })}
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                >
+                  <option value="hero">{getPositionLabel('hero')}</option>
+                  <option value="promo">{getPositionLabel('promo')}</option>
+                  <option value="popup">{getPositionLabel('popup')}</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'Заголовок' : 'Title'}</label>
+                <input
+                  type="text"
+                  value={editingBanner.title}
+                  onChange={(e) => setEditingBanner({ ...editingBanner, title: e.target.value })}
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                />
+              </div>
+              <div>
+                <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'Підзаголовок' : 'Subtitle'}</label>
+                <input
+                  type="text"
+                  value={editingBanner.subtitle || ''}
+                  onChange={(e) => setEditingBanner({ ...editingBanner, subtitle: e.target.value })}
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                />
+              </div>
+              <div>
+                <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'URL зображення' : 'Image URL'}</label>
+                <input
+                  type="text"
+                  value={editingBanner.imageUrl}
+                  onChange={(e) => setEditingBanner({ ...editingBanner, imageUrl: e.target.value })}
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                />
+              </div>
+              <div>
+                <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'Посилання' : 'Link URL'}</label>
+                <input
+                  type="text"
+                  value={editingBanner.linkUrl}
+                  onChange={(e) => setEditingBanner({ ...editingBanner, linkUrl: e.target.value })}
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'Дата початку' : 'Start Date'}</label>
+                  <input
+                    type="date"
+                    value={editingBanner.startDate}
+                    onChange={(e) => setEditingBanner({ ...editingBanner, startDate: e.target.value })}
+                    className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'Дата кінця' : 'End Date'}</label>
+                  <input
+                    type="date"
+                    value={editingBanner.endDate}
+                    onChange={(e) => setEditingBanner({ ...editingBanner, endDate: e.target.value })}
+                    className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                  />
+                </div>
+              </div>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={editingBanner.isActive}
+                  onChange={(e) => setEditingBanner({ ...editingBanner, isActive: e.target.checked })}
+                  className="w-5 h-5 rounded accent-[var(--accent)]"
+                />
+                <span className="text-[var(--text-primary)]">{language === 'uk' ? 'Активний' : 'Active'}</span>
+              </label>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setEditingBanner(null)}
+                className="flex-1 px-4 py-3 bg-[#F5F0E8]/10 text-[var(--text-primary)] rounded-xl font-medium"
+              >
+                {language === 'uk' ? 'Скасувати' : 'Cancel'}
+              </button>
+              <button
+                onClick={handleUpdateBanner}
+                className="flex-1 px-4 py-3 bg-[var(--accent)] text-[#0D0D0D] rounded-xl font-medium"
+              >
+                {language === 'uk' ? 'Зберегти' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ===============================================
+// BLOG CONTENT - Articles & News Management
+// ===============================================
+interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  coverImage: string;
+  category: string;
+  tags: string[];
+  status: 'draft' | 'published' | 'scheduled';
+  publishedAt: string;
+  createdAt: string;
+}
+
+const mockBlogPosts: BlogPost[] = [
+  {
+    id: 'post-1',
+    title: 'Як правильно заварювати Матчу',
+    slug: 'yak-zavaryuvaty-matchu',
+    excerpt: 'Покрокова інструкція для ідеального матча латте вдома',
+    content: '',
+    coverImage: '/lifestyle-minimal.png',
+    category: 'Рецепти',
+    tags: ['матча', 'рецепт', 'латте'],
+    status: 'published',
+    publishedAt: '2025-02-01',
+    createdAt: '2025-01-28',
+  },
+  {
+    id: 'post-2',
+    title: '5 переваг чайних концентратів',
+    slug: '5-perevag-chainykh-kontsentrativ',
+    excerpt: 'Чому концентрати — це майбутнє чайної індустрії',
+    content: '',
+    coverImage: '/lifestyle-cafe.png',
+    category: 'Статті',
+    tags: ['концентрати', 'переваги', 'якість'],
+    status: 'draft',
+    publishedAt: '',
+    createdAt: '2025-01-25',
+  },
+];
+
+const BlogContent = () => {
+  const { language } = useTranslation();
+  const [posts, setPosts] = useState<BlogPost[]>(mockBlogPosts);
+  const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newPost, setNewPost] = useState<Partial<BlogPost>>({
+    title: '',
+    slug: '',
+    excerpt: '',
+    content: '',
+    coverImage: '',
+    category: '',
+    tags: [],
+    status: 'draft',
+  });
+
+  const handleCreatePost = () => {
+    if (!newPost.title) return;
+    const post: BlogPost = {
+      id: `post-${Date.now()}`,
+      title: newPost.title!,
+      slug: newPost.slug || newPost.title!.toLowerCase().replace(/\s+/g, '-'),
+      excerpt: newPost.excerpt || '',
+      content: newPost.content || '',
+      coverImage: newPost.coverImage || '',
+      category: newPost.category || '',
+      tags: newPost.tags || [],
+      status: newPost.status as BlogPost['status'] || 'draft',
+      publishedAt: newPost.status === 'published' ? new Date().toISOString().split('T')[0] : '',
+      createdAt: new Date().toISOString().split('T')[0],
+    };
+    setPosts(prev => [post, ...prev]);
+    setShowCreateModal(false);
+    setNewPost({ title: '', slug: '', excerpt: '', content: '', coverImage: '', category: '', tags: [], status: 'draft' });
+  };
+
+  const handleUpdatePost = () => {
+    if (!editingPost) return;
+    setPosts(prev => prev.map(p => p.id === editingPost.id ? editingPost : p));
+    setEditingPost(null);
+  };
+
+  const handleDeletePost = (id: string) => {
+    setPosts(prev => prev.filter(p => p.id !== id));
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'published': return 'bg-green-500/20 text-green-400';
+      case 'draft': return 'bg-yellow-500/20 text-yellow-400';
+      case 'scheduled': return 'bg-blue-500/20 text-blue-400';
+      default: return 'bg-[#F5F0E8]/10 text-[var(--text-muted)]';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    if (language === 'uk') {
+      switch (status) {
+        case 'published': return 'Опубліковано';
+        case 'draft': return 'Чернетка';
+        case 'scheduled': return 'Заплановано';
+        default: return status;
+      }
+    }
+    return status.charAt(0).toUpperCase() + status.slice(1);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-heading)' }}>
+            {language === 'uk' ? 'Блог та новини' : 'Blog & News'}
+          </h2>
+          <p className="text-[var(--text-muted)] text-sm mt-1">
+            {language === 'uk' ? 'Створюйте статті для SEO та залучення клієнтів' : 'Create articles for SEO and customer engagement'}
+          </p>
+        </div>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="px-4 py-2 bg-[var(--accent)] text-[#0D0D0D] rounded-xl font-medium hover:bg-[var(--accent-hover)] transition-colors flex items-center gap-2"
+        >
+          <span>+</span>
+          {language === 'uk' ? 'Нова стаття' : 'New Article'}
+        </button>
+      </div>
+
+      {/* Posts Grid */}
+      <div className="grid gap-4">
+        {posts.map(post => (
+          <div key={post.id} className="bg-[var(--bg-secondary)] rounded-2xl border border-[var(--card-border)] overflow-hidden">
+            <div className="flex">
+              {/* Cover */}
+              <div className="w-48 h-32 bg-[var(--bg-primary)] flex-shrink-0">
+                {post.coverImage ? (
+                  <img src={post.coverImage} alt={post.title} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-[var(--text-muted)]">
+                    <span className="text-3xl">📝</span>
+                  </div>
+                )}
+              </div>
+              
+              {/* Info */}
+              <div className="flex-1 p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`px-2 py-0.5 rounded-full text-xs ${getStatusColor(post.status)}`}>
+                        {getStatusLabel(post.status)}
+                      </span>
+                      {post.category && (
+                        <span className="px-2 py-0.5 rounded-full text-xs bg-[#F5F0E8]/10 text-[var(--text-muted)]">
+                          {post.category}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="text-[var(--text-primary)] font-medium">{post.title}</h3>
+                    <p className="text-[var(--text-muted)] text-sm line-clamp-1">{post.excerpt}</p>
+                    <p className="text-[var(--text-muted)] text-xs mt-2">
+                      {post.status === 'published' ? `${language === 'uk' ? 'Опубліковано' : 'Published'}: ${post.publishedAt}` : `${language === 'uk' ? 'Створено' : 'Created'}: ${post.createdAt}`}
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 ml-4">
+                    <button
+                      onClick={() => setEditingPost(post)}
+                      className="p-2 bg-[#F5F0E8]/10 rounded-lg text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/10 transition-colors"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={() => handleDeletePost(post.id)}
+                      className="p-2 bg-[#F5F0E8]/10 rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Create Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-4">{language === 'uk' ? 'Нова стаття' : 'New Article'}</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'Заголовок' : 'Title'}</label>
+                <input
+                  type="text"
+                  value={newPost.title || ''}
+                  onChange={(e) => setNewPost({ ...newPost, title: e.target.value, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                />
+              </div>
+              <div>
+                <label className="block text-[var(--text-muted)] text-sm mb-2">URL Slug</label>
+                <input
+                  type="text"
+                  value={newPost.slug || ''}
+                  onChange={(e) => setNewPost({ ...newPost, slug: e.target.value })}
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                />
+              </div>
+              <div>
+                <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'Короткий опис' : 'Excerpt'}</label>
+                <textarea
+                  value={newPost.excerpt || ''}
+                  onChange={(e) => setNewPost({ ...newPost, excerpt: e.target.value })}
+                  rows={2}
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] resize-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'Контент' : 'Content'}</label>
+                <textarea
+                  value={newPost.content || ''}
+                  onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
+                  rows={8}
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] resize-none"
+                  placeholder={language === 'uk' ? 'Напишіть контент статті...' : 'Write article content...'}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'Категорія' : 'Category'}</label>
+                  <input
+                    type="text"
+                    value={newPost.category || ''}
+                    onChange={(e) => setNewPost({ ...newPost, category: e.target.value })}
+                    className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'Статус' : 'Status'}</label>
+                  <select
+                    value={newPost.status || 'draft'}
+                    onChange={(e) => setNewPost({ ...newPost, status: e.target.value as BlogPost['status'] })}
+                    className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                  >
+                    <option value="draft">{getStatusLabel('draft')}</option>
+                    <option value="published">{getStatusLabel('published')}</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'URL обкладинки' : 'Cover Image URL'}</label>
+                <input
+                  type="text"
+                  value={newPost.coverImage || ''}
+                  onChange={(e) => setNewPost({ ...newPost, coverImage: e.target.value })}
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="flex-1 px-4 py-3 bg-[#F5F0E8]/10 text-[var(--text-primary)] rounded-xl font-medium"
+              >
+                {language === 'uk' ? 'Скасувати' : 'Cancel'}
+              </button>
+              <button
+                onClick={handleCreatePost}
+                className="flex-1 px-4 py-3 bg-[var(--accent)] text-[#0D0D0D] rounded-xl font-medium"
+              >
+                {language === 'uk' ? 'Створити' : 'Create'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editingPost && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-4">{language === 'uk' ? 'Редагувати статтю' : 'Edit Article'}</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'Заголовок' : 'Title'}</label>
+                <input
+                  type="text"
+                  value={editingPost.title}
+                  onChange={(e) => setEditingPost({ ...editingPost, title: e.target.value })}
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                />
+              </div>
+              <div>
+                <label className="block text-[var(--text-muted)] text-sm mb-2">URL Slug</label>
+                <input
+                  type="text"
+                  value={editingPost.slug}
+                  onChange={(e) => setEditingPost({ ...editingPost, slug: e.target.value })}
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                />
+              </div>
+              <div>
+                <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'Короткий опис' : 'Excerpt'}</label>
+                <textarea
+                  value={editingPost.excerpt}
+                  onChange={(e) => setEditingPost({ ...editingPost, excerpt: e.target.value })}
+                  rows={2}
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] resize-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'Контент' : 'Content'}</label>
+                <textarea
+                  value={editingPost.content}
+                  onChange={(e) => setEditingPost({ ...editingPost, content: e.target.value })}
+                  rows={8}
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] resize-none"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'Категорія' : 'Category'}</label>
+                  <input
+                    type="text"
+                    value={editingPost.category}
+                    onChange={(e) => setEditingPost({ ...editingPost, category: e.target.value })}
+                    className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'Статус' : 'Status'}</label>
+                  <select
+                    value={editingPost.status}
+                    onChange={(e) => setEditingPost({ ...editingPost, status: e.target.value as BlogPost['status'] })}
+                    className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                  >
+                    <option value="draft">{getStatusLabel('draft')}</option>
+                    <option value="published">{getStatusLabel('published')}</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-[var(--text-muted)] text-sm mb-2">{language === 'uk' ? 'URL обкладинки' : 'Cover Image URL'}</label>
+                <input
+                  type="text"
+                  value={editingPost.coverImage}
+                  onChange={(e) => setEditingPost({ ...editingPost, coverImage: e.target.value })}
+                  className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setEditingPost(null)}
+                className="flex-1 px-4 py-3 bg-[#F5F0E8]/10 text-[var(--text-primary)] rounded-xl font-medium"
+              >
+                {language === 'uk' ? 'Скасувати' : 'Cancel'}
+              </button>
+              <button
+                onClick={handleUpdatePost}
+                className="flex-1 px-4 py-3 bg-[var(--accent)] text-[#0D0D0D] rounded-xl font-medium"
+              >
+                {language === 'uk' ? 'Зберегти' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Reports Content - For Accounting, Sysadmin, Legal audit
+const ReportsContent = () => {
+  const { language } = useTranslation();
+  const [dateRange, setDateRange] = useState<'today' | 'week' | 'month' | 'quarter' | 'year' | 'custom'>('month');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
+  const [reportType, setReportType] = useState<'sales' | 'products' | 'customers' | 'bonuses' | 'delivery' | 'tax'>('sales');
+  const [exportFormat, setExportFormat] = useState<'csv' | 'xlsx' | 'pdf'>('xlsx');
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  // Mock data for reports
+  const salesData = {
+    totalRevenue: 456000,
+    totalOrders: 124,
+    avgOrderValue: 3677,
+    totalProducts: 412,
+    deliveryCosts: 12400,
+    netRevenue: 443600,
+    taxAmount: 88720, // 20% VAT
+    bonusPointsIssued: 45600,
+    bonusPointsRedeemed: 12300,
+    marketingCupsGiven: 2480
+  };
+
+  const productBreakdown = [
+    { name: 'PU-ERH 1L', quantity: 156, revenue: 152100, avgPrice: 975 },
+    { name: 'DA HONG PAO 1L', quantity: 134, revenue: 136680, avgPrice: 1020 },
+    { name: 'GABA 1L', quantity: 98, revenue: 117600, avgPrice: 1200 },
+    { name: 'PU-ERH 0.25L', quantity: 84, revenue: 14280, avgPrice: 170 },
+    { name: 'DA HONG PAO 0.25L', quantity: 72, revenue: 12888, avgPrice: 179 },
+    { name: 'GABA 0.25L', quantity: 68, revenue: 14280, avgPrice: 210 },
+  ];
+
+  const deliveryBreakdown = [
+    { method: 'Нова Пошта', orders: 108, avgCost: 95, totalCost: 10260 },
+    { method: 'Самовивіз', orders: 16, avgCost: 0, totalCost: 0 },
+  ];
+
+  const handleExport = async () => {
+    setIsGenerating(true);
+    
+    // Simulate export generation
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Generate CSV content based on report type
+    let csvContent = '';
+    let filename = '';
+    
+    if (reportType === 'sales') {
+      filename = `sales_report_${dateRange}_${new Date().toISOString().slice(0,10)}`;
+      csvContent = `Звіт продажів BoosterTea\n`;
+      csvContent += `Період: ${dateRange}\n`;
+      csvContent += `Дата генерації: ${new Date().toLocaleString('uk-UA')}\n\n`;
+      csvContent += `Показник,Значення\n`;
+      csvContent += `Загальний дохід,${salesData.totalRevenue} грн\n`;
+      csvContent += `Кількість замовлень,${salesData.totalOrders}\n`;
+      csvContent += `Середній чек,${salesData.avgOrderValue} грн\n`;
+      csvContent += `Кількість проданих одиниць,${salesData.totalProducts}\n`;
+      csvContent += `Витрати на доставку,${salesData.deliveryCosts} грн\n`;
+      csvContent += `Чистий дохід,${salesData.netRevenue} грн\n`;
+      csvContent += `ПДВ (20%),${salesData.taxAmount} грн\n`;
+      csvContent += `Видано бонусних балів,${salesData.bonusPointsIssued}\n`;
+      csvContent += `Використано бонусних балів,${salesData.bonusPointsRedeemed}\n`;
+      csvContent += `Видано маркетингових стаканчиків,${salesData.marketingCupsGiven}\n`;
+    } else if (reportType === 'products') {
+      filename = `products_report_${dateRange}_${new Date().toISOString().slice(0,10)}`;
+      csvContent = `Звіт по продуктах BoosterTea\n`;
+      csvContent += `Період: ${dateRange}\n\n`;
+      csvContent += `Продукт,Кількість,Дохід (грн),Середня ціна (грн)\n`;
+      productBreakdown.forEach(p => {
+        csvContent += `${p.name},${p.quantity},${p.revenue},${p.avgPrice}\n`;
+      });
+    } else if (reportType === 'delivery') {
+      filename = `delivery_report_${dateRange}_${new Date().toISOString().slice(0,10)}`;
+      csvContent = `Звіт по доставках BoosterTea\n`;
+      csvContent += `Період: ${dateRange}\n\n`;
+      csvContent += `Спосіб доставки,Замовлень,Середня вартість (грн),Загальна вартість (грн)\n`;
+      deliveryBreakdown.forEach(d => {
+        csvContent += `${d.method},${d.orders},${d.avgCost},${d.totalCost}\n`;
+      });
+    } else if (reportType === 'tax') {
+      filename = `tax_report_${dateRange}_${new Date().toISOString().slice(0,10)}`;
+      csvContent = `Податковий звіт BoosterTea\n`;
+      csvContent += `Період: ${dateRange}\n`;
+      csvContent += `ЄДРПОУ: XXXXXXXX\n`;
+      csvContent += `Дата генерації: ${new Date().toLocaleString('uk-UA')}\n\n`;
+      csvContent += `Категорія,Сума без ПДВ (грн),ПДВ 20% (грн),Сума з ПДВ (грн)\n`;
+      const netSales = Math.round(salesData.totalRevenue / 1.2);
+      const vatAmount = salesData.totalRevenue - netSales;
+      csvContent += `Продажі товарів,${netSales},${vatAmount},${salesData.totalRevenue}\n`;
+      csvContent += `Доставка (не оподатковується),${salesData.deliveryCosts},0,${salesData.deliveryCosts}\n`;
+      csvContent += `\nРазом до сплати ПДВ:,${vatAmount} грн\n`;
+    }
+    
+    // Create and download file
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${filename}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    setIsGenerating(false);
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Report Controls */}
+      <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 border border-[var(--card-border)]">
+        <h3 className="text-lg text-[var(--text-primary)] font-medium mb-6" style={{ fontFamily: 'var(--font-heading)' }}>
+          {language === 'uk' ? 'Генерація звітів' : 'Report Generation'}
+        </h3>
+        
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Report Type */}
+          <div>
+            <label className="block text-[var(--text-muted)] text-sm mb-2">
+              {language === 'uk' ? 'Тип звіту' : 'Report Type'}
+            </label>
+            <select
+              value={reportType}
+              onChange={(e) => setReportType(e.target.value as any)}
+              className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+            >
+              <option value="sales">{language === 'uk' ? '📊 Продажі' : '📊 Sales'}</option>
+              <option value="products">{language === 'uk' ? '🍵 По продуктах' : '🍵 By Products'}</option>
+              <option value="customers">{language === 'uk' ? '👥 По клієнтах' : '👥 By Customers'}</option>
+              <option value="bonuses">{language === 'uk' ? '⭐ Бонусна система' : '⭐ Bonus System'}</option>
+              <option value="delivery">{language === 'uk' ? '🚚 Доставка' : '🚚 Delivery'}</option>
+              <option value="tax">{language === 'uk' ? '📋 Податковий' : '📋 Tax Report'}</option>
+            </select>
+          </div>
+
+          {/* Date Range */}
+          <div>
+            <label className="block text-[var(--text-muted)] text-sm mb-2">
+              {language === 'uk' ? 'Період' : 'Period'}
+            </label>
+            <select
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value as any)}
+              className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+            >
+              <option value="today">{language === 'uk' ? 'Сьогодні' : 'Today'}</option>
+              <option value="week">{language === 'uk' ? 'Тиждень' : 'Week'}</option>
+              <option value="month">{language === 'uk' ? 'Місяць' : 'Month'}</option>
+              <option value="quarter">{language === 'uk' ? 'Квартал' : 'Quarter'}</option>
+              <option value="year">{language === 'uk' ? 'Рік' : 'Year'}</option>
+              <option value="custom">{language === 'uk' ? 'Власний' : 'Custom'}</option>
+            </select>
+          </div>
+
+          {/* Export Format */}
+          <div>
+            <label className="block text-[var(--text-muted)] text-sm mb-2">
+              {language === 'uk' ? 'Формат' : 'Format'}
+            </label>
+            <select
+              value={exportFormat}
+              onChange={(e) => setExportFormat(e.target.value as any)}
+              className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+            >
+              <option value="csv">CSV (Excel)</option>
+              <option value="xlsx">XLSX (Excel)</option>
+              <option value="pdf">PDF</option>
+            </select>
+          </div>
+
+          {/* Generate Button */}
+          <div className="flex items-end">
+            <button
+              onClick={handleExport}
+              disabled={isGenerating}
+              className="w-full px-6 py-3 bg-[var(--accent)] text-[#0D0D0D] font-bold rounded-xl hover:bg-[#5a7a42] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {isGenerating ? (
+                <>
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  {language === 'uk' ? 'Генерація...' : 'Generating...'}
+                </>
+              ) : (
+                <>
+                  <span>📥</span>
+                  {language === 'uk' ? 'Завантажити' : 'Download'}
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Custom date range */}
+        {dateRange === 'custom' && (
+          <div className="grid sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-[var(--border)]">
+            <div>
+              <label className="block text-[var(--text-muted)] text-sm mb-2">
+                {language === 'uk' ? 'Від' : 'From'}
+              </label>
+              <input
+                type="date"
+                value={customStartDate}
+                onChange={(e) => setCustomStartDate(e.target.value)}
+                className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+              />
+            </div>
+            <div>
+              <label className="block text-[var(--text-muted)] text-sm mb-2">
+                {language === 'uk' ? 'До' : 'To'}
+              </label>
+              <input
+                type="date"
+                value={customEndDate}
+                onChange={(e) => setCustomEndDate(e.target.value)}
+                className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)]"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Quick Stats Preview */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 border border-[var(--card-border)]">
+          <p className="text-[var(--text-muted)] text-sm mb-1">{language === 'uk' ? 'Дохід за період' : 'Period Revenue'}</p>
+          <p className="text-3xl font-bold text-[var(--accent)]" style={{ fontFamily: 'var(--font-heading)' }}>
+            {salesData.totalRevenue.toLocaleString()}₴
+          </p>
+          <p className="text-[var(--text-primary)]/50 text-xs mt-1">
+            {language === 'uk' ? 'Чистий: ' : 'Net: '}{salesData.netRevenue.toLocaleString()}₴
+          </p>
+        </div>
+        <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 border border-[var(--card-border)]">
+          <p className="text-[var(--text-muted)] text-sm mb-1">{language === 'uk' ? 'Замовлень' : 'Orders'}</p>
+          <p className="text-3xl font-bold text-[#C9A962]" style={{ fontFamily: 'var(--font-heading)' }}>
+            {salesData.totalOrders}
+          </p>
+          <p className="text-[var(--text-primary)]/50 text-xs mt-1">
+            {language === 'uk' ? 'Середній чек: ' : 'Avg: '}{salesData.avgOrderValue.toLocaleString()}₴
+          </p>
+        </div>
+        <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 border border-[var(--card-border)]">
+          <p className="text-[var(--text-muted)] text-sm mb-1">{language === 'uk' ? 'ПДВ до сплати' : 'VAT to Pay'}</p>
+          <p className="text-3xl font-bold text-[#E07B2D]" style={{ fontFamily: 'var(--font-heading)' }}>
+            {salesData.taxAmount.toLocaleString()}₴
+          </p>
+          <p className="text-[var(--text-primary)]/50 text-xs mt-1">20%</p>
+        </div>
+        <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 border border-[var(--card-border)]">
+          <p className="text-[var(--text-muted)] text-sm mb-1">{language === 'uk' ? 'Бонуси видано' : 'Bonus Issued'}</p>
+          <p className="text-3xl font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-heading)' }}>
+            {salesData.bonusPointsIssued.toLocaleString()}
+          </p>
+          <p className="text-[var(--text-primary)]/50 text-xs mt-1">
+            {language === 'uk' ? 'Використано: ' : 'Redeemed: '}{salesData.bonusPointsRedeemed.toLocaleString()}
+          </p>
+        </div>
+      </div>
+
+      {/* Product Breakdown Table */}
+      <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 border border-[var(--card-border)]">
+        <h3 className="text-lg text-[var(--text-primary)] font-medium mb-4" style={{ fontFamily: 'var(--font-heading)' }}>
+          {language === 'uk' ? 'Розбивка по продуктах' : 'Product Breakdown'}
+        </h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-[var(--border)]">
+                <th className="pb-3 text-[var(--text-muted)] text-sm font-medium">
+                  {language === 'uk' ? 'Продукт' : 'Product'}
+                </th>
+                <th className="pb-3 text-[var(--text-muted)] text-sm font-medium text-right">
+                  {language === 'uk' ? 'Кількість' : 'Quantity'}
+                </th>
+                <th className="pb-3 text-[var(--text-muted)] text-sm font-medium text-right">
+                  {language === 'uk' ? 'Дохід' : 'Revenue'}
+                </th>
+                <th className="pb-3 text-[var(--text-muted)] text-sm font-medium text-right">
+                  {language === 'uk' ? 'Сер. ціна' : 'Avg Price'}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {productBreakdown.map((product, index) => (
+                <tr key={index} className="border-b border-[var(--border)]/50">
+                  <td className="py-3 text-[var(--text-primary)]">{product.name}</td>
+                  <td className="py-3 text-[var(--text-primary)] text-right">{product.quantity}</td>
+                  <td className="py-3 text-[var(--accent)] text-right font-medium">
+                    {product.revenue.toLocaleString()}₴
+                  </td>
+                  <td className="py-3 text-[var(--text-muted)] text-right">{product.avgPrice}₴</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className="font-bold">
+                <td className="pt-3 text-[var(--text-primary)]">{language === 'uk' ? 'Разом' : 'Total'}</td>
+                <td className="pt-3 text-[var(--text-primary)] text-right">
+                  {productBreakdown.reduce((a, b) => a + b.quantity, 0)}
+                </td>
+                <td className="pt-3 text-[var(--accent)] text-right">
+                  {productBreakdown.reduce((a, b) => a + b.revenue, 0).toLocaleString()}₴
+                </td>
+                <td className="pt-3 text-[var(--text-muted)] text-right">—</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      {/* Delivery & Marketing Summary */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Delivery Stats */}
+        <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 border border-[var(--card-border)]">
+          <h3 className="text-lg text-[var(--text-primary)] font-medium mb-4" style={{ fontFamily: 'var(--font-heading)' }}>
+            🚚 {language === 'uk' ? 'Доставка' : 'Delivery'}
+          </h3>
+          <div className="space-y-4">
+            {deliveryBreakdown.map((delivery, index) => (
+              <div key={index} className="flex justify-between items-center py-2 border-b border-[var(--border)]/50">
+                <span className="text-[var(--text-primary)]">{delivery.method}</span>
+                <div className="text-right">
+                  <p className="text-[var(--text-primary)] font-medium">{delivery.orders} {language === 'uk' ? 'замовлень' : 'orders'}</p>
+                  <p className="text-[var(--text-muted)] text-sm">{delivery.totalCost.toLocaleString()}₴</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Marketing Gifts */}
+        <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 border border-[var(--card-border)]">
+          <h3 className="text-lg text-[var(--text-primary)] font-medium mb-4" style={{ fontFamily: 'var(--font-heading)' }}>
+            🎁 {language === 'uk' ? 'Маркетингові витрати' : 'Marketing Costs'}
+          </h3>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center py-2 border-b border-[var(--border)]/50">
+              <span className="text-[var(--text-primary)]">
+                {language === 'uk' ? 'Брендовані стаканчики' : 'Branded Cups'}
+              </span>
+              <div className="text-right">
+                <p className="text-[#E07B2D] font-bold">{salesData.marketingCupsGiven.toLocaleString()} шт</p>
+                <p className="text-[var(--text-muted)] text-sm">~{Math.round(salesData.marketingCupsGiven * 2.5).toLocaleString()}₴</p>
+              </div>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-[var(--border)]/50">
+              <span className="text-[var(--text-primary)]">
+                {language === 'uk' ? 'Бонуси (оцінка)' : 'Bonuses (estimate)'}
+              </span>
+              <div className="text-right">
+                <p className="text-[#C9A962] font-bold">{salesData.bonusPointsIssued.toLocaleString()} балів</p>
+                <p className="text-[var(--text-muted)] text-sm">~{Math.round(salesData.bonusPointsIssued * 0.5).toLocaleString()}₴</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Legal Notice */}
+      <div className="bg-[#E07B2D]/10 rounded-xl p-4 border border-[#E07B2D]/30">
+        <div className="flex items-start gap-3">
+          <span className="text-xl">⚠️</span>
+          <div>
+            <p className="text-[#E07B2D] font-medium">
+              {language === 'uk' ? 'Увага для бухгалтерії' : 'Accounting Notice'}
+            </p>
+            <p className="text-[var(--text-primary)]/70 text-sm">
+              {language === 'uk' 
+                ? 'Звіти формуються на основі даних системи. Для офіційної звітності використовуйте дані з банківських виписок та касових апаратів.'
+                : 'Reports are generated from system data. For official reporting, use bank statements and POS data.'}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SettingsContent = () => {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [testingNotification, setTestingNotification] = useState(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  
+  // Notification settings state
+  const [telegramBotToken, setTelegramBotToken] = useState('');
+  const [telegramChatId, setTelegramChatId] = useState('');
+  const [telegramEnabled, setTelegramEnabled] = useState(false);
+  const [newOrderEnabled, setNewOrderEnabled] = useState(true);
+  const [paymentReceivedEnabled, setPaymentReceivedEnabled] = useState(true);
+  const [orderShippedEnabled, setOrderShippedEnabled] = useState(true);
+  const [hasToken, setHasToken] = useState(false);
+  
+  // Notification log
+  const [notificationLog, setNotificationLog] = useState<{
+    id: number;
+    type: string;
+    channel: string;
+    success: boolean;
+    errorMessage: string | null;
+    messagePreview: string | null;
+    sentAt: string;
+  }[]>([]);
+
+  // Fetch settings on mount
+  useEffect(() => {
+    fetchSettings();
+    fetchNotificationLog();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const response = await fetch('/api/notifications/settings');
+      const data = await response.json();
+      
+      if (data.settings) {
+        setTelegramBotToken(data.settings.telegramBotToken || '');
+        setTelegramChatId(data.settings.telegramChatId || '');
+        setTelegramEnabled(data.settings.telegramEnabled || false);
+        setNewOrderEnabled(data.settings.newOrderEnabled !== false);
+        setPaymentReceivedEnabled(data.settings.paymentReceivedEnabled !== false);
+        setOrderShippedEnabled(data.settings.orderShippedEnabled !== false);
+        setHasToken(data.settings.hasToken || false);
+      }
+    } catch (error) {
+      console.error('Failed to fetch notification settings:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchNotificationLog = async () => {
+    try {
+      const response = await fetch('/api/notifications/log?limit=10');
+      const data = await response.json();
+      
+      if (data.logs) {
+        setNotificationLog(data.logs);
+      }
+    } catch (error) {
+      console.error('Failed to fetch notification log:', error);
+    }
+  };
+
+  const saveSettings = async () => {
+    setSaving(true);
+    try {
+      const response = await fetch('/api/notifications/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          telegramBotToken: telegramBotToken.startsWith('•') ? undefined : telegramBotToken,
+          telegramChatId,
+          telegramEnabled,
+          newOrderEnabled,
+          paymentReceivedEnabled,
+          orderShippedEnabled,
+        }),
+      });
+      
+      if (response.ok) {
+        setTestResult({ success: true, message: 'Налаштування збережено!' });
+        // Refresh to get masked token
+        if (telegramBotToken && !telegramBotToken.startsWith('•')) {
+          fetchSettings();
+        }
+      } else {
+        setTestResult({ success: false, message: 'Помилка збереження' });
+      }
+    } catch (error) {
+      setTestResult({ success: false, message: 'Помилка мережі' });
+    } finally {
+      setSaving(false);
+      setTimeout(() => setTestResult(null), 3000);
+    }
+  };
+
+  const testTelegramNotification = async () => {
+    setTestingNotification(true);
+    setTestResult(null);
+    
+    try {
+      const response = await fetch('/api/notifications/telegram/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setTestResult({ success: true, message: 'Тестове повідомлення відправлено!' });
+        fetchNotificationLog(); // Refresh log
+      } else {
+        setTestResult({ success: false, message: data.error || 'Помилка відправки' });
+      }
+    } catch (error) {
+      setTestResult({ success: false, message: 'Помилка мережі' });
+    } finally {
+      setTestingNotification(false);
+    }
+  };
+
+  const getNotificationTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      'new_order': '📦 Нове замовлення',
+      'payment_received': '💳 Оплата',
+      'order_shipped': '🚚 Відправлено',
+      'test': '🧪 Тест',
+      'manual': '✏️ Вручну',
+    };
+    return labels[type] || type;
+  };
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleString('uk-UA', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* Result Toast */}
+      {testResult && (
+        <div className={`fixed top-20 right-8 px-6 py-4 rounded-xl shadow-lg z-50 transition-all ${
+          testResult.success ? 'bg-green-500/90' : 'bg-red-500/90'
+        } text-white`}>
+          <div className="flex items-center gap-3">
+            <span>{testResult.success ? '✅' : '❌'}</span>
+            <span>{testResult.message}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Telegram Notifications */}
+      <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 border border-[var(--card-border)]">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-[#0088cc]/20 rounded-xl flex items-center justify-center">
+              <svg className="w-6 h-6 text-[#0088cc]" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.66-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.24.37-.49 1.02-.75 3.99-1.74 6.65-2.89 7.99-3.45 3.8-1.6 4.59-1.87 5.1-1.88.11 0 .37.03.54.17.14.12.18.28.2.45-.01.06.01.24 0 .38z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-[var(--text-primary)] font-medium text-lg">Telegram сповіщення</h3>
+              <p className="text-[var(--text-primary)]/60 text-sm">Отримуйте миттєві сповіщення про замовлення</p>
+            </div>
+          </div>
+          
+          {/* Enable Toggle */}
+          <button
+            onClick={() => setTelegramEnabled(!telegramEnabled)}
+            className={`relative w-14 h-7 rounded-full transition-colors ${
+              telegramEnabled ? 'bg-[var(--accent)]' : 'bg-[#F5F0E8]/20'
+            }`}
+          >
+            <span className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+              telegramEnabled ? 'translate-x-7' : ''
+            }`} />
+          </button>
+        </div>
+
+        {/* Configuration */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-[var(--text-primary)]/80 text-sm mb-2">
+              Bot Token
+              <span className="text-[var(--text-primary)]/40 ml-2">(від @BotFather)</span>
+            </label>
+            <input
+              type="password"
+              value={telegramBotToken}
+              onChange={(e) => setTelegramBotToken(e.target.value)}
+              placeholder={hasToken ? '••••••••••••••••••••' : 'Вставте токен бота'}
+              className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30 focus:border-[var(--accent)] focus:outline-none transition-colors"
+            />
+            <p className="text-[var(--text-primary)]/40 text-xs mt-2">
+              Створіть бота в @BotFather і отримайте токен
+            </p>
+          </div>
+          
+          <div>
+            <label className="block text-[var(--text-primary)]/80 text-sm mb-2">
+              Chat ID
+              <span className="text-[var(--text-primary)]/40 ml-2">(куди відправляти)</span>
+            </label>
+            <input
+              type="text"
+              value={telegramChatId}
+              onChange={(e) => setTelegramChatId(e.target.value)}
+              placeholder="-1001234567890 або @channel_name"
+              className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30 focus:border-[var(--accent)] focus:outline-none transition-colors"
+            />
+            <p className="text-[var(--text-primary)]/40 text-xs mt-2">
+              ID чату, групи або каналу. Дізнайтеся ID через @userinfobot
+            </p>
+          </div>
+        </div>
+
+        {/* Notification Types */}
+        <div className="mt-6 pt-6 border-t border-[var(--border)]">
+          <h4 className="text-[var(--text-primary)]/80 text-sm font-medium mb-4">Типи сповіщень</h4>
+          
+          <div className="space-y-3">
+            <label className="flex items-center justify-between p-4 bg-[var(--bg-primary)] rounded-xl cursor-pointer hover:bg-[#F5F0E8]/5 transition-colors">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">📦</span>
+                <div>
+                  <span className="text-[var(--text-primary)]">Нове замовлення</span>
+                  <p className="text-[var(--text-primary)]/40 text-xs">Сповіщення при оформленні</p>
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                checked={newOrderEnabled}
+                onChange={(e) => setNewOrderEnabled(e.target.checked)}
+                className="w-5 h-5 accent-[var(--accent)]"
+              />
+            </label>
+            
+            <label className="flex items-center justify-between p-4 bg-[var(--bg-primary)] rounded-xl cursor-pointer hover:bg-[#F5F0E8]/5 transition-colors">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">💳</span>
+                <div>
+                  <span className="text-[var(--text-primary)]">Оплата отримана</span>
+                  <p className="text-[var(--text-primary)]/40 text-xs">Сповіщення після оплати</p>
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                checked={paymentReceivedEnabled}
+                onChange={(e) => setPaymentReceivedEnabled(e.target.checked)}
+                className="w-5 h-5 accent-[var(--accent)]"
+              />
+            </label>
+            
+            <label className="flex items-center justify-between p-4 bg-[var(--bg-primary)] rounded-xl cursor-pointer hover:bg-[#F5F0E8]/5 transition-colors">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🚚</span>
+                <div>
+                  <span className="text-[var(--text-primary)]">Замовлення відправлено</span>
+                  <p className="text-[var(--text-primary)]/40 text-xs">Сповіщення при відправці</p>
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                checked={orderShippedEnabled}
+                onChange={(e) => setOrderShippedEnabled(e.target.checked)}
+                className="w-5 h-5 accent-[var(--accent)]"
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-3 mt-6 pt-6 border-t border-[var(--border)]">
+          <button
+            onClick={saveSettings}
+            disabled={saving}
+            className="flex-1 px-6 py-3 bg-[var(--accent)] text-[#0D0D0D] rounded-xl font-medium hover:bg-[var(--accent-hover)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {saving ? 'Збереження...' : 'Зберегти налаштування'}
+          </button>
+          
+          <button
+            onClick={testTelegramNotification}
+            disabled={testingNotification || !telegramChatId || (!hasToken && !telegramBotToken)}
+            className="px-6 py-3 bg-[#0088cc]/20 text-[#0088cc] rounded-xl font-medium hover:bg-[#0088cc]/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {testingNotification ? (
+              <>
+                <div className="w-4 h-4 border-2 border-[#0088cc] border-t-transparent rounded-full animate-spin" />
+                Відправка...
+              </>
+            ) : (
+              <>
+                <span>🧪</span>
+                Тест
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Help */}
+        <div className="mt-6 p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
+          <div className="flex items-start gap-3">
+            <span className="text-blue-400 text-lg">💡</span>
+            <div className="text-blue-300/80 text-sm">
+              <p className="font-medium mb-1">Як налаштувати:</p>
+              <ol className="list-decimal list-inside space-y-1 text-blue-300/60">
+                <li>Створіть бота через @BotFather в Telegram</li>
+                <li>Скопіюйте токен бота</li>
+                <li>Створіть групу/канал і додайте туди бота як адміна</li>
+                <li>Дізнайтеся Chat ID через @userinfobot або @getidsbot</li>
+                <li>Вставте дані та натисніть "Тест"</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Notification Log */}
+      <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 border border-[var(--card-border)]">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-[var(--text-primary)] font-medium text-lg">Історія сповіщень</h3>
+            <p className="text-[var(--text-primary)]/60 text-sm">Останні відправлені повідомлення</p>
+          </div>
+          <button
+            onClick={fetchNotificationLog}
+            className="px-4 py-2 text-[var(--text-primary)]/60 hover:text-[var(--text-primary)] transition-colors"
+          >
+            🔄 Оновити
+          </button>
+        </div>
+
+        {notificationLog.length === 0 ? (
+          <div className="text-center py-12 text-[var(--text-primary)]/40">
+            <span className="text-4xl block mb-3">📭</span>
+            <p>Сповіщень поки немає</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {notificationLog.map((log) => (
+              <div
+                key={log.id}
+                className={`flex items-center justify-between p-4 rounded-xl ${
+                  log.success ? 'bg-green-500/5' : 'bg-red-500/10'
+                }`}
+              >
+                <div className="flex items-center gap-4">
+                  <span className={`w-2 h-2 rounded-full ${
+                    log.success ? 'bg-green-500' : 'bg-red-500'
+                  }`} />
+                  <div>
+                    <span className="text-[var(--text-primary)]">
+                      {getNotificationTypeLabel(log.type)}
+                    </span>
+                    {log.errorMessage && (
+                      <p className="text-red-400 text-xs mt-1">{log.errorMessage}</p>
+                    )}
+                  </div>
+                </div>
+                <span className="text-[var(--text-primary)]/40 text-sm">
+                  {formatDate(log.sentAt)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Browser Push Notifications */}
+      <BrowserPushNotifications />
+
+      {/* Email Notifications Placeholder */}
+      <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 border border-[var(--card-border)] opacity-60">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
+            <span className="text-2xl">📧</span>
+          </div>
+          <div>
+            <h3 className="text-[var(--text-primary)] font-medium text-lg">Email сповіщення</h3>
+            <p className="text-[var(--text-primary)]/60 text-sm">Скоро буде доступно</p>
+          </div>
+        </div>
+        <div className="p-4 bg-[#F5F0E8]/5 rounded-xl text-center text-[var(--text-primary)]/40">
+          🚧 В розробці
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Admin;

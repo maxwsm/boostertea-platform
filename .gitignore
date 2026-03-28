@@ -1,0 +1,14 @@
+node_modules
+.DS_Store
+.env
+.env.local
+.next
+dist
+build
+coverage
+.turbo
+create_notion_dbs.js
+.env*
+*.pem
+*.sqlite
+*.key

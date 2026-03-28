@@ -1,0 +1,14 @@
+{
+  "name": "@wsm/events",
+  "version": "1.0.0",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@wsm/db": "workspace:*",
+    "@prisma/client": "^5.10.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}
