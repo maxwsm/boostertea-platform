@@ -1,7 +1,7 @@
 const TelegramButton = () => {
   return (
     <a
-      href="https://t.me/booster_tea_ua"
+      href="https://t.me/boostertea_bot"
       target="_blank"
       rel="noopener noreferrer"
       className="fixed bottom-6 right-6 sm:bottom-6 sm:right-6 z-40 group telegram-floating-btn safe-area-bottom"

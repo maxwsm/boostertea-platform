@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useParams } from 'wouter';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Toast from '../components/Toast';
@@ -10,6 +11,82 @@ import { products, useStore } from '../lib/store';
 import { ScrollReveal, SteamParticles } from '../components/animations';
 import { SEO } from '../components/SEO';
 import { useI18n } from '../lib/i18n';
+import { MagneticButton } from '../components/scrollytelling/MagneticButton';
+import { PackifyViewer, MagneticGlassButton } from '@wsm/ui';
+
+// Animated Brewing Guide Component
+const DosageCalculator = ({ selectedVolume }: { selectedVolume: '1L' | '0.25L' | 'sticks' }) => {
+  const { t, language } = useI18n();
+  const [cupSize, setCupSize] = useState<250 | 350 | 500>(250);
+  const [strength, setStrength] = useState<'light' | 'normal' | 'strong'>('normal');
+
+  const getDosage = () => {
+    let base = cupSize === 250 ? 25 : cupSize === 350 ? 35 : 50;
+    if (strength === 'light') base = Math.floor(base * 0.8);
+    if (strength === 'strong') base = Math.floor(base * 1.3);
+    return base;
+  };
+
+  const dosage = getDosage();
+  const bottleVolumeML = selectedVolume === '1L' ? 1000 : selectedVolume === '0.25L' ? 250 : 25; // sticks approx
+  const totalCups = Math.floor(bottleVolumeML / dosage);
+
+  return (
+    <div className="bg-[var(--bg-secondary)] border border-white/5 rounded-2xl p-6 mb-8 relative overflow-hidden group">
+      <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent)]/5 to-transparent opacity-50"></div>
+      <h3 className="text-[var(--text-primary)]/var(--text-muted) text-sm uppercase tracking-wider mb-4 relative z-10 flex items-center gap-2">
+        <svg className="w-4 h-4 text-[var(--accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+        Калькулятор Дозування
+      </h3>
+      
+      <div className="space-y-5 relative z-10">
+        <div>
+          <label className="text-xs text-[var(--text-subtle)] font-bold uppercase mb-2 block">Об'єм чашки</label>
+          <div className="flex gap-2 bg-[var(--bg-primary)] p-1 rounded-xl border border-white/5">
+            {[250, 350, 500].map(size => (
+              <button 
+                key={size} onClick={() => setCupSize(size as any)}
+                className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${cupSize === size ? 'bg-[var(--accent)] text-black shadow-md' : 'text-[var(--text-secondary)] hover:text-white'}`}
+              >
+                {size} мл
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="text-xs text-[var(--text-subtle)] font-bold uppercase mb-2 block">Міцність</label>
+          <div className="flex gap-2">
+            {[
+              { id: 'light', label: 'М\'яка', icon: '🍃' },
+              { id: 'normal', label: 'Класика', icon: '☕' },
+              { id: 'strong', label: 'Міцна', icon: '⚡' }
+            ].map(s => (
+              <button 
+                key={s.id} onClick={() => setStrength(s.id as any)}
+                className={`flex-1 py-3 px-2 text-xs font-bold rounded-xl border transition-all flex flex-col items-center gap-1 ${strength === s.id ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]' : 'border-white/5 text-[var(--text-secondary)] hover:border-white/20'}`}
+              >
+                <span className="text-lg">{s.icon}</span>
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="pt-4 mt-2 border-t border-white/5 grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-[10px] text-[var(--text-subtle)] uppercase font-bold tracking-wider mb-1">Потрібно концентрату</p>
+            <p className="text-2xl font-black text-white">{dosage}<span className="text-sm font-normal text-[var(--text-muted)] ml-1">мл</span></p>
+          </div>
+          <div>
+            <p className="text-[10px] text-[var(--text-subtle)] uppercase font-bold tracking-wider mb-1">Вийде порцій з {selectedVolume}</p>
+            <p className="text-2xl font-black text-[var(--accent)]">{selectedVolume === 'sticks' ? 1 : totalCups}<span className="text-sm font-normal text-[var(--text-muted)] ml-1">шт</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // Animated Brewing Guide Component
 const AnimatedBrewingGuide = () => {
@@ -161,6 +238,18 @@ const AnimatedBrewingGuide = () => {
         {activeStep === 2 && t('productDetail.brewingStep3')}
         {activeStep === 3 && t('productDetail.brewingStep4')}
       </p>
+
+      {/* Visual GIF Instruction for 15 seconds process */}
+      <div className="mt-8 rounded-2xl overflow-hidden border border-white/10 shadow-lg group relative">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 pointer-events-none"></div>
+        <img src="https://media.giphy.com/media/l41JOUJdGqgYI2Lp6/giphy.gif" alt="Швидке приготування за 15 секунд" className="w-full h-auto object-cover opacity-80 group-hover:opacity-100 transition-opacity" style={{aspectRatio: '16/9'}} />
+        <div className="absolute bottom-4 left-4 right-4 z-20 text-center">
+          <span className="bg-[var(--accent)] text-black px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 max-w-[200px] mx-auto shadow-md">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            Готово за 15 сек.
+          </span>
+        </div>
+      </div>
     </div>
   );
 };
@@ -205,6 +294,28 @@ const ProductDetail = () => {
 
   const handleAddToCart = () => {
     addToCart(product, selectedVolume, quantity);
+    
+    // GA4 Ecommerce Event: add_to_cart
+    try {
+      const gtmWindow = window as any;
+      gtmWindow.dataLayer = gtmWindow.dataLayer || [];
+      gtmWindow.dataLayer.push({
+        event: "add_to_cart",
+        ecommerce: {
+          currency: "UAH",
+          value: totalPrice,
+          items: [{
+            item_id: `BT-${product.slug.toUpperCase()}-${selectedVolume}`,
+            item_name: product.nameUk,
+            affiliation: "BoosterTea Store",
+            item_category: "Liquid Tea",
+            item_variant: selectedVolume,
+            price: currentPrice,
+            quantity: quantity
+          }]
+        }
+      });
+    } catch(e) {}
   };
 
   // Simulated gallery images (in real app these would come from product data)
@@ -279,8 +390,16 @@ const ProductDetail = () => {
     }
   };
 
-  const seoTitle = productSeoTitles[product.slug]?.[language] || product.nameUk;
-  const seoDescription = productSeoDescriptions[product.slug]?.[language] || product.descriptionUk;
+  const defaultSeoTitle = language === 'uk' ? `${product.nameUk} - Купити чайний концентрат BoosterTea` :
+                          language === 'es' ? `${product.nameUk} - Comprar concentrado de té BoosterTea` :
+                                              `${product.nameUk} - Buy Tea Concentrate BoosterTea`;
+
+  const defaultSeoDesc = language === 'uk' ? `${product.nameUk} концентрат від BoosterTea. ${product.price1L}₴ за 1л. ${product.descriptionUk}` :
+                         language === 'es' ? `Concentrado de té ${product.nameUk} de BoosterTea. ${product.price1L}₴ por 1L. ${product.descriptionUk}` :
+                                             `${product.nameUk} tea concentrate by BoosterTea. ${product.price1L}₴ per 1L. ${product.descriptionUk}`;
+
+  const seoTitle = productSeoTitles[product.slug]?.[language] || defaultSeoTitle;
+  const seoDescription = productSeoDescriptions[product.slug]?.[language] || defaultSeoDesc;
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] page-transition">
@@ -325,20 +444,29 @@ const ProductDetail = () => {
               {/* Gallery */}
               <div>
                 <div className="relative aspect-square bg-gradient-to-br from-[#1A1A1A] to-[#141414] rounded-3xl overflow-hidden mb-4">
-                  <img 
-                    src={galleryImages[activeImage]}
-                    alt={product.nameUk}
-                    className="w-full h-full object-contain p-8"
-                  />
-                  
-                  {/* Category badge */}
-                  <div className="absolute top-6 left-6">
-                    <span className="px-4 py-2 bg-[var(--accent)]/20 text-[var(--accent)] text-sm font-medium rounded-full">
-                      {product.category === 'energy' && '⚡ Енергія'}
-                      {product.category === 'classic' && '🍵 Класика'}
-                      {product.category === 'relaxation' && '🌙 Релакс'}
-                    </span>
-                  </div>
+                  {product.packifyId ? (
+                    <PackifyViewer 
+                      projectId={product.packifyId} 
+                      className="w-full h-full shadow-[0_0_100px_rgba(204,255,0,0.1)]"
+                    />
+                  ) : (
+                    <>
+                      <img 
+                        src={galleryImages[activeImage]}
+                        alt={product.nameUk}
+                        className="w-full h-full object-contain p-8"
+                      />
+                      
+                      {/* Category badge */}
+                      <div className="absolute top-6 left-6">
+                        <span className="px-4 py-2 bg-[var(--accent)]/20 text-[var(--accent)] text-sm font-medium rounded-full">
+                          {product.category === 'energy' && '⚡ Енергія'}
+                          {product.category === 'classic' && '🍵 Класика'}
+                          {product.category === 'relaxation' && '🌙 Релакс'}
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {/* Thumbnail gallery */}
@@ -432,27 +560,7 @@ const ProductDetail = () => {
                       </p>
                     </button>
 
-                    {product.priceSticks !== undefined && (
-                      <button
-                        onClick={() => {
-                          setSelectedVolume('sticks');
-                          setQuantity(1);
-                        }}
-                        className={`flex-1 py-4 rounded-xl border-2 transition-all ${
-                          selectedVolume === 'sticks'
-                            ? 'border-[#9FD356] bg-[var(--accent)]/10'
-                            : 'border-[var(--border)] hover:border-[#F5F0E8]/30'
-                        }`}
-                      >
-                        <p className="text-[var(--text-primary)] text-base font-semibold">
-                          {product.isBundle ? '3× стіки' : 'Стіки'}
-                        </p>
-                        <p className="text-[var(--accent)] font-bold">{product.priceSticks}₴</p>
-                        <p className="text-[var(--text-muted)] text-xs mt-1">
-                          {product.isBundle ? '72 порції' : '24 порції'}
-                        </p>
-                      </button>
-                    )}
+                    {/* Removed Sticks Section via B2B Overhaul */}
                   </div>
                 </div>
 
@@ -483,6 +591,9 @@ const ProductDetail = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Dosage Calculator */}
+                <DosageCalculator selectedVolume={selectedVolume} />
 
                 {/* Accessory Bonus Info */}
                 {selectedVolume === '1L' && quantity < 3 && (
@@ -530,18 +641,37 @@ const ProductDetail = () => {
                   <hr className="border-[var(--border)] my-4" />
                   <div className="flex justify-between items-center">
                     <span className="text-[var(--text-primary)] text-lg">{t('productDetail.total')}:</span>
-                    <span className="text-[var(--accent)] text-3xl font-bold">{totalPrice.toLocaleString()}₴</span>
+                    <div className="text-right">
+                      <span className="text-[var(--accent)] text-3xl font-bold">{totalPrice.toLocaleString()}₴</span>
+                      {selectedVolume === '1L' && (
+                        <p className="text-xs text-[var(--text-muted)] mt-1 font-medium bg-white/5 border border-white/10 px-2 py-0.5 rounded-md inline-block">
+                          ~ 26 грн за чашку ідеального {product.nameUk.includes('Пуєр') ? 'пуеру' : 'чаю'}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* Add to Cart */}
-                <button
-                  onClick={handleAddToCart}
-                  disabled={selectedVolume === '0.25L'}
-                  className="w-full py-4 bg-[var(--accent)] text-[#0D0D0D] text-lg font-bold rounded-xl hover:bg-[var(--accent-hover)] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {t('productDetail.addToCart')}
-                </button>
+                {/* Add to Cart with Trust Badges */}
+                <div className="mb-6">
+                  <MagneticGlassButton 
+                    variant="booster"
+                    onClick={handleAddToCart}
+                    className="w-full py-5 text-base sm:text-lg"
+                  >
+                    <span className="relative z-10 flex items-center justify-center gap-3">
+                      {t('productDetail.addToCart')}
+                      <svg className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </span>
+                  </MagneticGlassButton>
+                  <div className="mt-5 flex flex-wrap justify-center items-center gap-4 sm:gap-6 text-[var(--text-muted)] text-[11px] sm:text-xs font-medium opacity-90">
+                    <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-[#9FD356]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> В наявності</span>
+                    <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-[#9FD356]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> Безпечна оплата</span>
+                    <span className="flex items-center gap-1.5"><svg className="w-4 h-4 text-[#9FD356]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> Відправка сьогодні</span>
+                  </div>
+                </div>
 
                 {/* Certification Badges */}
                 <div className="mt-8 pt-8 border-t border-[var(--border)]">

@@ -83,7 +83,7 @@ export function OrganizationSchema() {
         sameAs: [
           "https://www.instagram.com/booster_tea_ua",
           "https://www.tiktok.com/@booster_tea",
-          "https://t.me/booster_tea_ua",
+          "https://t.me/boostertea_bot",
         ],
         contactPoint: {
           "@type": "ContactPoint",

@@ -94,7 +94,7 @@ const Contacts = () => {
               {/* Telegram */}
               <ScrollReveal delay={200}>
                 <a 
-                  href="https://t.me/booster_tea_ua"
+                  href="https://t.me/boostertea_bot"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-[var(--bg-secondary)] rounded-2xl p-8 border border-[var(--card-border)] hover:border-[var(--border-accent)] transition-all group block h-full"
@@ -105,7 +105,7 @@ const Contacts = () => {
                     </svg>
                   </div>
                   <h3 className="text-[var(--text-primary)] text-lg font-medium mb-2">{t('contacts.telegram')}</h3>
-                  <p className="text-[#0088cc] font-semibold">@booster_tea_ua</p>
+                  <p className="text-[#0088cc] font-semibold">@boostertea_bot</p>
                 </a>
               </ScrollReveal>
 
@@ -244,7 +244,7 @@ const Contacts = () => {
                       </a>
 
                       <a 
-                        href="https://t.me/booster_tea_ua"
+                        href="https://t.me/boostertea_bot"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-4 p-4 bg-[var(--bg-primary)] rounded-xl hover:bg-[var(--theme-toggle-hover)] transition-colors group"

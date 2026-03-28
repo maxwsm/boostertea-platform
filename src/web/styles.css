@@ -1,8 +1,48 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Manrope:wght@300;400;500;600;700;800&display=swap');
 
 @import "tailwindcss";
+@source "../../../../packages";
+@source "../../packages";
 
 @custom-variant dark (&:is(.dark *));
+
+/* ============================================
+   CRITICAL CSS - Prevent Hydration Issues
+   ============================================ */
+
+/* Prevent flash of unstyled content */
+html {
+  background-color: #0D0D0D;
+}
+
+body {
+  min-height: 100vh;
+  background-color: #0D0D0D;
+  color: #F5F0E8;
+  margin: 0;
+  padding: 0;
+}
+
+/* Fix for Lucide icons during hydration - CRITICAL */
+.lucide,
+[data-lucide],
+svg[class*="lucide-"],
+.lucide-icon svg {
+  width: 20px !important;
+  height: 20px !important;
+  max-width: 24px !important;
+  max-height: 24px !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+  flex-shrink: 0 !important;
+}
+
+/* Header specific icon sizes */
+header .lucide,
+header [data-lucide] {
+  width: 20px !important;
+  height: 20px !important;
+}
 
 /* ============================================
    THEME SYSTEM - CSS VARIABLES
@@ -14,10 +54,10 @@
   --tea-lime-dark: #7FB030;
   --tea-brown: #8B7355;
   --tea-gold: #C9A55C;
-  --radius: 0.625rem;
+  --radius: 0px; /* Brutalist Cyber-Zen edges */
 }
 
-/* DARK MODE (Default) */
+/* DARK MODE (Obsidian Cyber-Zen) */
 :root, 
 :root[data-theme="dark"],
 .dark {
@@ -32,6 +72,10 @@
   --text-secondary: rgba(245, 240, 232, 0.7);
   --text-muted: rgba(245, 240, 232, 0.5);
   --text-subtle: rgba(245, 240, 232, 0.4);
+  
+  /* Brand Agnostic WSM Core Maps */
+  --brand-primary: #9FD356;
+  --brand-foreground: #0D0D0D;
   
   /* Accent colors */
   --accent: #9FD356;
@@ -297,6 +341,7 @@
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-body);
     transition: background-color 0.3s ease, color 0.3s ease;
+    filter: contrast(1.05) saturate(1.1); /* Nanobanana Polish */
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -1796,3 +1841,55 @@ html, body {
     outline-offset: 2px;
   }
 }
+
+/* Fix for massive SVG logos */
+svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.logo-container svg, .header-logo svg {
+  width: 150px !important;
+  height: auto !important;
+}
+
+/* Fix for Next.js Image component in static export */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+
+/* ── GLOBALS FOR BLOG TABLES ── */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2rem 0;
+  font-size: 0.9em;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.prose th,
+.prose td {
+  padding: 12px 15px;
+  border: 1px solid var(--border);
+  text-align: left;
+}
+.prose th {
+  background-color: var(--bg-secondary);
+  color: var(--accent);
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.prose tbody tr {
+  border-bottom: 1px solid var(--border);
+}
+.prose tbody tr:nth-of-type(even) {
+  background-color: var(--bg-secondary);
+  opacity: 0.8;
+}
+.prose tbody tr:last-of-type {
+  border-bottom: 2px solid var(--accent);
+}
+

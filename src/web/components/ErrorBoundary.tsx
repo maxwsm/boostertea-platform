@@ -1,5 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
-import { Link } from 'wouter';
+import Link from 'next/link';
 import { Coffee, RefreshCw, Home } from 'lucide-react';
 
 interface Props {

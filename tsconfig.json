@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "ES2020",
     "lib": [
       "dom",
       "dom.iterable",
@@ -8,7 +8,7 @@
     ],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": false,
+    "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
@@ -31,6 +31,9 @@
       ],
       "@/lib/*": [
         "./src/web/lib/*"
+      ],
+      "@myth/*": [
+        "./src/web/mythbusters/*"
       ]
     }
   },
@@ -49,6 +52,7 @@
     "src/api",
     "apps",
     "src/web/components/admin",
+    "src/web/components/layout/ComingSoon.tsx",
     "src/web/pages/admin.tsx",
     "src/web/pages/admin.tsx.backup",
     "src/web/main.tsx",

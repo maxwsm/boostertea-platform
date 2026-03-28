@@ -66,6 +66,8 @@ export interface User {
   totalSpent: number;
   totalLiters: number;
   favoriteTea: string;
+  hasClaimedProfileBonus?: boolean;
+  hasCompletedOnboarding?: boolean;
   isAdmin?: boolean;
 }
 
@@ -207,6 +209,8 @@ const mockUser: User = {
   totalSpent: 44460,
   totalLiters: 48,
   favoriteTea: 'Пуер',
+  hasClaimedProfileBonus: false,
+  hasCompletedOnboarding: false,
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -244,24 +248,47 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const login = async (email: string, password: string) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    if (email && password.length >= 6) {
-      // Check for admin login
-      const isAdmin = email.toLowerCase() === 'admin@boostertea.com.ua';
-      const userData = { 
-        ...mockUser, 
-        email,
-        isAdmin,
-        name: isAdmin ? 'Адміністратор' : mockUser.name,
-      };
-      setUser(userData);
-      saveAuth(userData);
-      return { success: true };
+    try {
+      // Step 1: Attempt to contact the Global WSM Auth Engine
+      const res = await fetch('http://localhost:3000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        localStorage.setItem('wsm-token', data.token); // Store Global JWT
+        
+        const userData = {
+          ...mockUser,
+          ...data.user,
+          bonusPoints: data.user.bonusPoints,
+        };
+        setUser(userData);
+        saveAuth(userData);
+        return { success: true };
+      }
+      
+      return { success: false, error: data.error || 'Помилка авторизації' };
+    } catch (e) {
+      // Fallback for incubator mode if backend is off
+      if (email && password.length >= 6) {
+        // MEGA-AUDIT: Replaced hardcoded admin@boostertea.com.ua privilege escalation vulnerability
+        const isAdmin = false; // Strictly enforced: No offline admin access
+        const userData = { 
+          ...mockUser, 
+          email,
+          isAdmin,
+          name: mockUser.name,
+        };
+        setUser(userData);
+        saveAuth(userData);
+        return { success: true };
+      }
+      return { success: false, error: 'Невірний email або пароль' };
     }
-    
-    return { success: false, error: 'Невірний email або пароль' };
   };
 
   const register = async (data: { name: string; email?: string; phone: string; password: string }) => {
@@ -276,7 +303,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         name: data.name,
         email: data.email || '',
         phone: data.phone,
-        bonusPoints: 100, // Welcome bonus
+        bonusPoints: 20, // Welcome bonus
         referralCode: data.name.toUpperCase().slice(0, 6) + Math.floor(Math.random() * 1000),
         savedPromoCodes: [],
         addresses: [],
@@ -286,6 +313,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         totalSpent: 0,
         totalLiters: 0,
         favoriteTea: '',
+        hasClaimedProfileBonus: false,
+        hasCompletedOnboarding: false,
       };
       setUser(newUser);
       saveAuth(newUser);
@@ -296,6 +325,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
+    localStorage.removeItem('wsm-token');
     setUser(null);
     saveAuth(null);
   };

@@ -12,82 +12,72 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-const getSystemTheme = (): ResolvedTheme => {
-  if (typeof window !== 'undefined') {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  }
-  return 'dark';
-};
-
-const resolveTheme = (theme: Theme): ResolvedTheme => {
-  if (theme === 'system') {
-    return getSystemTheme();
-  }
-  return theme;
-};
-
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('boostertea-theme');
+  // Always start with 'dark' for SSR (matches our CSS variables default)
+  const [theme, setThemeState] = useState<Theme>('dark');
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>('dark');
+  const [mounted, setMounted] = useState(false);
+
+  // Load from localStorage only after mount (client-side only)
+  useEffect(() => {
+    setMounted(true);
+    try {
+      const saved = localStorage.getItem('boostertea-theme') as Theme | null;
       if (saved && (saved === 'dark' || saved === 'light' || saved === 'system')) {
-        return saved as Theme;
+        setThemeState(saved);
+        const resolved = saved === 'system' 
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : saved;
+        setResolvedTheme(resolved);
       }
+    } catch (e) {
+      console.error('Failed to load theme:', e);
     }
-    return 'dark'; // Default to dark theme for BoosterTea's brand
-  });
+  }, []);
 
-  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(() => resolveTheme(theme));
-
-  // Update resolved theme when theme changes
+  // Listen for system theme changes
   useEffect(() => {
-    setResolvedTheme(resolveTheme(theme));
-  }, [theme]);
-
-  // Listen for system preference changes
-  useEffect(() => {
-    if (theme !== 'system') return;
-
+    if (!mounted || theme !== 'system') return;
+    
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e: MediaQueryListEvent) => {
       setResolvedTheme(e.matches ? 'dark' : 'light');
     };
-
+    
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [theme]);
+  }, [mounted, theme]);
 
-  // Apply theme to document
+  // Apply theme class to document
   useEffect(() => {
-    localStorage.setItem('boostertea-theme', theme);
+    if (!mounted) return;
     
-    // Update document class for Tailwind dark mode variant
     const root = document.documentElement;
-    
-    if (resolvedTheme === 'dark') {
-      root.classList.add('dark');
-      root.classList.remove('light');
-    } else {
-      root.classList.add('light');
-      root.classList.remove('dark');
-    }
-
-    // Set data attribute for CSS variable switching
+    root.classList.remove('dark', 'light');
+    root.classList.add(resolvedTheme);
     root.setAttribute('data-theme', resolvedTheme);
-  }, [theme, resolvedTheme]);
+    
+    try {
+      localStorage.setItem('boostertea-theme', theme);
+    } catch (e) {
+      console.error('Failed to save theme:', e);
+    }
+  }, [mounted, theme, resolvedTheme]);
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
+    if (newTheme === 'system') {
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      setResolvedTheme(systemTheme);
+    } else {
+      setResolvedTheme(newTheme);
+    }
   };
 
   const toggleTheme = () => {
-    setThemeState(prev => {
-      // Simple toggle between dark and light
-      if (prev === 'dark') return 'light';
-      if (prev === 'light') return 'dark';
-      // If system, toggle based on current resolved theme
-      return resolvedTheme === 'dark' ? 'light' : 'dark';
-    });
+    if (theme === 'dark') setTheme('light');
+    else if (theme === 'light') setTheme('dark');
+    else setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
   };
 
   return (

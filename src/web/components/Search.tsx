@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useLocation } from 'wouter';
+import { usePathname, useRouter } from 'next/navigation';
 import { Search as SearchIcon, X, Clock, ArrowRight, Loader2 } from 'lucide-react';
 import { useSearch } from '../hooks/useSearch';
 import type { SearchItem } from '../hooks/useSearch';
@@ -10,7 +10,7 @@ interface SearchProps {
 }
 
 export function Search({ isOpen, onClose }: SearchProps) {
-  const [, setLocation] = useLocation();
+  const router = useRouter();
   const { query, setQuery, results, isLoading, recentSearches, addRecentSearch, clearRecentSearches } = useSearch();
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -56,10 +56,10 @@ export function Search({ isOpen, onClose }: SearchProps) {
 
   const handleResultClick = useCallback((url: string, searchQuery: string) => {
     addRecentSearch(searchQuery);
-    setLocation(url);
+    router.push(url);
     onClose();
     setQuery('');
-  }, [addRecentSearch, setLocation, onClose, setQuery]);
+  }, [addRecentSearch, router, onClose, setQuery]);
 
   const handleRecentSearchClick = useCallback((s: string) => { setQuery(s); }, [setQuery]);
 
@@ -81,9 +81,9 @@ export function Search({ isOpen, onClose }: SearchProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-[var(--bg-primary)] w-full max-w-3xl mx-auto mt-0 md:mt-20 md:rounded-2xl overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-3 p-4 border-b border-[var(--border-color)]">
+    <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-md animate-in fade-in duration-300" onClick={onClose}>
+      <div className="bg-[var(--bg-primary)]/90 backdrop-blur-xl w-full max-w-3xl mx-auto mt-0 md:mt-20 md:rounded-3xl border border-[#F5F0E8]/10 overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.4)] animate-in slide-in-from-bottom-4 md:slide-in-from-top-4 duration-300" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-3 p-5 border-b border-[var(--border-color)]/50">
           <SearchIcon className="w-5 h-5 text-[var(--text-secondary)] flex-shrink-0" />
           <input ref={inputRef} type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Пошук чаю, статей..." className="flex-1 bg-transparent text-[var(--text-primary)] placeholder-[var(--text-secondary)] text-lg outline-none" aria-label="Пошук" />
           {isLoading && <Loader2 className="w-5 h-5 text-[var(--color-primary)] animate-spin" />}
@@ -129,8 +129,8 @@ export function Search({ isOpen, onClose }: SearchProps) {
                 {productResults.map((result, index) => {
                   const isSelected = selectedIndex === index;
                   return (
-                    <button key={result.id} onClick={() => handleResultClick(result.url, query)} className={`flex items-center gap-4 w-full p-3 rounded-xl transition-colors text-left ${isSelected ? 'bg-[var(--color-primary)]/10 ring-2 ring-[var(--color-primary)]' : 'hover:bg-[var(--bg-secondary)]'}`}>
-                      {result.image && <img src={result.image} alt={result.title} className="w-12 h-12 object-cover rounded-lg" />}
+                    <button key={result.id} onClick={() => handleResultClick(result.url, query)} className={`flex items-center gap-4 w-full p-3 rounded-2xl transition-all duration-300 text-left ${isSelected ? 'bg-[var(--color-primary)]/20 ring-1 ring-[var(--color-primary)]/50 shadow-lg translate-x-2' : 'hover:bg-[var(--bg-secondary)] hover:translate-x-1'}`}>
+                      {result.image && <img src={result.image} alt={result.title} className="w-14 h-14 object-cover rounded-xl shadow-sm" />}
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-[var(--text-primary)] truncate">{highlightMatch(result.title, query)}</h4>
                         <p className="text-sm text-[var(--text-secondary)] truncate">{highlightMatch(result.description, query)}</p>
@@ -151,7 +151,7 @@ export function Search({ isOpen, onClose }: SearchProps) {
                   const globalIndex = productResults.length + index;
                   const isSelected = selectedIndex === globalIndex;
                   return (
-                    <button key={result.id} onClick={() => handleResultClick(result.url, query)} className={`flex items-center gap-4 w-full p-3 rounded-xl transition-colors text-left ${isSelected ? 'bg-[var(--color-primary)]/10 ring-2 ring-[var(--color-primary)]' : 'hover:bg-[var(--bg-secondary)]'}`}>
+                    <button key={result.id} onClick={() => handleResultClick(result.url, query)} className={`flex items-center gap-4 w-full p-3 rounded-2xl transition-all duration-300 text-left ${isSelected ? 'bg-[var(--color-primary)]/20 ring-1 ring-[var(--color-primary)]/50 shadow-lg translate-x-2' : 'hover:bg-[var(--bg-secondary)] hover:translate-x-1'}`}>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-[var(--text-primary)] truncate">{highlightMatch(result.title, query)}</h4>
                         <p className="text-sm text-[var(--text-secondary)] truncate">{highlightMatch(result.description, query)}</p>

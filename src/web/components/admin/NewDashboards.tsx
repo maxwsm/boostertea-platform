@@ -281,7 +281,7 @@ const SocialMediaDashboard = ({ language }: { language: 'uk' | 'en' }) => {
             </div>
             <div>
               <h3 className="text-[var(--text-primary)] font-medium">Telegram</h3>
-              <a href="https://t.me/booster_tea_ua" target="_blank" rel="noopener" className="text-[var(--text-muted)] text-xs hover:text-[#0088cc]">@booster_tea_ua</a>
+              <a href="https://t.me/boostertea_bot" target="_blank" rel="noopener" className="text-[var(--text-muted)] text-xs hover:text-[#0088cc]">@boostertea_bot</a>
             </div>
           </div>
           <p className="text-4xl font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-heading)' }}>{stats.telegram.subscribers.toLocaleString()}</p>
@@ -300,7 +300,7 @@ const SocialMediaDashboard = ({ language }: { language: 'uk' | 'en' }) => {
               <p className="text-xs text-[var(--text-muted)]">{t('постів', 'posts')}</p>
             </div>
           </div>
-          <a href="https://t.me/booster_tea_ua" target="_blank" rel="noopener" className="block w-full py-2 mt-4 text-center bg-[#0088cc] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
+          <a href="https://t.me/boostertea_bot" target="_blank" rel="noopener" className="block w-full py-2 mt-4 text-center bg-[#0088cc] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
             {t('Відкрити канал', 'Open Channel')} →
           </a>
         </div>
@@ -318,7 +318,7 @@ const SocialMediaDashboard = ({ language }: { language: 'uk' | 'en' }) => {
             <span className="text-xl">📈</span>
             <span className="text-sm text-[var(--text-primary)]">TikTok Analytics</span>
           </a>
-          <a href="https://t.me/booster_tea_ua" target="_blank" rel="noopener" className="flex items-center gap-3 p-3 bg-[var(--bg-primary)] rounded-lg hover:bg-[#0088cc]/10 transition-colors">
+          <a href="https://t.me/boostertea_bot" target="_blank" rel="noopener" className="flex items-center gap-3 p-3 bg-[var(--bg-primary)] rounded-lg hover:bg-[#0088cc]/10 transition-colors">
             <span className="text-xl">✏️</span>
             <span className="text-sm text-[var(--text-primary)]">{t('Новий пост TG', 'New TG Post')}</span>
           </a>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'wouter';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { useStore } from '../lib/store';
 import { useAuth } from '../lib/auth';
@@ -11,9 +12,9 @@ import ThemeToggle, { ThemeToggleSimple } from './ThemeToggle';
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { getCartItemCount } = useStore();
+  const { getCartItemCount, setSearchOpen, setCartDrawerOpen } = useStore();
   const { user, isAuthenticated, isLoading } = useAuth();
-  const [location] = useLocation();
+  const location = usePathname() || '/';
   const cartCount = getCartItemCount();
   const { t } = useTranslation();
   const { resolvedTheme } = useTheme();
@@ -33,7 +34,8 @@ const Header = () => {
   const navLinks = [
     { href: '/', label: t('nav.home') },
     { href: '/products', label: t('nav.products') },
-    { href: '/accessories', label: t('nav.accessories') },
+    { href: '/accessories', label: 'Аксесуари та Сухий Чай' },
+    { href: '/influencer', label: 'Академія & Кастинг' },
     { href: '/b2b', label: t('nav.b2b') },
     { href: '/blog', label: t('nav.blog') },
     { href: '/contacts', label: t('nav.contacts') },
@@ -59,39 +61,48 @@ const Header = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 group">
+            <div className="flex flex-1">
+              <Link href="/" className="flex items-center gap-2 group">
+
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-hover)] flex items-center justify-center group-hover:scale-110 transition-transform">
                 <span className="text-[var(--bg-primary)] font-bold text-lg" style={{ fontFamily: 'var(--font-heading)' }}>B</span>
               </div>
               <span className="text-[var(--text-primary)] text-xl font-semibold tracking-tight hidden sm:block">
                 Booster<span className="text-[var(--accent)]">Tea</span>
               </span>
-            </Link>
+              </Link>
+            </div>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-8" aria-label="Головна навігація">
+            {/* Desktop Navigation - Centered Floating Glassmorphism Pill */}
+            <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-1 px-3 py-2 rounded-[2rem] bg-gradient-to-r from-white/5 via-white/20 to-white/5 dark:from-black/5 dark:via-white/10 dark:to-black/5 border border-black/5 dark:border-white/10 backdrop-blur-3xl shadow-[0_8px_32px_rgba(0,0,0,0.05)] shadow-black/10 transition-all duration-300" aria-label="Головна навігація">
               {navLinks.map(link => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`text-sm font-medium transition-colors hover:text-[var(--accent)] ${
-                    location === link.href ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'
+                  className={`relative px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 overflow-hidden group ${
+                    location === link.href 
+                      ? 'text-[var(--accent)]' 
+                      : 'text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white'
                   }`}
                 >
-                  {link.label}
+                  {/* Subtle hover background that adapts cleanly */}
+                  <div className={`absolute inset-0 rounded-full transition-opacity duration-300 ${
+                    location === link.href ? 'bg-black/5 dark:bg-white/10 opacity-100' : 'bg-black/5 dark:bg-white/10 opacity-0 group-hover:opacity-100'
+                  }`} />
+                  <span className="relative z-10">{link.label}</span>
                 </Link>
               ))}
             </nav>
 
             {/* Right side actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-1 items-center justify-end gap-2">
               {/* Search Button */}
               <button
-                onClick={() => (window as any).openSearch?.()}
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-[var(--theme-toggle-bg)] hover:bg-[var(--theme-toggle-hover)] transition-colors"
+                onClick={() => setSearchOpen(true)}
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl hover:bg-white/10 transition-all shadow-[0_4px_24px_rgba(0,0,0,0.1)]"
                 aria-label="Відкрити пошук"
               >
-                <Search className="w-5 h-5 text-[var(--text-secondary)]" />
+                <Search className="w-5 h-5 text-[var(--text-secondary)] group-hover:text-[var(--accent)] transition-colors" />
               </button>
 
               {/* Theme Toggle */}
@@ -133,10 +144,11 @@ const Header = () => {
                 )
               )}
 
-              {/* Cart */}
-              <Link 
-                href="/cart" 
-                className="relative flex items-center justify-center w-10 h-10 rounded-full bg-[var(--accent-muted)] hover:bg-[var(--accent-subtle)] transition-colors"
+              {/* Cart Button */}
+              <button 
+                onClick={(e) => { e.preventDefault(); setCartDrawerOpen(true); }}
+                className="relative flex items-center justify-center w-10 h-10 rounded-full bg-white/10 border border-white/20 backdrop-blur-xl hover:bg-white/20 transition-all shadow-[0_4px_24px_rgba(0,0,0,0.15)]"
+                aria-label="Open Cart"
               >
                 <svg className="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -146,12 +158,12 @@ const Header = () => {
                     {cartCount}
                   </span>
                 )}
-              </Link>
+              </button>
 
               {/* Mobile menu button */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="md:hidden flex items-center justify-center w-10 h-10 rounded-full bg-[var(--theme-toggle-bg)] hover:bg-[var(--theme-toggle-hover)] transition-colors"
+                className="md:hidden flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl hover:bg-white/10 transition-all shadow-[0_4px_24px_rgba(0,0,0,0.1)]"
               >
                 <svg className="w-6 h-6 text-[var(--text-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   {isMobileMenuOpen ? (

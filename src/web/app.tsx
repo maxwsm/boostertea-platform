@@ -1,3 +1,4 @@
+// App Entry Point
 import { Route, Switch } from "wouter";
 import React, { Suspense, useState } from "react";
 import Home from "./pages/index";
@@ -9,9 +10,16 @@ import { ThemeProvider } from "./lib/theme";
 import { CookieConsent } from "./components/CookieConsent";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { BottomNav } from "./components/BottomNav";
+import { LaunchSequence } from "./components/LaunchSequence";
 import ChatWidget from "./components/ChatWidget";
 import { Search } from "./components/Search";
 import { PageSkeleton } from "./components/Skeleton";
+import { LivePurchasesPopup } from "./components/LivePurchasesPopup";
+import { TornPageEasterEgg } from "./components/TornPageEasterEgg";
+import { TelemetryTracker } from "./components/TelemetryTracker";
+import { SmartCartDrawer } from "./components/SmartCartDrawer";
+import { UpsellModal } from "./components/UpsellModal";
+import { useStore } from "./lib/store";
 
 // Lazy load all pages except Home (for LCP)
 const Products = React.lazy(() => import("./pages/products"));
@@ -35,6 +43,8 @@ const ReturnPolicy = React.lazy(() => import("./pages/return-policy"));
 const Certificates = React.lazy(() => import("./pages/certificates"));
 const NotFound = React.lazy(() => import("./pages/404"));
 const MLM = React.lazy(() => import("./pages/mlm"));
+const Influencer = React.lazy(() => import("./pages/influencer"));
+const BaristaGateway = React.lazy(() => import("./pages/barista"));
 
 // Lazy route wrapper component
 function LazyRoute({ children }: { children: React.ReactNode }) {
@@ -45,28 +55,53 @@ function LazyRoute({ children }: { children: React.ReactNode }) {
         );
 }
 
-function App() {
-        const [isSearchOpen, setIsSearchOpen] = useState(false);
+function GlobalSearchWrapper() {
+        const { isSearchOpen, setSearchOpen } = useStore();
+        return <Search isOpen={isSearchOpen} onClose={() => setSearchOpen(false)} />;
+}
 
-        // Expose search opener globally for header
+function GlobalTelemetryTracker() {
         React.useEffect(() => {
-                (window as any).openSearch = () => setIsSearchOpen(true);
-                return () => {
-                        delete (window as any).openSearch;
-                };
+                try {
+                        const params = new URLSearchParams(window.location.search);
+                        const refCode = params.get('ref');
+                        if (refCode) {
+                                const existing = localStorage.getItem('wsm_ref_code');
+                                if (existing !== refCode) {
+                                        localStorage.setItem('wsm_ref_code', refCode);
+                                        // Notify backend about click
+                                        fetch('/api/ambassadors/click', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ refCode })
+                                        }).catch(() => {});
+                                }
+                        }
+                } catch(e) {}
         }, []);
+        return null;
+}
 
+function App() {
         return (
                 <Provider>
                         <ThemeProvider>
                                 <I18nProvider>
                                         <AuthProvider>
                                                 <StoreProvider>
-                                                        {/* Cookie Consent Banner */}
+                                                        <LaunchSequence />
                                                         <CookieConsent />
                                                         
-                                                        {/* Global Search */}
-                                                        <Search isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+                                                        <GlobalTelemetryTracker />
+                                                        <TelemetryTracker />
+                                                        
+                                                        {/* Behavioral Economics Upsell Modals */}
+                                                        <UpsellModal />
+
+                                                        <GlobalSearchWrapper />
+                                                        
+                                                        {/* Global Smart Cart Drawer */}
+                                                        <SmartCartDrawer />
                                                         
                                                         {/* Error Boundary wraps all routes */}
                                                         <ErrorBoundary>
@@ -96,12 +131,15 @@ function App() {
                                                                                 <Route path="/mlm">
                                                                                         <LazyRoute><MLM /></LazyRoute>
                                                                                 </Route>
+                                                                                <Route path="/influencer">
+                                                                                        <LazyRoute><Influencer /></LazyRoute>
+                                                                                </Route>
                                                                                 <Route path="/blog">
                                                                                         <LazyRoute><Blog /></LazyRoute>
                                                                                 </Route>
                                                                                 <Route path="/blog/:slug">
                                                                                         {(params) => (
-                                                                                                <LazyRoute><BlogPost /></LazyRoute>
+                                                                                                <LazyRoute><div className="text-white p-20 text-center text-xl mt-32">Server Components Required</div></LazyRoute>
                                                                                         )}
                                                                                 </Route>
                                                                                 <Route path="/cart">
@@ -112,6 +150,9 @@ function App() {
                                                                                 </Route>
                                                                                 <Route path="/order-success">
                                                                                         <LazyRoute><OrderSuccess /></LazyRoute>
+                                                                                </Route>
+                                                                                <Route path="/barista">
+                                                                                        <LazyRoute><BaristaGateway /></LazyRoute>
                                                                                 </Route>
                                                                                 <Route path="/account">
                                                                                         <LazyRoute><Account /></LazyRoute>
@@ -157,6 +198,9 @@ function App() {
                                                         
                                                         {/* Mobile Bottom Navigation */}
                                                         <BottomNav />
+
+                                                        <LivePurchasesPopup />
+                                                        <TornPageEasterEgg />
 
                                                         {/* AI Chat Widget */}
                                                         <ChatWidget />

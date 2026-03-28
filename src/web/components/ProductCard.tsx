@@ -1,117 +1,35 @@
-import { useRef, useEffect, useState, useCallback } from 'react';
-import { Link } from 'wouter';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Product, useStore } from '../lib/store';
 import { useTranslation } from '../lib/i18n';
+import { useIntentPrefetch } from '../hooks/useIntentPrefetch';
+import { trackEvent } from './TelemetryTracker';
 
 interface ProductCardProps {
   product: Product;
   index?: number;
+  defaultVolume?: string;
 }
 
-// Spring physics constants
-const STIFFNESS = 0.08;
-const DAMPING   = 0.72;
-const MAX_TILT  = 18;
-
-const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
+const ProductCard = ({ product, index = 0, defaultVolume = 'all' }: ProductCardProps) => {
   const { addToCart } = useStore();
-  const cardRef     = useRef<HTMLDivElement>(null);
-  const specularRef = useRef<HTMLDivElement>(null);
-  const rafRef      = useRef<number | null>(null);
-  const [isHovered, setIsHovered] = useState(false);
   const { t, language } = useTranslation();
+  
+  // Start with 1L or 0.25L depending on what's available
+  const initialVolume = (defaultVolume === '1L' || defaultVolume === '0.25L') ? defaultVolume as '1L' | '0.25L' : '1L';
+  const [volume, setVolume] = useState<'1L' | '0.25L' | 'sticks'>(initialVolume);
+  const [quantity, setQuantity] = useState(1);
 
-  // Spring state (mutable, not React state to avoid re-renders)
-  const spring = useRef({ rotX: 0, rotY: 0, vX: 0, vY: 0 });
-
-  const applyTransform = useCallback((rotX: number, rotY: number) => {
-    const card = cardRef.current;
-    if (!card) return;
-    // Shadow shifts opposite to tilt direction for depth realism
-    const shadowX = rotY * 1.2;
-    const shadowY = -rotX * 1.2;
-    card.style.transform = `perspective(1200px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale(1.04)`;
-    card.style.boxShadow = `${shadowX}px ${shadowY + 20}px 60px rgba(0,0,0,0.45), 0 4px 24px rgba(0,0,0,0.25)`;
-  }, []);
-
-  // Spring loop: runs when mouse leaves, animates back to 0,0
-  const springLoop = useCallback(() => {
-    const s = spring.current;
-    s.vX += (0 - s.rotX) * STIFFNESS;
-    s.vY += (0 - s.rotY) * STIFFNESS;
-    s.vX *= DAMPING;
-    s.vY *= DAMPING;
-    s.rotX += s.vX;
-    s.rotY += s.vY;
-
-    applyTransform(s.rotX, s.rotY);
-
-    if (Math.abs(s.rotX) > 0.05 || Math.abs(s.rotY) > 0.05 ||
-        Math.abs(s.vX) > 0.05  || Math.abs(s.vY) > 0.05) {
-      rafRef.current = requestAnimationFrame(springLoop);
-    } else {
-      // Settled — clean up
-      s.rotX = 0; s.rotY = 0; s.vX = 0; s.vY = 0;
-      const card = cardRef.current;
-      if (card) {
-        card.style.transform = 'perspective(1200px) rotateX(0deg) rotateY(0deg) scale(1)';
-        card.style.boxShadow = '';
-      }
-    }
-  }, [applyTransform]);
-
+  // Sync with prop changes from products filter
   useEffect(() => {
-    const card = cardRef.current;
-    if (!card) return;
+    if (defaultVolume === '1L' || defaultVolume === '0.25L') {
+      setVolume(defaultVolume as '1L' | '0.25L');
+    }
+  }, [defaultVolume]);
 
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = card.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const cx = rect.width / 2;
-      const cy = rect.height / 2;
-
-      const rotX = ((y - cy) / cy) * -MAX_TILT;
-      const rotY = ((x - cx) / cx) *  MAX_TILT;
-
-      spring.current.rotX = rotX;
-      spring.current.rotY = rotY;
-      applyTransform(rotX, rotY);
-
-      // Specular highlight: radial gradient at mouse position
-      const gx = (x / rect.width)  * 100;
-      const gy = (y / rect.height) * 100;
-      if (specularRef.current) {
-        specularRef.current.style.background =
-          `radial-gradient(circle at ${gx}% ${gy}%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.05) 40%, transparent 65%)`;
-        specularRef.current.style.opacity = '1';
-      }
-    };
-
-    const handleMouseLeave = () => {
-      setIsHovered(false);
-      if (specularRef.current) specularRef.current.style.opacity = '0';
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      rafRef.current = requestAnimationFrame(springLoop);
-    };
-
-    const handleMouseEnter = () => setIsHovered(true);
-
-    card.addEventListener('mousemove', handleMouseMove, { passive: true });
-    card.addEventListener('mouseleave', handleMouseLeave);
-    card.addEventListener('mouseenter', handleMouseEnter);
-
-    return () => {
-      card.removeEventListener('mousemove', handleMouseMove);
-      card.removeEventListener('mouseleave', handleMouseLeave);
-      card.removeEventListener('mouseenter', handleMouseEnter);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [applyTransform, springLoop]);
-
-  const productName        = language === 'uk' ? product.nameUk        : product.name;
-  const productDescription = language === 'uk' ? product.descriptionUk  : product.description;
-  const productEffects     = language === 'uk' ? product.effectsUk      : product.effects;
+  const productName        = language === 'uk' ? product.nameUk       : product.name;
+  const productDescription = language === 'uk' ? product.descriptionUk : product.description;
+  const productEffects     = language === 'uk' ? product.effectsUk     : product.effects;
 
   const getCategoryLabel = (category: string) => {
     switch (category) {
@@ -122,146 +40,222 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
     }
   };
 
+  const intensity = product.category === 'energy' ? 95 : product.category === 'classic' ? 75 : 40;
+
+  const currentPrice = volume === '1L' ? product.price1L : volume === 'sticks' ? (product.priceSticks || product.price025L) : product.price025L;
+  
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    addToCart(product, volume, quantity);
+    trackEvent('AddToCart', {
+      content_name: productName,
+      content_ids: [product.id],
+      content_type: 'product',
+      value: currentPrice * quantity,
+      currency: 'UAH'
+    });
+  };
+
+  const getPortions = () => {
+    switch(volume) {
+      case '1L': return 33;
+      case '0.25L': return 8;
+      case 'sticks': return 12;
+      default: return 33;
+    }
+  };
+  const portionsCount = getPortions() * quantity;
+  const costPerPortion = Math.round((currentPrice * quantity) / portionsCount);
+
+  const isPreRelease = product.name.includes('BoosterShot') || product.name.includes('BoosterMix');
+  const launchDate = new Date('2026-04-13T00:00:00Z');
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    if (!isPreRelease) return;
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+      const distance = launchDate.getTime() - now;
+      if (distance < 0) return clearInterval(interval);
+      setTimeLeft({
+        days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((distance % (1000 * 60)) / 1000)
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isPreRelease]);
+
+  const hoverProps = useIntentPrefetch(`/products/${product.slug}`);
+
   return (
-    <div
-      ref={cardRef}
-      className="group relative rounded-2xl overflow-hidden border border-[var(--card-border)] hover:border-[var(--border-accent)] card-shimmer"
-      style={{
-        animationDelay: `${index * 100}ms`,
-        transformStyle: 'preserve-3d',
-        transition: 'border-color 0.3s ease',
-        background: 'var(--gradient-card)',
-        willChange: 'transform',
-      }}
+    <article
+      itemScope itemType="https://schema.org/Product"
+      className="group relative rounded-2xl overflow-hidden border border-[var(--card-border)] hover:border-[var(--border-accent)] bg-gradient-to-b from-[#1A1A1A] to-[#0D0D0D] transition-all duration-300 hover:shadow-xl flex flex-col h-full"
+      style={{ animationDelay: `${index * 100}ms` }}
+      {...hoverProps}
     >
-      {/* Specular / gloss highlight — tracks mouse */}
-      <div
-        ref={specularRef}
-        className="absolute inset-0 pointer-events-none z-20 rounded-2xl"
-        style={{
-          opacity: 0,
-          transition: 'opacity 0.3s ease',
-          mixBlendMode: 'screen',
-        }}
-      />
-
-      {/* Ambient glow layer (behind) */}
-      <div
-        className={`absolute inset-0 rounded-2xl pointer-events-none transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
-        style={{
-          background: 'radial-gradient(ellipse at 50% 110%, var(--accent-subtle) 0%, transparent 65%)',
-          transform: 'translateZ(-10px)',
-        }}
-      />
-
+      <meta itemProp="name" content={productName} />
+      <meta itemProp="description" content={productDescription} />
       {/* Product Image */}
       <Link href={`/products/${product.slug}`}>
-        <div className="relative aspect-square p-6 bg-gradient-to-br from-[var(--theme-toggle-bg)] to-transparent overflow-hidden">
+        <figure className="relative aspect-square p-6 bg-[var(--theme-toggle-bg)] overflow-hidden m-0">
           <img
+            itemProp="image"
             src={product.image}
             alt={productName}
+            width="400"
+            height="400"
             loading="lazy"
-            decoding="async"
-            className="w-full h-full object-contain"
-            style={{
-              transform: isHovered ? 'translateZ(40px) scale(1.08)' : 'translateZ(0) scale(1)',
-              transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-            }}
+            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
           />
-
-          {/* Category badge — closer to viewer */}
-          <div className="absolute top-4 left-4" style={{ transform: 'translateZ(28px)' }}>
-            <span className="px-3 py-1 bg-[var(--accent-muted)] text-[var(--accent)] text-xs font-medium rounded-full backdrop-blur-sm border border-[var(--accent)]/20">
+          <div className="absolute top-4 left-4">
+            <span className="px-3 py-1 bg-[var(--accent-muted)] text-[var(--accent)] text-xs font-medium rounded-full border border-[var(--accent)]/20">
               {getCategoryLabel(product.category)}
             </span>
           </div>
-
-          {/* NEW/BESTSELLER badge */}
-          {product.isBundle && (
-            <div className="absolute top-4 right-4" style={{ transform: 'translateZ(28px)' }}>
+          {isPreRelease && (
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center pointer-events-none">
+               <span className="text-[var(--accent)] uppercase font-bold tracking-[0.2em] text-sm mb-2 drop-shadow-lg">Дроп через</span>
+               <div className="flex gap-2 text-white font-mono text-xl drop-shadow-md">
+                 <div className="flex flex-col items-center"><span className="text-2xl font-black">{timeLeft.days}</span><span className="text-[10px] text-zinc-400">ДНІВ</span></div><span className="text-[var(--accent)] text-2xl">:</span>
+                 <div className="flex flex-col items-center"><span className="text-2xl font-black">{timeLeft.hours.toString().padStart(2, '0')}</span><span className="text-[10px] text-zinc-400">ГОД</span></div><span className="text-[var(--accent)] text-2xl">:</span>
+                 <div className="flex flex-col items-center"><span className="text-2xl font-black">{timeLeft.minutes.toString().padStart(2, '0')}</span><span className="text-[10px] text-zinc-400">ХВ</span></div><span className="text-[var(--accent)] text-2xl">:</span>
+                 <div className="flex flex-col items-center"><span className="text-2xl font-black">{timeLeft.seconds.toString().padStart(2, '0')}</span><span className="text-[10px] text-zinc-400">СЕК</span></div>
+               </div>
+            </div>
+          )}
+          {product.isBundle && !isPreRelease && (
+            <div className="absolute top-4 right-4">
               <span className="px-2 py-1 bg-[var(--accent)] text-[var(--bg-primary)] text-xs font-bold rounded-full">
                 −30%
               </span>
             </div>
           )}
-        </div>
+        </figure>
       </Link>
 
       {/* Product Info */}
-      <div className="p-6 pt-0" style={{ transform: 'translateZ(14px)' }}>
+      <div className="p-6 flex flex-col flex-grow">
         <Link href={`/products/${product.slug}`}>
-          <h3
-            className="text-2xl text-[var(--text-primary)] mb-2 group-hover:text-[var(--accent)] transition-colors duration-300"
-            style={{ fontFamily: 'var(--font-heading)' }}
-          >
+          <h3 className="text-2xl text-[var(--text-primary)] mb-2 group-hover:text-[var(--accent)] transition-colors duration-300" style={{ fontFamily: 'var(--font-heading)' }}>
             {productName}
           </h3>
         </Link>
-
         <p className="text-[var(--text-muted)] text-sm mb-4 line-clamp-2">
           {productDescription}
         </p>
-
-        {/* Effects */}
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="flex flex-wrap gap-2 mb-3">
           {productEffects.slice(0, 2).map((effect, i) => (
-            <span
-              key={i}
-              className="text-xs text-[var(--secondary)] bg-[var(--secondary-muted)] px-2 py-1 rounded"
-            >
+            <span key={i} className="text-xs text-[var(--secondary)] bg-[var(--secondary-muted)] px-2 py-1 rounded">
               {effect}
             </span>
           ))}
         </div>
 
-        {/* Bundle badge */}
-        {product.isBundle && (
-          <div className="mb-3 px-3 py-1.5 bg-[var(--accent)]/15 border border-[var(--accent)]/30 rounded-lg text-center">
-            <span className="text-[var(--accent)] text-xs font-semibold">
-              Пуер + Да Хун Пао + ГАБА — економія 30%
-            </span>
+        {/* 360° UX: Cyber-Zen Immersive Metrics */}
+          <div className="mt-4 space-y-3">
+            <div className="space-y-1">
+              <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest text-[#9FD356]">
+                <span>Energy Qi Output</span>
+                <span>{intensity}%</span>
+              </div>
+              <div className="h-1 bg-[#1A1A1A] overflow-hidden border border-[#9FD356]/20">
+                <div 
+                  className="h-full bg-[#9FD356] shadow-[0_0_10px_#9FD356] transition-all duration-1000 ease-out" 
+                  style={{ width: `${intensity}%` }} 
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-1">
+              <div className="flex justify-between text-[10px] uppercase font-bold tracking-widest text-[#C9A55C]">
+                <span>Absolute Focus</span>
+                <span>100%</span>
+              </div>
+              <div className="h-1 bg-[#1A1A1A] overflow-hidden border border-[#C9A55C]/20">
+                <div 
+                  className="h-full bg-[#C9A55C] shadow-[0_0_10px_#C9A55C] transition-all duration-1000 ease-out" 
+                  style={{ width: '100%' }} 
+                />
+              </div>
+            </div>
           </div>
-        )}
 
-        {/* Price and CTA */}
-        <div className="flex items-end justify-between">
-          <div>
-            <p className="text-[var(--text-subtle)] text-xs mb-1">{t('products.from')}</p>
-            {product.isBundle ? (
-              <p className="text-[var(--accent)] text-2xl font-bold">
-                {product.price025L}₴
-                <span className="text-sm text-[var(--text-subtle)] font-normal ml-1">/3× 0.25л</span>
-              </p>
-            ) : (
-              <p className="text-[var(--accent)] text-2xl font-bold">
-                {Math.min(product.price025L, product.priceSticks ?? product.price025L)}₴
-                <span className="text-sm text-[var(--text-subtle)] font-normal ml-1">
-                  {(product.priceSticks ?? 0) < product.price025L ? '/стіки' : '/0.25л'}
-                </span>
-              </p>
+        {/* HIGH-VISIBILITY Concentration & ROI Calculator */}
+        <div className="mb-4 p-4 rounded-xl bg-gradient-to-br from-[#12141C] to-black border border-[#C4956A]/40 shadow-[0_0_15px_rgba(196,149,106,0.15)] flex flex-col gap-2">
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-white/60">Вихід порцій:</span>
+            <span className="text-[#C4956A] text-lg font-black">{portionsCount} шт</span>
+          </div>
+          <div className="flex justify-between items-center text-sm border-t border-white/10 pt-2 mt-1">
+            <span className="text-white/60">Собівартість:</span>
+            <span className="text-[#00D4FF] text-lg font-black">≈ {costPerPortion} ₴ / чашка</span>
+          </div>
+        </div>
+
+        {/* Volume & Quantity Selector */}
+        <div className={`mt-5 flex flex-col gap-3 ${isPreRelease ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
+          <div className="flex gap-2 text-sm">
+            <button 
+              onClick={(e) => { e.preventDefault(); setVolume('1L'); }}
+              className={`flex-1 py-1.5 rounded-md border transition-colors ${volume === '1L' ? 'bg-[var(--accent)]/10 border-[var(--accent)] text-[var(--accent)]' : 'border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--border-accent)]'}`}
+            >
+              1 Л
+            </button>
+            <button 
+              onClick={(e) => { e.preventDefault(); setVolume('0.25L'); }}
+              className={`flex-1 py-1.5 rounded-md border transition-colors ${volume === '0.25L' ? 'bg-[var(--accent)]/10 border-[var(--accent)] text-[var(--accent)]' : 'border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--border-accent)]'}`}
+            >
+              0.25 Л
+            </button>
+            {product.priceSticks && (
+              <button 
+                onClick={(e) => { e.preventDefault(); setVolume('sticks'); }}
+                className={`flex-1 py-1.5 rounded-md border transition-colors ${volume === 'sticks' ? 'bg-[var(--accent)]/10 border-[var(--accent)] text-[var(--accent)]' : 'border-[var(--card-border)] text-[var(--text-muted)] hover:border-[var(--border-accent)]'}`}
+              >
+                Стіки
+              </button>
             )}
           </div>
-
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              addToCart(product, '1L', 1);
-            }}
-            className="relative px-4 py-2 bg-[var(--accent)] text-[var(--bg-primary)] text-sm font-semibold rounded-lg hover:bg-[var(--accent-hover)] active:scale-95 overflow-hidden group/btn"
-            style={{ transition: 'background 0.2s, transform 0.1s' }}
-          >
-            <span className="relative z-10">{t('products.addToCart')}</span>
-            <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-500 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-          </button>
+          
+          <div className="flex items-center gap-4 mt-2">
+             <div className="flex items-center bg-[var(--bg-secondary)] border border-[var(--card-border)] rounded-lg overflow-hidden">
+               <button onClick={(e) => { e.preventDefault(); setQuantity(Math.max(1, quantity - 1)); }} className="px-3 py-1.5 hover:bg-[var(--theme-toggle-bg)] text-[var(--text-primary)] transition-colors">-</button>
+               <span className="px-4 py-1.5 text-[var(--text-primary)] font-medium min-w-[3rem] text-center border-x border-[var(--card-border)]">{quantity}</span>
+               <button onClick={(e) => { e.preventDefault(); setQuantity(quantity + 1); }} className="px-3 py-1.5 hover:bg-[var(--theme-toggle-bg)] text-[var(--text-primary)] transition-colors">+</button>
+             </div>
+             <p className="text-[var(--accent)] text-2xl font-bold ml-auto tabular-nums">{currentPrice * quantity}₴</p>
+          </div>
         </div>
-      </div>
 
-      {/* Bottom accent line — animates in */}
-      <div
-        className={`absolute bottom-0 left-0 right-0 h-[2px] transition-all duration-500 ${isHovered ? 'opacity-80 scale-x-100' : 'opacity-0 scale-x-0'}`}
-        style={{ background: 'linear-gradient(90deg, transparent, var(--accent) 30%, var(--accent) 70%, transparent)' }}
-      />
-    </div>
+        {isPreRelease ? (
+          <button
+            disabled
+            className="mt-4 w-full relative px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--card-border)] text-[var(--text-muted)] text-sm font-bold rounded-lg cursor-not-allowed text-center uppercase tracking-widest flex items-center justify-center"
+          >
+            Скоро у продажу
+          </button>
+        ) : (
+          <div className="mt-4">
+            <button
+              onClick={handleAddToCart}
+              className="w-full relative px-4 py-3.5 bg-gradient-to-r from-[var(--accent)] to-[#D4A57A] text-[var(--bg-primary)] text-sm font-bold rounded-xl hover:shadow-[0_0_20px_rgba(196,149,106,0.3)] active:scale-95 transition-all flex items-center justify-center gap-2 group"
+            >
+              <span>Спробувати сорт</span>
+              <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </button>
+            <div className="mt-3 flex items-center justify-center gap-3 text-[var(--text-muted)] text-[10px] sm:text-[11px] opacity-80">
+              <span className="flex items-center gap-1"><span className="text-[#9FD356]">✓</span> 100% Натурально</span>
+              <span className="flex items-center gap-1"><span className="text-[#9FD356]">✓</span> Готово за 15с</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </article>
   );
 };
 

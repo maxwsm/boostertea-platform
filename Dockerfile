@@ -4,12 +4,11 @@ RUN npm install -g bun
 COPY package.json bun.lock ./
 RUN bun install || npm install
 COPY . .
-RUN npx vite build --config vite.config.prod.ts
+RUN npm run build:vite
 
 FROM nginx:alpine
-# Copy built files
-COPY --from=builder /app/dist /usr/share/nginx/html
-# Copy nginx config
+RUN rm /etc/nginx/conf.d/default.conf
+COPY --from=builder /app/dist/client /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 3000
+EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

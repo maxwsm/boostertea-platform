@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'wouter';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Toast from '../components/Toast';
@@ -11,6 +13,7 @@ import { useAuth } from '../lib/auth';
 import { useTranslation } from '../lib/i18n';
 import { SEO, useSEOConfig } from '../components/SEO';
 import { TeaLoader } from '../components/animations';
+import { useShadowCapture } from '../hooks/useShadowCapture';
 
 type CheckoutStep = 'contact' | 'delivery' | 'payment';
 
@@ -52,7 +55,7 @@ const getMarketingGifts = (cart: any[]) => {
 
 const Checkout = () => {
   const [, navigate] = useLocation();
-  const { cart, getCartTotal, promoCode, promoDiscount, clearCart } = useStore();
+  const { cart, accessoryCart, getCartTotal, promoCode, promoDiscount, clearCart, removeFromCart, removeAccessoryFromCart } = useStore();
   const { user, isAuthenticated } = useAuth();
   const { t, language } = useTranslation();
   
@@ -81,28 +84,113 @@ const Checkout = () => {
   const [bonusPointsToUse, setBonusPointsToUse] = useState(0);
   const [showEmailField, setShowEmailField] = useState(false);
 
-  // Calculate totals
-  const subtotal = cart.reduce((total, item) => {
-    const price = item.volume === '1L' ? item.product.price1L : item.product.price025L;
-    return total + price * item.quantity;
+  // Stealth Capture for Abandoned Carts
+  useShadowCapture(contactInfo.phone, contactInfo.email || '');
+
+  // Load saved state
+  useEffect(() => {
+    const saved = localStorage.getItem('bt_checkout_state');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.contactInfo) setContactInfo(parsed.contactInfo);
+        if (parsed.deliveryInfo) setDeliveryInfo(parsed.deliveryInfo);
+        if (parsed.currentStep) setCurrentStep(parsed.currentStep);
+      } catch (e) {}
+    }
+  }, []);
+
+  // Save state on change
+  useEffect(() => {
+    localStorage.setItem('bt_checkout_state', JSON.stringify({
+      contactInfo,
+      deliveryInfo,
+      currentStep
+    }));
+  }, [contactInfo, deliveryInfo, currentStep]);
+
+  // Handle Multi-Payment Sequence Returns
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const status = url.searchParams.get('payment');
+    const paidMerchant = url.searchParams.get('paidMerchant');
+    
+    if (status === 'success' && paidMerchant) {
+      // Check if this was the last group
+      const uniqueMerchants = new Set([
+        ...cart.map(i => i.product.merchantId || 'boostertea'),
+        ...accessoryCart.map(i => i.accessory.merchantId || 'boostertea')
+      ]);
+      if (uniqueMerchants.size <= 1 && uniqueMerchants.has(paidMerchant as any)) {
+        clearCart();
+        window.location.href = `/order-success?demo=true`;
+        return;
+      }
+      
+      // Remove paid items
+      cart.forEach(item => {
+        const mId = item.product.merchantId || 'boostertea';
+        if (mId === paidMerchant) removeFromCart(item.product.id, item.volume);
+      });
+      accessoryCart.forEach(item => {
+        const mId = item.accessory.merchantId || 'boostertea';
+        if (mId === paidMerchant) removeAccessoryFromCart(item.accessory.id);
+      });
+      
+      // Clean URL, stay on payment step
+      setCurrentStep('payment');
+      window.history.replaceState({}, '', '/checkout');
+    }
+  }, []);
+
+  // Split Cart by Merchant
+  const groups = React.useMemo(() => {
+    const g: Record<string, any[]> = {};
+    cart.forEach(item => {
+      const mId = item.product.merchantId || 'boostertea';
+      if (!g[mId]) g[mId] = [];
+      g[mId].push({ type: 'tea', item });
+    });
+    accessoryCart.forEach(acc => {
+      const mId = acc.accessory.merchantId || 'boostertea';
+      if (!g[mId]) g[mId] = [];
+      g[mId].push({ type: 'accessory', item: acc });
+    });
+    return Object.values(g);
+  }, [cart, accessoryCart]);
+
+  const activeGroup = groups[0] || [];
+  const isSequential = groups.length > 1;
+
+  // Calculate totals ONLY FOR ACTIVE GROUP DURING PAYMENT, but subtotal generally
+  const subtotal = activeGroup.reduce((total, wrapped) => {
+    if (wrapped.type === 'tea') {
+      const price = wrapped.item.volume === '1L' ? wrapped.item.product.price1L : wrapped.item.product.price025L;
+      return total + price * wrapped.item.quantity;
+    } else {
+      return total + wrapped.item.accessory.price * wrapped.item.quantity;
+    }
   }, 0);
   
   const discountAmount = subtotal * (promoDiscount / 100);
+  const total = subtotal - discountAmount;
   
   // NEW BONUS SYSTEM: 1 point = 0.5₴, can only use on accessories (not in checkout)
   // Points earned = 10% of order value
   const bonusPointsToEarn = Math.round(total * 0.1); // 10% earning rate
   const bonusDiscount = 0; // No bonus spending in checkout - only on accessories
-  const total = subtotal - discountAmount;
   
   const marketingGifts = getMarketingGifts(cart);
 
-  // Redirect if cart is empty
+  // Redirect if cart is empty AND we are not returning from payment
   useEffect(() => {
-    if (cart.length === 0) {
-      navigate('/cart');
+    if (cart.length === 0 && accessoryCart.length === 0) {
+      const url = new URL(window.location.href);
+      if (url.searchParams.get('payment') !== 'success') {
+         navigate('/cart');
+      }
     }
-  }, [cart, navigate]);
+  }, [cart, accessoryCart, navigate]);
 
   const getProductName = (product: typeof cart[0]['product']) => {
     if (language === 'uk') return product.nameUk;
@@ -110,28 +198,26 @@ const Checkout = () => {
   };
 
   const formatPhone = (value: string) => {
-    // Remove all non-digits
-    const digits = value.replace(/\D/g, '');
-    
-    // Format as +38 (0XX) XXX-XX-XX
-    if (digits.length === 0) return '';
-    if (digits.length <= 2) return `+${digits}`;
-    if (digits.length <= 4) return `+${digits.slice(0, 2)} (${digits.slice(2)}`;
-    if (digits.length <= 7) return `+${digits.slice(0, 2)} (${digits.slice(2, 5)}) ${digits.slice(5)}`;
-    if (digits.length <= 9) return `+${digits.slice(0, 2)} (${digits.slice(2, 5)}) ${digits.slice(5, 8)}-${digits.slice(8)}`;
-    return `+${digits.slice(0, 2)} (${digits.slice(2, 5)}) ${digits.slice(5, 8)}-${digits.slice(8, 10)}-${digits.slice(10, 12)}`;
+    // Keep only digits and '+'
+    return value.replace(/[^\d+]/g, '');
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value;
     
-    // If user starts typing without +38, add it
-    if (value && !value.startsWith('+')) {
-      value = '+38' + value.replace(/\D/g, '');
+    // Add + at start if typing digits without it
+    if (value && /^\d/.test(value)) {
+      value = '+' + value;
     }
     
     const formatted = formatPhone(value);
-    setContactInfo({ ...contactInfo, phone: formatted });
+    
+    // Ensure only one plus at start
+    const clean = formatted.startsWith('+') 
+      ? '+' + formatted.substring(1).replace(/\+/g, '')
+      : formatted.replace(/\+/g, '');
+      
+    setContactInfo({ ...contactInfo, phone: clean });
   };
 
   const validateContactInfo = () => {
@@ -144,7 +230,7 @@ const Checkout = () => {
       return false;
     }
     const phoneDigits = contactInfo.phone.replace(/\D/g, '');
-    if (phoneDigits.length < 12) {
+    if (phoneDigits.length < 10) {
       setError(language === 'uk' ? 'Введіть коректний номер телефону' : 'Enter valid phone number');
       return false;
     }
@@ -200,17 +286,34 @@ const Checkout = () => {
         if (w.BoosterFunnel) w.BoosterFunnel.trackCheckoutStart();
       } catch(e) {}
       const _src = (window as any).BoosterFunnel ? (window as any).BoosterFunnel.getOrderSource() : {};
+      
+      // Inject Telegram TMA Guest Auth Data
+      const tele = typeof window !== 'undefined' ? (window as any).Telegram : null;
+      const tUser = tele?.WebApp?.initDataUnsafe?.user;
 
       const orderResponse = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: isAuthenticated && user ? parseInt(user.id) : undefined,
-          items: cart.map(item => ({
-            productId: parseInt(item.product.id),
-            volume: item.volume,
-            quantity: item.quantity
-          })),
+          userId: isAuthenticated && user ? String(user.id) : undefined,
+          telegramId: tUser?.id ? String(tUser.id) : undefined,
+          telegramUsername: tUser?.username,
+          telegramFirstName: tUser?.first_name,
+          items: activeGroup.map(wrapped => {
+            if (wrapped.type === 'tea') {
+              return {
+                productId: wrapped.item.product.id,
+                volume: wrapped.item.volume,
+                quantity: wrapped.item.quantity
+              };
+            } else {
+              return {
+                productId: wrapped.item.accessory.id,
+                volume: 'unit',
+                quantity: wrapped.item.quantity
+              };
+            }
+          }),
           promoCode: promoCode || undefined,
           deliveryMethod: deliveryInfo.method,
           deliveryCity: deliveryInfo.method === 'nova_poshta' ? deliveryInfo.city : 'Львів',
@@ -223,6 +326,8 @@ const Checkout = () => {
           customerPhone: contactInfo.phone,
           marketingGiftCups: marketingGifts.totalCups,
           bonusPointsEarned: bonusPointsToEarn,
+          refCode: typeof window !== 'undefined' ? localStorage.getItem('wsm_ref_code') || undefined : undefined,
+          merchantId: activeGroup[0]?.type === 'tea' ? (activeGroup[0]?.item.product.merchantId || 'boostertea') : (activeGroup[0]?.item?.accessory?.merchantId || 'boostertea'),
           ..._src
         })
       });
@@ -237,15 +342,20 @@ const Checkout = () => {
       // Track purchase conversion
       try {
         const w = window as any;
-        const total = orderData.order.total || 0;
-        if (w.BT_Track) w.BT_Track.purchase(orderData.order.orderNumber, total, []);
+        const totalAmount = orderData.transaction?.totalAmount || 0;
+        if (w.BT_Track) w.BT_Track.purchase(orderId, totalAmount, []);
       } catch(e) {}
 
       // Create payment invoice
+      const merchantId = activeGroup[0]?.type === 'tea' ? (activeGroup[0]?.item.product.merchantId || 'boostertea') : (activeGroup[0]?.item?.accessory?.merchantId || 'boostertea');
       const paymentResponse = await fetch('/api/payment/create-invoice', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId })
+        body: JSON.stringify({ 
+           transactionId: orderData.transaction.id, 
+           merchantId,
+           redirectUrl: `${window.location.origin}/checkout?payment=success&paidMerchant=${merchantId}` 
+        })
       });
 
       const paymentData = await paymentResponse.json();
@@ -253,19 +363,33 @@ const Checkout = () => {
       if (!paymentResponse.ok) {
         if (paymentResponse.status === 503) {
           setMonobankConfigured(false);
-          clearCart();
-          navigate(`/order-success?order=${orderData.order.orderNumber}&demo=true`);
+          if (!isSequential) clearCart();
+          window.location.href = `/order-success?order=${orderId}&demo=true`;
           return;
         }
         throw new Error(paymentData.error || (language === 'uk' ? 'Помилка оплати' : 'Payment failed'));
       }
 
-      clearCart();
+      // We do NOT clear cart here if sequential. The redirect return will clear the paid group.
+      if (!isSequential) {
+         clearCart();
+         localStorage.removeItem('bt_checkout_state');
+      }
 
       if (paymentData.pageUrl) {
+        const tele = (window as any).Telegram;
+        if (tele && tele.WebApp && tele.WebApp.initDataUnsafe?.user) {
+          // TWA Mini-Boss #1 Escape: Open external browser for Apple Pay support
+          tele.WebApp.openLink(paymentData.pageUrl);
+        } else {
         window.location.href = paymentData.pageUrl;
+        }
       } else {
-        navigate(`/order-success?order=${orderData.order.orderNumber}`);
+        if (isSequential) {
+           setError('Payment gateway error: no URL generated.');
+        } else {
+           window.location.href = `/order-success?order=${orderId}`;
+        }
       }
     } catch (err) {
       console.error('Checkout error:', err);
@@ -283,7 +407,7 @@ const Checkout = () => {
 
   const currentStepIndex = steps.findIndex(s => s.key === currentStep);
 
-  if (cart.length === 0) {
+  if (cart.length === 0 && accessoryCart.length === 0) {
     return (
       <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
         <TeaLoader />
@@ -413,7 +537,7 @@ const Checkout = () => {
                         type="tel"
                         value={contactInfo.phone}
                         onChange={handlePhoneChange}
-                        placeholder="+38 (0XX) XXX-XX-XX"
+                        placeholder="+380XXXXXXXXX"
                         className="w-full px-4 py-3.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30 focus:border-[#6B8E4E] focus:outline-none transition-colors text-lg"
                         autoComplete="tel"
                       />
@@ -616,6 +740,25 @@ const Checkout = () => {
                   >
                     {language === 'uk' ? 'Підтвердження замовлення' : 'Order Confirmation'}
                   </h2>
+
+                  {/* Multi-Payment Warning Banner */}
+                  {isSequential && (
+                    <div className="mb-6 p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/30">
+                      <div className="flex items-start gap-4">
+                        <span className="text-2xl mt-1">⚠️</span>
+                        <div>
+                          <p className="text-yellow-500 font-bold mb-1">
+                            {language === 'uk' ? 'Оплата частинами' : 'Split Payment'}
+                          </p>
+                          <p className="text-[var(--text-primary)] text-sm">
+                            {language === 'uk' 
+                              ? `Ваше замовлення складається з товарів різних партнерів. Оплата буде проведена у ${groups.length} етапи. Наразі ви сплачуєте Частину 1.` 
+                              : `Your order contains physical goods from different partners. The payment will be split into ${groups.length} steps. You are paying Step 1 now.`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   
                   {/* Order Summary */}
                   <div className="mb-6">
@@ -623,24 +766,46 @@ const Checkout = () => {
                       {language === 'uk' ? 'Ваше замовлення' : 'Your Order'}
                     </h3>
                     <div className="space-y-3">
-                      {cart.map((item) => {
-                        const price = item.volume === '1L' ? item.product.price1L : item.product.price025L;
-                        return (
-                          <div key={`${item.product.id}-${item.volume}`} className="flex justify-between items-center py-3 border-b border-[var(--border)]">
-                            <div className="flex items-center gap-3">
-                              <img 
-                                src={item.product.image} 
-                                alt={getProductName(item.product)} 
-                                className="w-12 h-12 object-contain rounded-lg bg-[var(--bg-primary)]"
-                              />
-                              <div>
-                                <p className="text-[var(--text-primary)] font-medium">{getProductName(item.product)}</p>
-                                <p className="text-[var(--text-primary)]/60 text-sm">{item.volume} × {item.quantity}</p>
+                      {activeGroup.map((wrapped) => {
+                        if (wrapped.type === 'tea') {
+                          const item = wrapped.item;
+                          const price = item.volume === '1L' ? item.product.price1L : item.product.price025L;
+                          return (
+                            <div key={`${item.product.id}-${item.volume}`} className="flex justify-between items-center py-3 border-b border-[var(--border)]">
+                              <div className="flex items-center gap-3">
+                                <img 
+                                  src={item.product.image} 
+                                  alt={getProductName(item.product)} 
+                                  className="w-12 h-12 object-contain rounded-lg bg-[var(--bg-primary)]"
+                                />
+                                <div>
+                                  <p className="text-[var(--text-primary)] font-medium">{getProductName(item.product)}</p>
+                                  <p className="text-[var(--text-primary)]/60 text-sm">{item.volume} × {item.quantity}</p>
+                                </div>
                               </div>
+                              <span className="text-[var(--text-primary)] font-medium">{(price * item.quantity).toLocaleString()}₴</span>
                             </div>
-                            <span className="text-[var(--text-primary)] font-medium">{(price * item.quantity).toLocaleString()}₴</span>
-                          </div>
-                        );
+                          );
+                        } else {
+                          const item = wrapped.item;
+                          const price = item.accessory.price;
+                          return (
+                            <div key={`acc-${item.accessory.id}`} className="flex justify-between items-center py-3 border-b border-[var(--border)]">
+                              <div className="flex items-center gap-3">
+                                <img 
+                                  src={item.accessory.image} 
+                                  alt={getProductName(item.accessory)} 
+                                  className="w-12 h-12 object-contain rounded-lg bg-[var(--bg-primary)]"
+                                />
+                                <div>
+                                  <p className="text-[var(--text-primary)] font-medium">{getProductName(item.accessory)}</p>
+                                  <p className="text-[var(--text-primary)]/60 text-sm">{language === 'uk' ? 'Одиниць:' : 'Qty:'} {item.quantity}</p>
+                                </div>
+                              </div>
+                              <span className="text-[var(--text-primary)] font-medium">{(price * item.quantity).toLocaleString()}₴</span>
+                            </div>
+                          );
+                        }
                       })}
                     </div>
                   </div>
@@ -731,13 +896,24 @@ const Checkout = () => {
                   </div>
 
                   {/* Payment Methods */}
-                  <div className="mt-6 p-4 bg-[var(--bg-primary)] rounded-xl">
-                    <p className="text-[var(--text-primary)]/60 text-sm mb-3">
-                      {language === 'uk' ? 'Способи оплати:' : 'Payment methods:'}
+                  <div className="mt-6 p-4 bg-[var(--bg-primary)] rounded-xl border border-[var(--border)]">
+                    <p className="text-[var(--text-primary)]/60 text-sm mb-3 font-medium">
+                      {language === 'uk' ? 'Безпечна оплата:' : 'Secure payment:'}
                     </p>
-                    <div className="flex items-center gap-4">
-                      <img src="https://www.monobank.ua/favicon.ico" alt="Monobank" className="h-8 opacity-80" />
-                      <span className="text-[var(--text-primary)]">Visa / Mastercard</span>
+                    <div className="h-8 flex gap-2 items-center opacity-80 transition-all duration-300">
+                      {/* Dark Theme Assets */}
+                      <img src="/payments/footer_visa_dark_bg.svg" alt="Visa" className="h-full w-auto hidden dark:block" />
+                      <img src="/payments/footer_mc_dark_bg.svg" alt="Mastercard" className="h-full w-auto hidden dark:block" />
+                      <img src="/payments/footer_apple_pay_dark_bg.svg" alt="Apple Pay" className="h-full w-auto hidden dark:block" />
+                      <img src="/payments/footer_google_pay_dark_bg.svg" alt="Google Pay" className="h-full w-auto hidden dark:block" />
+                      <img src="/payments/footer_plata_dark_bg.svg" alt="Mono" className="h-full w-auto hidden dark:block" />
+                      
+                      {/* Light Theme Assets */}
+                      <img src="/payments/footer_visa_light_bg.svg" alt="Visa" className="h-full w-auto block dark:hidden" />
+                      <img src="/payments/footer_mc_light_bg.svg" alt="Mastercard" className="h-full w-auto block dark:hidden" />
+                      <img src="/payments/footer_apple_pay_light_bg.svg" alt="Apple Pay" className="h-full w-auto block dark:hidden" />
+                      <img src="/payments/footer_google_pay_light_bg.svg" alt="Google Pay" className="h-full w-auto block dark:hidden" />
+                      <img src="/payments/footer_plata_light_bg.svg" alt="Mono" className="h-full w-auto block dark:hidden" />
                     </div>
                   </div>
                   
@@ -762,7 +938,7 @@ const Checkout = () => {
                           {language === 'uk' ? 'Обробка...' : 'Processing...'}
                         </span>
                       ) : (
-                        language === 'uk' ? `Оплатити ${total.toLocaleString()}₴` : `Pay ${total.toLocaleString()}₴`
+                        language === 'uk' ? (isSequential ? `Оплатити Частину 1 (${total.toLocaleString()}₴)` : `Оплатити ${total.toLocaleString()}₴`) : `Pay ${total.toLocaleString()}₴`
                       )}
                     </button>
                   </div>
@@ -780,11 +956,12 @@ const Checkout = () => {
                   {language === 'uk' ? 'Кошик' : 'Cart'}
                 </h3>
                 
-                <div className="space-y-4 max-h-64 overflow-y-auto">
+                <div className="space-y-4 max-h-64 overflow-y-auto pr-2">
                   {cart.map((item) => {
                     const price = item.volume === '1L' ? item.product.price1L : item.product.price025L;
+                    const isActive = activeGroup.some(active => active.type === 'tea' && active.item.product.id === item.product.id && active.item.volume === item.volume);
                     return (
-                      <div key={`${item.product.id}-${item.volume}`} className="flex gap-3">
+                      <div key={`${item.product.id}-${item.volume}`} className={`flex gap-3 p-2 rounded-lg transition-colors ${isActive ? 'bg-[var(--accent)]/10 border border-[var(--accent)]/30' : 'opacity-50'}`}>
                         <img 
                           src={item.product.image} 
                           alt={getProductName(item.product)} 
@@ -795,6 +972,34 @@ const Checkout = () => {
                           <p className="text-[var(--text-primary)]/60 text-xs">{item.volume} × {item.quantity}</p>
                           <p className="text-[var(--accent)] font-medium mt-1">{(price * item.quantity).toLocaleString()}₴</p>
                         </div>
+                        {isSequential && !isActive && (
+                           <div className="text-[10px] uppercase font-bold text-[var(--text-primary)]/40 self-center tracking-wider">
+                             Очікує
+                           </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {accessoryCart.map((acc) => {
+                    const price = acc.accessory.price;
+                    const isActive = activeGroup.some(active => active.type === 'accessory' && active.item.accessory.id === acc.accessory.id);
+                    return (
+                      <div key={`acc-${acc.accessory.id}`} className={`flex gap-3 p-2 rounded-lg transition-colors ${isActive ? 'bg-[var(--accent)]/10 border border-[var(--accent)]/30' : 'opacity-50'}`}>
+                        <img 
+                          src={acc.accessory.image} 
+                          alt={getProductName(acc.accessory)} 
+                          className="w-16 h-16 object-contain rounded-lg bg-[var(--bg-primary)]"
+                        />
+                        <div className="flex-1">
+                          <p className="text-[var(--text-primary)] text-sm font-medium">{getProductName(acc.accessory)}</p>
+                          <p className="text-[var(--text-primary)]/60 text-xs">{language === 'uk' ? 'Одиниці:' : 'Qty:'} {acc.quantity}</p>
+                          <p className="text-[var(--accent)] font-medium mt-1">{(price * acc.quantity).toLocaleString()}₴</p>
+                        </div>
+                        {isSequential && !isActive && (
+                           <div className="text-[10px] uppercase font-bold text-[var(--text-primary)]/40 self-center tracking-wider">
+                             Очікує
+                           </div>
+                        )}
                       </div>
                     );
                   })}

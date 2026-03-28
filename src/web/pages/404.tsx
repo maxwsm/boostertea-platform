@@ -1,4 +1,4 @@
-import { Link } from 'wouter';
+import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useTranslation } from '../lib/i18n';
 import { SEO, useSEOConfig } from '../components/SEO';

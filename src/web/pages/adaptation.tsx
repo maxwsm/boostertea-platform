@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'wouter';
+import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Toast from '../components/Toast';
@@ -250,7 +250,7 @@ const ImplementationSteps = () => {
       content: {
         description: 'Залишайтеся на зв\'язку для отримання нових пропозицій та вирішення питань.',
         details: [
-          { label: 'Telegram підтримка', value: '@booster_tea_b2b' },
+          { label: 'Telegram підтримка', value: '@boostertea_b2b_bot' },
           { label: 'Гаряча лінія', value: '+380 96 310 96 22' },
           { label: 'Email', value: 'office@boostertea.com.ua' }
         ],
@@ -405,7 +405,7 @@ const ImplementationSteps = () => {
                   </button>
                 ) : (
                   <a
-                    href="https://t.me/booster_tea_b2b"
+                    href="https://t.me/boostertea_b2b_bot"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-6 py-3 bg-[var(--accent)] text-[#0D0D0D] font-semibold rounded-lg hover:bg-[var(--accent-hover)] transition-all"
@@ -548,7 +548,7 @@ const FAQSection = () => {
         <div className="mt-12 text-center">
           <p className="text-[var(--text-primary)]/var(--text-muted) mb-4">Не знайшли відповідь на своє питання?</p>
           <a 
-            href="https://t.me/booster_tea_b2b"
+            href="https://t.me/boostertea_b2b_bot"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-[var(--accent)] hover:text-[#7FB030] transition-colors"
@@ -853,8 +853,8 @@ const ContactForm = () => {
                   </div>
                   <div>
                     <p className="text-[var(--text-primary)] font-medium mb-1">Telegram</p>
-                    <a href="https://t.me/booster_tea_b2b" target="_blank" rel="noopener noreferrer" className="text-[var(--text-primary)]/var(--text-muted) hover:text-[var(--accent)] transition-colors">
-                      @booster_tea_b2b
+                    <a href="https://t.me/boostertea_b2b_bot" target="_blank" rel="noopener noreferrer" className="text-[var(--text-primary)]/var(--text-muted) hover:text-[var(--accent)] transition-colors">
+                      @boostertea_b2b_bot
                     </a>
                   </div>
                 </div>

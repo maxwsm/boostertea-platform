@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'wouter';
+import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Toast from '../components/Toast';
@@ -37,20 +37,6 @@ const B2B = () => {
     }
   ];
   
-  // Add FAQ schema to the page
-  useEffect(() => {
-    const script = document.createElement('script');
-    script.type = 'application/ld+json';
-    script.textContent = JSON.stringify(generateFAQSchema(b2bFaqs));
-    script.id = 'faq-schema';
-    document.head.appendChild(script);
-    
-    return () => {
-      const existingScript = document.getElementById('faq-schema');
-      if (existingScript) existingScript.remove();
-    };
-  }, [t]);
-  
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] page-transition">
       <SEO 
@@ -58,8 +44,9 @@ const B2B = () => {
         description={seoConfig.description}
         breadcrumbs={[
           { name: t('nav.home'), url: '/' },
-          { name: 'B2B', url: '/b2b' }
+          { name: t('nav.b2b'), url: '/b2b' }
         ]}
+        faq={b2bFaqs}
       />
       <Header />
       <main>
@@ -68,7 +55,7 @@ const B2B = () => {
           <Breadcrumbs 
             items={[
               { label: t('nav.home'), href: '/' },
-              { label: 'B2B' }
+              { label: t('nav.b2b') }
             ]} 
           />
         </div>
@@ -115,7 +102,7 @@ const HeroSection = () => {
 
           <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up animation-delay-300">
             <a 
-              href="https://t.me/booster_tea_b2b"
+              href="https://t.me/boostertea_b2b_bot"
               target="_blank"
               rel="noopener noreferrer"
               className="group relative px-8 py-4 bg-[var(--accent)] text-[#0D0D0D] font-semibold rounded-xl hover:bg-[var(--accent-hover)] transition-all inline-flex items-center justify-center gap-2 overflow-hidden"
@@ -221,6 +208,7 @@ const ProfitCalculator = () => {
   const [cupsPerDay, setCupsPerDay] = useState(30);
   const [sellingPrice, setSellingPrice] = useState(65);
   const [drinkType, setDrinkType] = useState<'hot' | 'cold' | 'mixed'>('mixed');
+  const [pumps, setPumps] = useState<1 | 2>(2); // The Taidrink Syndicate Doctrine
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
@@ -268,22 +256,28 @@ const ProfitCalculator = () => {
     mixed: language === 'uk' ? 'Обидва варіанти' : 'Both options'
   };
   
-  // Cost per cup (30ml from 1L bottle = 34 cups, average price ~1000 UAH)
-  const costPerCup = 29; // UAH (~1000/34)
+  // Cost per cup: Wholesale 1L price is 250 UAH (1500 UAH per box of 6)
+  const bottleWholesalePrice = 250;
+  const portionsPerBottle = pumps === 1 ? 33 : 17; // 30ml vs 60ml
+  const costPerCup = Math.round(bottleWholesalePrice / portionsPerBottle); 
+  
+  // Marketing Magic: 2 pumps is so good it drives up daily LTV by 45% naturally
+  const loyaltyMultiplier = pumps === 2 ? 1.45 : 1.0;
+  
   const seasonalCoef = seasonalityCoefficients[drinkType][currentMonth];
-  const adjustedCupsPerDay = Math.round(cupsPerDay * seasonalCoef);
+  const adjustedCupsPerDay = Math.round(cupsPerDay * seasonalCoef * loyaltyMultiplier);
   
   const profitPerCup = sellingPrice - costPerCup;
   const dailyProfit = profitPerCup * adjustedCupsPerDay;
   const monthlyProfit = dailyProfit * 30;
   const yearlyProfit = Array.from({ length: 12 }, (_, i) => {
     const monthCoef = seasonalityCoefficients[drinkType][i];
-    return profitPerCup * Math.round(cupsPerDay * monthCoef) * 30;
+    return profitPerCup * Math.round(cupsPerDay * monthCoef * loyaltyMultiplier) * 30;
   }).reduce((a, b) => a + b, 0);
   const marginPercent = Math.round((profitPerCup / sellingPrice) * 100);
 
   // B2B marketing bonus: 20 cups per 1L
-  const estimatedMonthlyBottles = Math.ceil((adjustedCupsPerDay * 30) / 34);
+  const estimatedMonthlyBottles = Math.ceil((adjustedCupsPerDay * 30) / portionsPerBottle);
   const freeMarketingCups = estimatedMonthlyBottles * 20;
 
   return (
@@ -391,6 +385,32 @@ const ProfitCalculator = () => {
                     <div className="flex justify-between text-[var(--text-subtle)] text-sm mt-2">
                       <span>5</span>
                       <span>200</span>
+                    </div>
+                  </div>
+
+                  {/* The 2-Pump Doctrine Toggle */}
+                  <div className="bg-[#1A1A1A] rounded-xl p-5 border border-[var(--border)] relative overflow-hidden group hover:border-[var(--accent)]/50 transition-all cursor-pointer" onClick={() => setPumps(pumps === 1 ? 2 : 1)}>
+                    {pumps === 2 && <div className="absolute top-0 right-0 w-16 h-16 bg-red-500/20 blur-[20px] rounded-full pointer-events-none" />}
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-white font-bold mb-1 flex items-center gap-2">
+                           Формула "Зубної Пасти" <span className="bg-red-500 text-black px-2 py-0.5 rounded text-[10px] uppercase font-black uppercase tracking-wider">Secret</span>
+                        </p>
+                        <p className="text-[var(--text-muted)] text-xs mb-3">Вибір дозування напряму впливає на LTV ваших гостей. Подвійна порція зрізає маржу на одиницю, але приносить шалений смак та X1.45 більше щоденних продажів.</p>
+                      </div>
+                      <div className={`shrink-0 w-12 h-6 rounded-full p-1 transition-colors ${pumps === 2 ? 'bg-red-500' : 'bg-zinc-700'}`}>
+                        <div className={`w-4 h-4 bg-white rounded-full transition-transform ${pumps === 2 ? 'translate-x-6' : 'translate-x-0'}`} />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                       <div className={`p-3 rounded-lg text-center border transition-all ${pumps === 1 ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]' : 'border-zinc-800 text-zinc-500'}`}>
+                          <span className="block text-sm font-bold">1 Помпа</span>
+                          <span className="text-[10px]">30мл / Висока Маржа</span>
+                       </div>
+                       <div className={`p-3 rounded-lg text-center border transition-all ${pumps === 2 ? 'border-red-500 bg-red-500/10 text-red-500 shadow-[0_0_15px_rgba(220,38,38,0.2)]' : 'border-zinc-800 text-zinc-500'}`}>
+                          <span className="block text-sm font-bold">2 Помпи</span>
+                          <span className="text-[10px]">60мл / Макс. Смак & Рітеншн</span>
+                       </div>
                     </div>
                   </div>
 
@@ -597,7 +617,7 @@ const PartnerMap = () => {
             
             <div className="text-center pt-4">
               <a 
-                href="https://t.me/booster_tea_b2b"
+                href="https://t.me/boostertea_b2b_bot"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[var(--accent)] hover:underline inline-flex items-center gap-2"
@@ -615,7 +635,7 @@ const PartnerMap = () => {
   );
 };
 
-// Wholesale Pricing Section - NEW according to marketing strategy
+// Wholesale Pricing Section - Redirected to Telegram
 const WholesalePricing = () => {
   const { language } = useTranslation();
   
@@ -624,151 +644,24 @@ const WholesalePricing = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <ScrollReveal>
           <div className="text-center mb-16">
-            <h2 
-              className="text-4xl sm:text-5xl text-[var(--text-primary)] mb-4"
-              style={{ fontFamily: 'var(--font-heading)' }}
-            >
-              {language === 'uk' ? 'Оптові' : 'Wholesale'} <span className="gradient-text">{language === 'uk' ? 'умови' : 'terms'}</span>
+            <h2 className="text-4xl sm:text-5xl text-[var(--text-primary)] mb-4" style={{ fontFamily: 'var(--font-heading)' }}>
+              {language === 'uk' ? 'Оптові' : 'Wholesale'} <span className="gradient-text">{language === 'uk' ? 'прайси' : 'pricing'}</span>
             </h2>
-            <p className="text-[var(--text-muted)] text-lg max-w-2xl mx-auto">
+            <p className="text-[var(--text-muted)] text-lg max-w-2xl mx-auto mb-8">
               {language === 'uk' 
-                ? 'Спеціальні ціни для бізнес-партнерів від 5 ящиків (30+ літрів)'
-                : 'Special prices for business partners from 5 cases (30+ liters)'}
+                ? 'Спеціальні ціни для бізнес-партнерів доступні виключно через нашого менеджера в Telegram.'
+                : 'Special prices for business partners are available exclusively through our Telegram manager.'}
             </p>
-          </div>
-        </ScrollReveal>
-
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Pricing Table */}
-          <ScrollReveal delay={100}>
-            <div className="bg-[var(--bg-primary)] rounded-2xl p-8 border border-[var(--border)]">
-              <h3 className="text-2xl text-[var(--text-primary)] mb-6" style={{ fontFamily: 'var(--font-heading)' }}>
-                {language === 'uk' ? '📦 Ціни на концентрати' : '📦 Concentrate prices'}
-              </h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl">
-                  <div>
-                    <p className="text-[var(--text-primary)] font-medium">1 л пляшка</p>
-                    <p className="text-[var(--text-muted)] text-sm">~34 порції</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[var(--text-muted)] text-sm line-through">300₴ роздріб</p>
-                    <p className="text-[var(--accent)] text-xl font-bold">250₴ опт</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl">
-                  <div>
-                    <p className="text-[var(--text-primary)] font-medium">0.5 л пляшка</p>
-                    <p className="text-[var(--text-muted)] text-sm">~17 порцій</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[var(--text-muted)] text-sm line-through">180₴ роздріб</p>
-                    <p className="text-[var(--accent)] text-xl font-bold">150₴ опт</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl">
-                  <div>
-                    <p className="text-[var(--text-primary)] font-medium">Ящик 1 л</p>
-                    <p className="text-[var(--text-muted)] text-sm">6 пляшок × 1 л</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[#C9A55C] text-xl font-bold">1 500₴</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-xl">
-                  <div>
-                    <p className="text-[var(--text-primary)] font-medium">Ящик 0.5 л</p>
-                    <p className="text-[var(--text-muted)] text-sm">12 пляшок × 0.5 л</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[#C9A55C] text-xl font-bold">1 800₴</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="mt-6 p-4 bg-[var(--accent)]/10 rounded-xl border border-[var(--accent)]/30">
-                <p className="text-[var(--accent)] font-medium text-sm">
-                  {language === 'uk' 
-                    ? '✓ Мінімальне замовлення: 5 ящиків (30 л) на позицію'
-                    : '✓ Minimum order: 5 cases (30 L) per item'}
-                </p>
-              </div>
-            </div>
-          </ScrollReveal>
-
-          {/* Bonus Program */}
-          <ScrollReveal delay={200}>
-            <div className="bg-[var(--bg-primary)] rounded-2xl p-8 border border-[var(--border)]">
-              <h3 className="text-2xl text-[var(--text-primary)] mb-6" style={{ fontFamily: 'var(--font-heading)' }}>
-                {language === 'uk' ? '🎁 Бонуси для партнерів' : '🎁 Partner bonuses'}
-              </h3>
-              
-              <div className="space-y-6">
-                {/* Cups bonus */}
-                <div className="flex gap-4 p-4 bg-[#E07B2D]/10 rounded-xl border border-[#E07B2D]/30">
-                  <span className="text-3xl">☕</span>
-                  <div>
-                    <p className="text-[#E07B2D] font-bold">20 стаканчиків до кожного літра</p>
-                    <p className="text-[var(--text-muted)] text-sm">
-                      Брендовані картонні стакани з кришками для To-Go продажів
-                    </p>
-                  </div>
-                </div>
-
-                {/* Accessories bonus */}
-                <div className="flex gap-4 p-4 bg-[#8B7355]/10 rounded-xl border border-[#8B7355]/30">
-                  <span className="text-3xl">🎒</span>
-                  <div>
-                    <p className="text-[#C9A55C] font-bold">Аксесуари за собівартістю</p>
-                    <p className="text-[var(--text-muted)] text-sm">
-                      При замовленні від 30 л — гамаки, лампи, рюкзаки для вашого закладу
-                    </p>
-                  </div>
-                </div>
-
-                {/* Marketing materials */}
-                <div className="flex gap-4 p-4 bg-[var(--accent)]/10 rounded-xl border border-[var(--accent)]/30">
-                  <span className="text-3xl">📋</span>
-                  <div>
-                    <p className="text-[var(--accent)] font-bold">Маркетингові матеріали</p>
-                    <p className="text-[var(--text-muted)] text-sm">
-                      Меню-стійки, постери, тейбл-тенти безкоштовно
-                    </p>
-                  </div>
-                </div>
-
-                {/* Loyalty program for clients */}
-                <div className="flex gap-4 p-4 bg-[#9FD356]/10 rounded-xl border border-[#9FD356]/30">
-                  <span className="text-3xl">💳</span>
-                  <div>
-                    <p className="text-[#9FD356] font-bold">Програма лояльності</p>
-                    <p className="text-[var(--text-muted)] text-sm">
-                      Ваші клієнти з аксесуарами BoosterTea отримують -10% на напої
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </ScrollReveal>
-        </div>
-
-        {/* CTA */}
-        <ScrollReveal delay={300}>
-          <div className="mt-12 text-center">
             <a 
-              href="https://t.me/booster_tea_b2b"
+              href="https://t.me/boostertea_b2b_bot"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 px-8 py-4 bg-[var(--accent)] text-[#0D0D0D] font-bold rounded-xl hover:bg-[var(--accent-hover)] transition-all"
+              className="inline-flex items-center gap-3 px-8 py-4 bg-[var(--accent)] text-[#0D0D0D] font-bold rounded-xl hover:bg-[var(--accent-hover)] transition-all mx-auto"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
               </svg>
-              {language === 'uk' ? 'Отримати оптовий прайс' : 'Get wholesale price list'}
+              {language === 'uk' ? 'Отримати оптовий прайс у Telegram' : 'Get wholesale pricing in Telegram'}
             </a>
           </div>
         </ScrollReveal>
@@ -874,7 +767,7 @@ const CTASection = () => {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
               <a 
-                href="https://t.me/booster_tea_b2b"
+                href="https://t.me/boostertea_b2b_bot"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-3 px-8 py-4 bg-[var(--accent)] text-[#0D0D0D] font-bold text-lg rounded-xl hover:bg-[var(--accent-hover)] transition-all hover:shadow-lg hover:shadow-[#9FD356]/30"

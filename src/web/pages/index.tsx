@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'wouter';
+import { CoreButton } from '@wsm/ui';
+import Link from 'next/link';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Toast from '../components/Toast';
@@ -9,6 +10,9 @@ import { products } from '../lib/store';
 import { ScrollReveal, SteamParticles } from '../components/animations';
 import { useTranslation } from '../lib/i18n';
 import { SEO, useSEOConfig } from '../components/SEO';
+import { ActivityLeaderboard } from '../components/ActivityLeaderboard';
+import { MagneticButton } from '../components/scrollytelling/MagneticButton';
+import { ScrollVideoScrubber } from '../components/scrollytelling/ScrollVideoScrubber';
 
 const Home = () => {
   const seoConfig = useSEOConfig('home');
@@ -24,12 +28,21 @@ const Home = () => {
         ]}
       />
       <Header />
+        <LiveActivity />
       <main>
         <HeroSection />
+        <ScrollytellingShowcase />
         <ProductsPreview />
         <HowItWorks />
         <UsageScenarios />
         <Testimonials />
+        <section className="py-24 bg-[var(--bg-primary)] border-t border-[var(--border)] relative overflow-hidden">
+          {/* subtle background effect matching the page design */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[var(--accent)]/5 to-[var(--bg-tertiary)]" />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <ActivityLeaderboard />
+          </div>
+        </section>
         <TrustAndQuality />
         <InstagramFeed />
       </main>
@@ -137,7 +150,7 @@ const HeroSection = () => {
               style={{ fontFamily: 'var(--font-heading)' }}
             >
               {t('hero.title')}{' '}
-              <span className="gradient-text">{t('hero.titleAccent')}</span>
+              <span className="gradient-text">"Енергія за 15 секунд"</span>
             </h1>
             
             <p className="text-xl text-[var(--text-secondary)] mb-8 max-w-xl mx-auto lg:mx-0 animate-fade-in-up animation-delay-200">
@@ -145,19 +158,23 @@ const HeroSection = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-fade-in-up animation-delay-300">
-              <Link 
-                href="/products"
-                className="group relative px-8 py-4 bg-[var(--accent)] text-[var(--bg-primary)] font-semibold rounded-xl hover:bg-[var(--accent-hover)] transition-all hover:shadow-lg hover:shadow-[var(--accent)]/30 active:scale-95 overflow-hidden"
-              >
-                <span className="relative z-10">{t('hero.cta')}</span>
-                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-500 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-              </Link>
-              <Link 
-                href="/b2b"
-                className="px-8 py-4 bg-transparent text-[var(--text-primary)] font-semibold rounded-xl border border-[var(--border-hover)] hover:bg-[var(--theme-toggle-bg)] transition-all"
-              >
-                {t('hero.ctaB2B')}
-              </Link>
+              <MagneticButton pullStrength={40}>
+                <Link 
+                  href="/products"
+                  className="group relative px-8 py-4 bg-[var(--accent)] text-[var(--bg-primary)] font-semibold rounded-xl hover:bg-[var(--accent-hover)] transition-all hover:shadow-lg hover:shadow-[var(--accent)]/30 active:scale-95 overflow-hidden block w-full text-center"
+                >
+                  <span className="relative z-10">{t('hero.cta')}</span>
+                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-500 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+                </Link>
+              </MagneticButton>
+              <MagneticButton pullStrength={20}>
+                <Link 
+                  href="/b2b"
+                  className="px-8 py-4 bg-transparent text-[var(--text-primary)] font-semibold rounded-xl border border-[var(--border-hover)] hover:bg-[var(--theme-toggle-bg)] transition-all block w-full text-center"
+                >
+                  {t('hero.ctaB2B')}
+                </Link>
+              </MagneticButton>
             </div>
 
             {/* Stats */}
@@ -171,7 +188,7 @@ const HeroSection = () => {
                 <p className="text-[var(--text-muted)] text-sm mt-1">{t('hero.stats.natural')}</p>
               </div>
               <div>
-                <p className="text-3xl sm:text-4xl font-bold text-[var(--accent)]" style={{ fontFamily: 'var(--font-heading)' }}>40+</p>
+                <p className="text-3xl sm:text-4xl font-bold text-[var(--accent)]" style={{ fontFamily: 'var(--font-heading)' }}>34</p>
                 <p className="text-[var(--text-muted)] text-sm mt-1">{t('hero.stats.portions')}</p>
               </div>
             </div>
@@ -197,7 +214,7 @@ const HeroSection = () => {
             </div>
 
             {/* Timer Ring */}
-            <div className="absolute w-80 h-80 sm:w-96 sm:h-96">
+            <div className="absolute w-80 h-80 sm:w-96 sm:h-96 z-20 pointer-events-none">
               <svg className="w-full h-full -rotate-90">
                 <defs>
                   <filter id="glow">
@@ -221,12 +238,12 @@ const HeroSection = () => {
                   cy="50%"
                   r="45%"
                   stroke="url(#timerGradient)"
-                  strokeWidth="6"
+                  strokeWidth="8"
                   fill="none"
                   strokeLinecap="round"
                   strokeDasharray={circumference}
                   strokeDashoffset={circumference - progress}
-                  className="transition-all duration-1000 ease-linear"
+                  className="transition-all duration-1000 ease-linear drop-shadow-[0_0_15px_rgba(159,211,86,0.5)]"
                   filter="url(#glow)"
                 />
                 <defs>
@@ -239,21 +256,21 @@ const HeroSection = () => {
             </div>
 
             {/* Timer display badge */}
-            <div className="absolute top-4 sm:top-8 left-1/2 -translate-x-1/2 bg-[var(--bg-secondary)]/90 backdrop-blur-md px-6 py-3 rounded-full border border-[var(--border-accent)] glow-effect">
+            <div className="absolute top-4 sm:top-8 left-1/2 -translate-x-1/2 bg-[var(--bg-secondary)]/90 backdrop-blur-md px-6 py-3 rounded-full border border-[var(--border-accent)] glow-effect z-30">
               <span className="text-[var(--accent)] text-2xl font-bold tabular-nums" style={{ fontFamily: 'var(--font-heading)' }}>
                 00:{seconds.toString().padStart(2, '0')}
               </span>
             </div>
 
             {/* Product image with steam */}
-            <div className="relative w-64 h-64 sm:w-80 sm:h-80 animate-float">
+            <div className="relative w-56 h-56 sm:w-72 sm:h-72 animate-float">
               {/* Steam particles rising from the bottle */}
               <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-40 h-40 pointer-events-none">
                 <SteamParticles count={8} />
               </div>
               
               <img 
-                src="./2c48187c-dfae-4491-8a85-29ceb65cf85c.png"
+                src="./puerh-tea-concentrate-premium.png"
                 alt="BoosterTea PU-ERH"
                 className="w-full h-full object-contain drop-shadow-2xl relative z-10"
                 style={{
@@ -289,6 +306,35 @@ const HeroSection = () => {
           <div className="w-1 h-2 bg-[var(--text-muted)] rounded-full animate-pulse" />
         </div>
         <p className="text-[var(--text-subtle)] text-xs mt-2 text-center">{t('hero.scroll')}</p>
+      </div>
+    </section>
+  );
+};
+
+const ScrollytellingShowcase = () => {
+  const { t } = useTranslation();
+  return (
+    <section className="py-24 bg-black relative">
+      <div className="absolute inset-0 bg-gradient-to-b from-[var(--bg-primary)] to-transparent opacity-80 z-0 h-32" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center mb-8">
+        <h2 
+          className="text-4xl sm:text-5xl text-white mb-4"
+          style={{ fontFamily: 'var(--font-heading)' }}
+        >
+          Магія <span className="text-[#9FD356]">Екстракції</span>
+        </h2>
+        <p className="text-white/60 text-lg max-w-2xl mx-auto">
+          Скрольте вниз, щоб керувати часом і побачити, як народжується концентрат в 8K деталізації.
+        </p>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 z-20 relative">
+        <ScrollVideoScrubber 
+          src="/videos/8k-extraction.webm"
+          durationSeconds={12}
+          playbackRate={1.5}
+          className="w-full aspect-video rounded-3xl overflow-hidden border border-white/10"
+        />
       </div>
     </section>
   );
@@ -780,3 +826,32 @@ const InstagramFeed = () => {
 };
 
 export default Home;
+
+const LiveActivity = () => {
+  const [active, setActive] = useState(false);
+  const [data, setData] = useState({ name: 'Максим', city: 'Львів' });
+  const names = ['Ігор', 'Анна', 'Дмитро', 'Олена', 'Сергій'];
+  const cities = ['Київ', 'Одеса', 'Харків', 'Дніпро', 'Львів'];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setData({
+        name: names[Math.floor(Math.random() * names.length)],
+        city: cities[Math.floor(Math.random() * cities.length)]
+      });
+      setActive(true);
+      setTimeout(() => setActive(false), 5000);
+    }, 20000);
+    return () => clearInterval(timer);
+  }, []);
+
+  if (!active) return null;
+  return (
+    <div className="fixed bottom-24 left-4 z-50 bg-[var(--bg-secondary)] border border-[var(--accent)]/30 p-3 rounded-xl shadow-2xl animate-fadeIn flex items-center gap-3">
+      <div className="w-2 h-2 bg-green-500 rounded-full animate-ping" />
+      <p className="text-xs text-[var(--text-primary)]">
+        <span className="font-bold">{data.name}</span> з м. {data.city} <br/>щойно замовив <span className="text-[var(--accent)] font-bold">BoosterTea 1L</span>
+      </p>
+    </div>
+  );
+};

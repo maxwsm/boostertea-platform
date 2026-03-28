@@ -1,4 +1,5 @@
-import { Link, useLocation } from 'wouter';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Home, ShoppingBag, ShoppingCart, BookOpen, User } from 'lucide-react';
 import { useScrollDirection } from '../hooks/useScrollDirection';
 import { useStore } from '../lib/store';
@@ -18,7 +19,7 @@ const navItems: NavItem[] = [
 ];
 
 export function BottomNav() {
-  const [location] = useLocation();
+  const location = usePathname() || '/';
   const scrollDirection = useScrollDirection();
   const { cart } = useStore();
   

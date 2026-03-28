@@ -94,7 +94,7 @@ const ReturnPolicy = () => {
                     <p className="mt-4">
                       <strong>Email:</strong> office@boostertea.com.ua<br/>
                       <strong>{t('contacts.phone')}:</strong> +380 96 310 96 22<br/>
-                      <strong>Telegram:</strong> @booster_tea_b2b
+                      <strong>Telegram:</strong> @boostertea_b2b_bot
                     </p>
                   </section>
                 </div>

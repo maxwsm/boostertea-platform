@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useLocation } from 'wouter';
+import { usePathname, useRouter } from 'next/navigation';
 import { useI18n, Language } from '../lib/i18n';
 
 export interface SEOProps {
@@ -22,6 +22,7 @@ export interface SEOProps {
     ratingValue?: number;
   };
   breadcrumbs?: Array<{ name: string; url: string }>;
+  faq?: Array<{ question: string; answer: string }>;
   noIndex?: boolean;
 }
 
@@ -64,7 +65,7 @@ const organizationSchema = {
   sameAs: [
     'https://www.instagram.com/booster_tea_ua',
     'https://www.tiktok.com/@booster_tea',
-    'https://t.me/booster_tea_b2b'
+    'https://t.me/boostertea_b2b_bot'
   ],
   address: {
     '@type': 'PostalAddress',
@@ -149,7 +150,6 @@ const generateProductSchema = (product: SEOProps['product'], title: string, desc
       name: product.brand || 'BoosterTea'
     },
     sku: product.sku,
-    gtin13: product.sku ? `482000${product.sku.replace(/[^0-9]/g, '').slice(0, 6).padEnd(6, '0')}` : undefined,
     mpn: product.sku,
     category: 'Beverages > Tea',
     manufacturer: {
@@ -222,7 +222,7 @@ const generateBreadcrumbSchema = (breadcrumbs: SEOProps['breadcrumbs']) => {
       '@type': 'ListItem',
       position: index + 1,
       name: item.name,
-      item: item.url.startsWith('http') ? item.url : `${BASE_URL}${item.url}`
+      item: item.url === '/' ? BASE_URL : (item.url.startsWith('http') ? item.url : `${BASE_URL}${item.url}`)
     }))
   };
 };
@@ -265,9 +265,10 @@ export const SEO = ({
   article,
   product,
   breadcrumbs,
+  faq,
   noIndex = false
 }: SEOProps) => {
-  const [location] = useLocation();
+  const location = usePathname() || '/';
   const { language } = useI18n();
   
   const fullTitle = `${title} | BoosterTea`;
@@ -278,72 +279,58 @@ export const SEO = ({
   useEffect(() => {
     // Update document title
     document.title = fullTitle;
-
-    // Update html lang attribute
     document.documentElement.lang = languageToHreflang[language];
 
-    // Remove existing meta tags that we'll replace
-    const metaTagsToRemove = [
-      'meta[name="description"]',
-      'meta[property^="og:"]',
-      'meta[name^="twitter:"]',
-      'meta[name="robots"]',
-      'link[rel="canonical"]',
-      'link[rel="alternate"][hreflang]',
-      'script[type="application/ld+json"]'
-    ];
+    // Масив для зберігання створених елементів, щоб видалити їх при переході на іншу сторінку
+    const appendedElements: HTMLElement[] = [];
 
-    metaTagsToRemove.forEach(selector => {
-      document.querySelectorAll(selector).forEach(el => el.remove());
-    });
-
-    // Helper to create and append meta tags
+    // Helper to create, append and track meta tags
     const addMeta = (attrs: Record<string, string>) => {
       const meta = document.createElement('meta');
       Object.entries(attrs).forEach(([key, value]) => meta.setAttribute(key, value));
       document.head.appendChild(meta);
+      appendedElements.push(meta); // Додаємо в трекер
     };
 
-    // Helper to create and append link tags
+    // Helper to create, append and track link tags
     const addLink = (attrs: Record<string, string>) => {
       const link = document.createElement('link');
       Object.entries(attrs).forEach(([key, value]) => link.setAttribute(key, value));
       document.head.appendChild(link);
+      appendedElements.push(link); // Додаємо в трекер
     };
 
-    // Helper to add JSON-LD script
+    // Helper to add and track JSON-LD script
     const addJsonLd = (data: object) => {
       const script = document.createElement('script');
       script.type = 'application/ld+json';
       script.textContent = JSON.stringify(data);
       document.head.appendChild(script);
+      appendedElements.push(script); // Додаємо в трекер
     };
 
-    // Basic meta tags
+    // --- Basic meta tags ---
     addMeta({ name: 'description', content: description });
-    addMeta({ name: 'robots', content: noIndex ? 'noindex,nofollow' : 'index,follow' });
+    addMeta({ name: 'robots', content: noIndex ? 'noindex,nofollow' : 'index,max-snippet:-1,max-image-preview:large,max-video-preview:-1' });
 
-    // Canonical URL
+    // Canonical & Hreflang
     addLink({ rel: 'canonical', href: fullUrl });
-
-    // Hreflang tags for multilingual SEO
-    // Add hreflang for each language version
     Object.entries(languageToHreflang).forEach(([lang, hreflang]) => {
       addLink({ rel: 'alternate', hreflang: hreflang, href: fullUrl });
     });
-    // Add x-default hreflang (pointing to Ukrainian as default)
     addLink({ rel: 'alternate', hreflang: 'x-default', href: fullUrl });
 
-    // Open Graph tags
+    // --- Open Graph tags ---
     addMeta({ property: 'og:title', content: fullTitle });
     addMeta({ property: 'og:description', content: description });
     addMeta({ property: 'og:image', content: fullImage });
+    addMeta({ property: 'og:image:width', content: '1200' });
+    addMeta({ property: 'og:image:height', content: '630' });
     addMeta({ property: 'og:url', content: fullUrl });
     addMeta({ property: 'og:type', content: type === 'product' ? 'product' : type });
     addMeta({ property: 'og:site_name', content: 'BoosterTea' });
     addMeta({ property: 'og:locale', content: locale });
 
-    // Add alternate locales
     const alternateLocales = Object.values(languageToLocale).filter(l => l !== locale);
     alternateLocales.forEach(altLocale => {
       addMeta({ property: 'og:locale:alternate', content: altLocale });
@@ -351,15 +338,9 @@ export const SEO = ({
 
     // Article-specific OG tags
     if (article) {
-      if (article.publishedTime) {
-        addMeta({ property: 'article:published_time', content: article.publishedTime });
-      }
-      if (article.modifiedTime) {
-        addMeta({ property: 'article:modified_time', content: article.modifiedTime });
-      }
-      if (article.author) {
-        addMeta({ property: 'article:author', content: article.author });
-      }
+      if (article.publishedTime) addMeta({ property: 'article:published_time', content: article.publishedTime });
+      if (article.modifiedTime) addMeta({ property: 'article:modified_time', content: article.modifiedTime });
+      if (article.author) addMeta({ property: 'article:author', content: article.author });
     }
 
     // Product-specific OG tags
@@ -367,54 +348,43 @@ export const SEO = ({
       addMeta({ property: 'product:price:amount', content: product.price.toString() });
       addMeta({ property: 'product:price:currency', content: product.currency || 'UAH' });
       addMeta({ property: 'product:availability', content: product.availability || 'in stock' });
-      if (product.brand) {
-        addMeta({ property: 'product:brand', content: product.brand });
-      }
+      if (product.brand) addMeta({ property: 'product:brand', content: product.brand });
     }
 
-    // Twitter Card tags
+    // --- Twitter Card tags ---
     addMeta({ name: 'twitter:card', content: 'summary_large_image' });
     addMeta({ name: 'twitter:site', content: '@booster_tea_ua' });
     addMeta({ name: 'twitter:title', content: fullTitle });
     addMeta({ name: 'twitter:description', content: description });
     addMeta({ name: 'twitter:image', content: fullImage });
 
-    // JSON-LD Structured Data
-    // Organization (on all pages)
-    addJsonLd({
-      ...organizationSchema,
-      '@id': `${BASE_URL}/#organization`
-    });
+    // --- JSON-LD Structured Data ---
+    addJsonLd({ ...organizationSchema, '@id': `${BASE_URL}/#organization` });
 
-    // Local Business (on homepage and contacts)
-    if (location === '/' || location === '/contacts') {
-      addJsonLd(localBusinessSchema);
-    }
+    if (location === '/' || location === '/contacts') addJsonLd(localBusinessSchema);
+    if (location === '/') addJsonLd(websiteSchema);
 
-    // Website schema (on homepage)
-    if (location === '/') {
-      addJsonLd(websiteSchema);
-    }
-
-    // Breadcrumbs
     const breadcrumbSchema = generateBreadcrumbSchema(breadcrumbs);
-    if (breadcrumbSchema) {
-      addJsonLd(breadcrumbSchema);
-    }
+    if (breadcrumbSchema) addJsonLd(breadcrumbSchema);
 
-    // Product schema
     if (product) {
       const productSchema = generateProductSchema(product, title, description, fullUrl, fullImage);
-      if (productSchema) {
-        addJsonLd(productSchema);
-      }
+      if (productSchema) addJsonLd(productSchema);
     }
 
-    // Cleanup function
+    if (faq && faq.length > 0) addJsonLd(generateFAQSchema(faq));
+
+    // --- CLEANUP FUNCTION (КРИТИЧНО ДЛЯ SPA) ---
     return () => {
-      // Tags will be cleaned up on next render
+      // Видаляємо всі додані теги при переході на інший роут, 
+      // щоб вони не дублювалися в <head>
+      appendedElements.forEach(el => {
+        if (el.parentNode) {
+          el.parentNode.removeChild(el);
+        }
+      });
     };
-  }, [fullTitle, description, fullUrl, fullImage, type, article, product, breadcrumbs, locale, noIndex, location]);
+  }, [fullTitle, description, fullUrl, fullImage, type, article, product, breadcrumbs, faq, locale, noIndex, location]);
 
   return null;
 };
@@ -423,8 +393,8 @@ export const SEO = ({
 export const seoConfigs = {
   home: {
     uk: {
-      title: 'Преміальні чайні концентрати',
-      description: 'BoosterTea — український бренд преміальних чайних концентратів. Готовий напій за 15 секунд. Пуер, Да Хун Пао, ГАБА чай. Натуральні інгредієнти, неймовірний смак.'
+      title: 'Рідкий Пуер та ГАБА чай | Преміальні чайні концентрати',
+      description: 'Купити справжній китайський чай у форматі концентрату від BoosterTea. Рідкий Пуер для енергії, ГАБА чай для фокусу. Без цукру. Натуральний концентрат чаю за 15 секунд.'
     },
     en: {
       title: 'Premium Tea Concentrates',
@@ -437,8 +407,8 @@ export const seoConfigs = {
   },
   products: {
     uk: {
-      title: 'Каталог продукції',
-      description: 'Каталог преміальних чайних концентратів BoosterTea. Пуер для енергії, Да Хун Пао для класичного смаку, ГАБА для релаксації. Доставка по всій Україні.'
+      title: 'Купити Пуер, ГАБА, Да Хун Пао | Каталог чаю',
+      description: 'Каталог преміальних рідких чаїв BoosterTea. Замовити справжній китайський чай: Шу Пуер (потужна енергія), Да Хун Пао (баланс), ГАБА (релакс та фокус). Доставка по Україні.'
     },
     en: {
       title: 'Product Catalog',

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useSearch } from 'wouter';
+import Link from 'next/link';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import TelegramButton from '../components/TelegramButton';
@@ -38,7 +39,8 @@ const OrderSuccess = () => {
       if (orderNum && w.BT_Track) w.BT_Track.purchase(orderNum, 0, []);
     } catch(e) {}
   }, []);
-  const search = useSearch();
+  const searchParams = useSearchParams();
+  const search = searchParams ? searchParams.toString() : '';
   const params = new URLSearchParams(search);
   const orderNumber = params.get('order');
   const isDemo = params.get('demo') === 'true';
@@ -46,6 +48,35 @@ const OrderSuccess = () => {
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showConfetti, setShowConfetti] = useState(true);
+
+  // GA4 DataLayer integration for purchase
+  useEffect(() => {
+    if (orderDetails) {
+      try {
+        const gtmWindow = window as any;
+        gtmWindow.dataLayer = gtmWindow.dataLayer || [];
+        gtmWindow.dataLayer.push({
+          event: "purchase",
+          user_data: { 
+            email: orderDetails.customerEmail
+          },
+          ecommerce: {
+            transaction_id: orderDetails.orderNumber,
+            affiliation: "BoosterTea Store",
+            value: orderDetails.total,
+            currency: "UAH",
+            items: orderDetails.items?.map(item => ({
+              item_id: item.productName,
+              item_name: item.productName,
+              item_variant: item.volume,
+              price: item.totalPrice / item.quantity,
+              quantity: item.quantity
+            })) || []
+          }
+        });
+      } catch(e) {}
+    }
+  }, [orderDetails]);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -128,7 +159,7 @@ const OrderSuccess = () => {
         description={t('orderSuccess.description')}
         noIndex={true}
       />
-      {showConfetti && <Confetti />}
+      {showConfetti && <Confetti active={showConfetti} />}
       <Header />
       
       <main className="pt-24 pb-16">

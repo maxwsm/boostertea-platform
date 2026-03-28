@@ -3,7 +3,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Toast from '../components/Toast';
 import TelegramButton from '../components/TelegramButton';
-import { Link } from 'wouter';
+import Link from 'next/link';
 import { useTranslation } from '../lib/i18n';
 import { SEO, useSEOConfig } from '../components/SEO';
 import { ScrollReveal } from '../components/animations';

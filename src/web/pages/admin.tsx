@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Link, useLocation } from 'wouter';
+import { useLocation } from 'wouter';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { SEO, useSEOConfig } from '../components/SEO';
 import { useTranslation } from '../lib/i18n';
 import { useAuth } from '../lib/auth';
@@ -523,7 +525,7 @@ const SocialMediaDashboard = ({ language }: { language: 'uk' | 'en' }) => {
             </div>
             <div>
               <h3 className="text-[var(--text-primary)] font-medium">Telegram</h3>
-              <a href="https://t.me/booster_tea_ua" target="_blank" rel="noopener" className="text-[var(--text-muted)] text-xs hover:text-[#0088cc]">@booster_tea_ua</a>
+              <a href="https://t.me/boostertea_bot" target="_blank" rel="noopener" className="text-[var(--text-muted)] text-xs hover:text-[#0088cc]">@boostertea_bot</a>
             </div>
           </div>
           <p className="text-4xl font-bold text-[var(--text-primary)]" style={{ fontFamily: 'var(--font-heading)' }}>{stats.telegram.subscribers.toLocaleString()}</p>
@@ -542,7 +544,7 @@ const SocialMediaDashboard = ({ language }: { language: 'uk' | 'en' }) => {
               <p className="text-xs text-[var(--text-muted)]">{t('постів', 'posts')}</p>
             </div>
           </div>
-          <a href="https://t.me/booster_tea_ua" target="_blank" rel="noopener" className="block w-full py-2 mt-4 text-center bg-[#0088cc] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
+          <a href="https://t.me/boostertea_bot" target="_blank" rel="noopener" className="block w-full py-2 mt-4 text-center bg-[#0088cc] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity">
             {t('Відкрити канал', 'Open Channel')} →
           </a>
         </div>
@@ -560,7 +562,7 @@ const SocialMediaDashboard = ({ language }: { language: 'uk' | 'en' }) => {
             <span className="text-xl">📈</span>
             <span className="text-sm text-[var(--text-primary)]">TikTok Analytics</span>
           </a>
-          <a href="https://t.me/booster_tea_ua" target="_blank" rel="noopener" className="flex items-center gap-3 p-3 bg-[var(--bg-primary)] rounded-lg hover:bg-[#0088cc]/10 transition-colors">
+          <a href="https://t.me/boostertea_bot" target="_blank" rel="noopener" className="flex items-center gap-3 p-3 bg-[var(--bg-primary)] rounded-lg hover:bg-[#0088cc]/10 transition-colors">
             <span className="text-xl">✏️</span>
             <span className="text-sm text-[var(--text-primary)]">{t('Новий пост TG', 'New TG Post')}</span>
           </a>
@@ -933,7 +935,7 @@ const Admin = () => {
               </li>
               <li>
                 <a 
-                  href="https://t.me/booster_tea_b2b" 
+                  href="https://t.me/boostertea_b2b_bot" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/5 transition-colors text-sm"
@@ -980,9 +982,9 @@ const Admin = () => {
         {/* Content */}
         <div className="p-8">
           {activeSection === 'dashboard' && <DashboardContent />}
-          {activeSection === 'visitors' && <VisitorsDashboard language={language} />}
-          {activeSection === 'social' && <SocialMediaDashboard language={language} />}
-          {activeSection === 'keycrm' && <KeyCRMDashboard language={language} />}
+          {activeSection === 'visitors' && <VisitorsDashboard language={language as 'uk' | 'en'} />}
+          {activeSection === 'social' && <SocialMediaDashboard language={language as 'uk' | 'en'} />}
+          {activeSection === 'keycrm' && <KeyCRMDashboard language={language as 'uk' | 'en'} />}
           {activeSection === 'orders' && <OrdersContent />}
           {activeSection === 'customers' && <CustomersContent />}
           {activeSection === 'products' && <ProductsContent />}
@@ -1670,7 +1672,7 @@ const mockAdminProducts: AdminProduct[] = [
     wholesalePrice1l: 880,
     wholesalePrice05l: 495,
     wholesalePrice025l: 153,
-    image1l: './2c48187c-dfae-4491-8a85-29ceb65cf85c.png',
+    image1l: './puerh-tea-concentrate-premium.png',
     image05l: '',
     image025l: '',
     is1lActive: true,
@@ -1711,7 +1713,7 @@ const mockAdminProducts: AdminProduct[] = [
     wholesalePrice1l: 920,
     wholesalePrice05l: 520,
     wholesalePrice025l: 160,
-    image1l: './e188ef51-7d4a-41dd-87fb-d6756d50f7b1.png',
+    image1l: './dahongpao-tea-concentrate-premium.png',
     image05l: '',
     image025l: '',
     is1lActive: true,
@@ -1752,7 +1754,7 @@ const mockAdminProducts: AdminProduct[] = [
     wholesalePrice1l: 1080,
     wholesalePrice05l: 610,
     wholesalePrice025l: 189,
-    image1l: './584c19ed-170d-4d1e-b258-5603552bab8d.png',
+    image1l: './gaba-tea-concentrate-premium.png',
     image05l: '',
     image025l: '',
     is1lActive: true,
@@ -2588,8 +2590,8 @@ const ProductsContent = () => {
               <div className="flex gap-4">
                 {/* Image */}
                 <div className="w-20 h-20 bg-[var(--bg-secondary)] rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
-                  {product.image ? (
-                    <img src={product.image} alt={product.nameUk} className="w-full h-full object-contain" />
+                  {product.image1l ? (
+                    <img src={product.image1l} alt={product.nameUk} className="w-full h-full object-contain" />
                   ) : (
                     <span className="text-3xl opacity-30">
                       {product.category === 'concentrate' ? '🍵' : product.category === 'accessory' ? '🛍️' : '🍃'}

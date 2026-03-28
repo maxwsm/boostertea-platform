@@ -211,7 +211,7 @@ export default function MLMPage() {
           <a href="/register?ref=mlm" className="inline-block bg-amber-500 hover:bg-amber-600 text-black font-bold py-4 px-12 rounded-xl text-lg transition-all">
             Зареєструватися як партнер
           </a>
-          <p className="text-gray-600 text-sm mt-4">Або напишіть нам: <a href="https://t.me/booster_tea_b2b" className="text-amber-400">@booster_tea_b2b</a></p>
+          <p className="text-gray-600 text-sm mt-4">Або напишіть нам: <a href="https://t.me/boostertea_b2b_bot" className="text-amber-400">@boostertea_b2b_bot</a></p>
         </div>
       </section>
 

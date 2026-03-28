@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Cookie, Settings, Check } from 'lucide-react';
+import { useStore } from '../lib/store';
 
 interface CookieConsentState {
   necessary: boolean;
@@ -11,6 +12,7 @@ interface CookieConsentState {
 const STORAGE_KEY = 'bt_cookie_consent';
 
 export function CookieConsent() {
+  const { isCookieSettingsOpen, setCookieSettingsOpen } = useStore();
   const [isVisible, setIsVisible] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [consent, setConsent] = useState<CookieConsentState>({
@@ -81,6 +83,7 @@ export function CookieConsent() {
     setConsent(newConsent);
     loadScripts(newConsent);
     setIsVisible(false);
+    setCookieSettingsOpen(false);
     document.body.style.overflow = '';
   };
 
@@ -109,15 +112,12 @@ export function CookieConsent() {
   const openSettings = useCallback(() => {
     setIsVisible(true);
     setShowSettings(true);
-  }, []);
+    setCookieSettingsOpen(true);
+  }, [setCookieSettingsOpen]);
 
-  // Expose openSettings globally for footer link
   useEffect(() => {
-    (window as any).openCookieSettings = openSettings;
-    return () => {
-      delete (window as any).openCookieSettings;
-    };
-  }, [openSettings]);
+    if (isCookieSettingsOpen) openSettings();
+  }, [isCookieSettingsOpen, openSettings]);
 
   if (!isVisible) return null;
 
@@ -147,7 +147,10 @@ export function CookieConsent() {
               </h2>
             </div>
             <button
-              onClick={handleRejectAll}
+              onClick={() => {
+                handleRejectAll();
+                setCookieSettingsOpen(false);
+              }}
               className="p-2 hover:bg-[var(--bg-secondary)] rounded-lg transition-colors"
               aria-label="Закрити"
             >

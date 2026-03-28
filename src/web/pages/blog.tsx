@@ -1,204 +1,431 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Link } from 'wouter';
 import { SEO } from '../components/SEO';
 import { Breadcrumbs } from '../components/Breadcrumbs';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import TelegramButton from '../components/TelegramButton';
+import { 
+  BlogHero, 
+  BlogFilter, 
+  BlogSearch, 
+  BlogCard 
+} from '../components/blog';
+import { WebGLXRay } from '../components/scrollytelling/WebGLXRay';
+import { useDevice } from '../hooks/useDevice';
+import { Suspense } from 'react';
+import { 
+  getAllPosts, 
+  getFeaturedPosts, 
+  getPostsByCategory,
+  CATEGORY_MAP,
+  type BlogPostMeta 
+} from '../lib/blog/getBlogPosts';
 
-interface BlogPost {
-  id: number;
-  slug: string;
-  title_uk: string;
-  excerpt_uk: string;
-  cover_image: string | null;
-  category_slug: string;
-  category_name: string;
-  published_at: string;
-  reading_time: number;
-  views: number;
-  is_featured: boolean;
-}
-
-interface Category {
-  id: number;
-  slug: string;
-  name_uk: string;
-  post_count: number;
-}
+const POSTS_PER_PAGE = 9;
 
 export default function Blog() {
-  const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [activeCategory, setActiveCategory] = useState<string>('');
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const { tier, isClient } = useDevice();
+  const [activeCategory, setActiveCategory] = useState('');
+  const [searchResults, setSearchResults] = useState<BlogPostMeta[] | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const fetchPosts = async (cat = '', p = 1) => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({ page: String(p), limit: '9' });
-      if (cat) params.set('category', cat);
-      const res = await fetch(`/api/blog/posts?${params}`);
-      const data = await res.json();
-      setPosts(data.posts || []);
-      setTotalPages(Math.ceil((data.pagination?.total || 0) / 9));
-    } catch (e) {
-      console.error('Blog fetch error:', e);
+  const allPosts = useMemo(() => getAllPosts(), []);
+  const featuredPosts = useMemo(() => getFeaturedPosts(), []);
+
+  // Filter posts based on category and search
+  const displayedPosts = useMemo(() => {
+    if (searchResults !== null) {
+      return searchResults;
     }
-    setLoading(false);
-  };
-
-  const fetchCategories = async () => {
-    try {
-      const res = await fetch('/api/blog/categories');
-      const data = await res.json();
-      setCategories(data.categories || []);
-    } catch (e) {
-      console.error('Categories fetch error:', e);
+    if (activeCategory) {
+      return getPostsByCategory(activeCategory);
     }
-  };
+    return allPosts;
+  }, [activeCategory, searchResults, allPosts]);
 
+  // Paginate posts
+  const paginatedPosts = useMemo(() => {
+    const start = 0;
+    const end = currentPage * POSTS_PER_PAGE;
+    return displayedPosts.slice(start, end);
+  }, [displayedPosts, currentPage]);
+
+  const hasMore = paginatedPosts.length < displayedPosts.length;
+  const totalPages = Math.ceil(displayedPosts.length / POSTS_PER_PAGE);
+
+  // Reset page when filter changes
   useEffect(() => {
-    fetchPosts();
-    fetchCategories();
-  }, []);
+    setCurrentPage(1);
+  }, [activeCategory, searchResults]);
 
-  const selectCategory = (slug: string) => {
-    setActiveCategory(slug);
-    setPage(1);
-    fetchPosts(slug, 1);
+  const handleLoadMore = () => {
+    setIsLoading(true);
+    // Simulate loading for smooth UX
+    setTimeout(() => {
+      setCurrentPage(prev => prev + 1);
+      setIsLoading(false);
+    }, 300);
   };
 
-  const formatDate = (d: string) => {
-    return new Date(d).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' });
+  const handleSearch = (query: string, results: BlogPostMeta[]) => {
+    if (query.length >= 2) {
+      setSearchResults(results);
+    } else {
+      setSearchResults(null);
+    }
+  };
+
+  const handleCategoryChange = (category: string) => {
+    setActiveCategory(category);
+    setSearchResults(null);
+  };
+
+  const getPageTitle = () => {
+    if (searchResults !== null) {
+      return `Результати пошуку (${searchResults.length})`;
+    }
+    if (activeCategory) {
+      return CATEGORY_MAP[activeCategory]?.name || 'Статті';
+    }
+    return 'Усі статті';
   };
 
   return (
-    <main id="main-content" style={{ minHeight: '100vh', background: '#fafaf8' }}>
+    <div className="min-h-screen bg-[#0D0F14] text-white">
       <SEO
-        title="Блог | BoosterTea"
-        description="Корисні статті про чай, здоров'я, рецепти та бізнес можливості від BoosterTea."
-        url="https://boostertea.com.ua/blog"
+        title="Чайний журнал BoosterTea"
+        description="Рецепти, наука чаю та китайська чайна культура. Дізнайтеся більше про DA HONG PAO, PU-ERH, GABA чай та чайні концентрати."
+        type="website"
         breadcrumbs={[
           { name: 'Головна', url: 'https://boostertea.com.ua/' },
           { name: 'Блог', url: 'https://boostertea.com.ua/blog' },
         ]}
       />
+      <Header />
 
-      <section style={{ background: 'linear-gradient(135deg, #2d5016 0%, #4a7c23 50%, #6b9b37 100%)', padding: '60px 20px', textAlign: 'center', color: 'white' }}>
-        <h1 style={{ fontSize: '2.5rem', margin: '0 0 12px', fontWeight: 700 }}>Блог BoosterTea</h1>
-        <p style={{ fontSize: '1.1rem', opacity: 0.9, maxWidth: 600, margin: '0 auto' }}>
-          Корисні статті про чай, здоров'я, рецепти та бізнес можливості
-        </p>
-      </section>
-
-      {/* Breadcrumbs */}
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '20px 20px 0' }}>
-        <Breadcrumbs 
-          items={[
-            { label: 'Головна', href: '/' },
-            { label: 'Блог' }
-          ]} 
-        />
-      </div>
-
-      <nav style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 20px 0', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-        <button
-          onClick={() => selectCategory('')}
-          style={{
-            padding: '8px 20px', borderRadius: 20,
-            border: `2px solid ${!activeCategory ? '#4a7c23' : '#ddd'}`,
-            background: !activeCategory ? '#4a7c23' : 'white',
-            color: !activeCategory ? 'white' : '#333',
-            cursor: 'pointer', fontSize: '0.9rem', fontWeight: 500
-          }}
-        >
-          Всі статті
-        </button>
-        {categories.map((cat) => (
-          <button
-            key={cat.id}
-            onClick={() => selectCategory(cat.slug)}
-            style={{
-              padding: '8px 20px', borderRadius: 20,
-              border: `2px solid ${activeCategory === cat.slug ? '#4a7c23' : '#ddd'}`,
-              background: activeCategory === cat.slug ? '#4a7c23' : 'white',
-              color: activeCategory === cat.slug ? 'white' : '#333',
-              cursor: 'pointer', fontSize: '0.9rem', fontWeight: 500
-            }}
-          >
-            {cat.name_uk} ({cat.post_count})
-          </button>
-        ))}
-      </nav>
-
-      <section style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 20px' }}>
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '60px 0' }}>
-            <div style={{ display: 'inline-block', width: 40, height: 40, border: '3px solid #4a7c23', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-          </div>
-        ) : posts.length > 0 ? (
-          <>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 24 }}>
-              {posts.map((post) => (
-                <Link
-                  key={post.id}
-                  to={`/blog/${post.slug}`}
-                  style={{ textDecoration: 'none', color: 'inherit', background: 'white', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column' }}
-                >
-                  <div style={{ height: 200, background: `linear-gradient(135deg, ${post.is_featured ? '#4a7c23' : '#6b9b37'} 0%, ${post.is_featured ? '#2d5016' : '#4a7c23'} 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                    <span style={{ fontSize: '3rem', opacity: 0.3 }}>🍵</span>
-                    {post.is_featured && (
-                      <span style={{ position: 'absolute', top: 12, right: 12, background: '#f59e0b', color: 'white', padding: '4px 12px', borderRadius: 12, fontSize: '0.75rem', fontWeight: 600 }}>Популярне</span>
-                    )}
-                  </div>
-                  <div style={{ padding: 20, flex: 1, display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                      <span style={{ background: '#e8f5e1', color: '#2d5016', padding: '4px 10px', borderRadius: 8, fontSize: '0.75rem', fontWeight: 600 }}>
-                        {post.category_name || 'Блог'}
-                      </span>
-                      <span style={{ color: '#999', fontSize: '0.8rem' }}>{post.reading_time} хв</span>
-                    </div>
-                    <h2 style={{ fontSize: '1.15rem', lineHeight: 1.4, margin: '0 0 10px', color: '#1a1a1a', fontWeight: 600 }}>{post.title_uk}</h2>
-                    <p style={{ color: '#666', fontSize: '0.9rem', lineHeight: 1.5, margin: '0 0 16px', flex: 1 }}>{post.excerpt_uk?.substring(0, 150)}...</p>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f0f0f0', paddingTop: 12 }}>
-                      <span style={{ color: '#999', fontSize: '0.8rem' }}>{formatDate(post.published_at)}</span>
-                      <span style={{ color: '#4a7c23', fontWeight: 600, fontSize: '0.85rem' }}>Читати →</span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+      {/* Hero Section - only show on first page without filters */}
+      {currentPage === 1 && !activeCategory && searchResults === null && (
+        <>
+          <Suspense fallback={<div className="h-[200px] w-full bg-[#0D0F14]/50 animate-pulse rounded-3xl" />}>
+            <div className="px-4 sm:px-6 lg:px-8 max-w-[1400px] mx-auto mt-8">
+              {tier === 'cinematic-3d' ? (
+                <WebGLXRay />
+              ) : (
+                /* OS-Adaptive Fallback for iOS/Android: Pre-rendered or lightweight placeholder */
+                <div className="h-[200px] md:h-[400px] w-full rounded-3xl overflow-hidden relative bg-[#13151A] border border-white/5 flex flex-col items-center justify-center">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(196,149,106,0.1)_0%,transparent_70%)]" />
+                  <p className="text-white/40 font-mono text-xs uppercase tracking-widest relative z-10 z-index-10">
+                    {tier === 'twa-minimal' ? 'Telegram Web App Mode' : 'iOS/Android Optimized Mode'}
+                  </p>
+                </div>
+              )}
             </div>
-            {totalPages > 1 && (
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 40 }}>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                  <button key={p} onClick={() => { setPage(p); fetchPosts(activeCategory, p); }}
-                    style={{ width: 40, height: 40, borderRadius: 8, border: `2px solid ${page === p ? '#4a7c23' : '#ddd'}`, background: page === p ? '#4a7c23' : 'white', color: page === p ? 'white' : '#333', cursor: 'pointer', fontWeight: 600 }}>
-                    {p}
-                  </button>
-                ))}
-              </div>
-            )}
-          </>
-        ) : (
-          <div style={{ textAlign: 'center', padding: '60px 0', color: '#999' }}>
-            <p style={{ fontSize: '1.2rem' }}>Статті не знайдені</p>
-          </div>
-        )}
-      </section>
+          </Suspense>
+          <BlogHero featuredPosts={featuredPosts} />
+        </>
+      )}
 
-      <section style={{ background: '#f0f7eb', padding: '48px 20px' }}>
-        <div style={{ maxWidth: 800, margin: '0 auto', textAlign: 'center' }}>
-          <h2 style={{ fontSize: '1.5rem', color: '#2d5016', margin: '0 0 16px' }}>Дізнавайтесь більше про чай</h2>
-          <p style={{ color: '#555', lineHeight: 1.7 }}>
-            Наш блог — це джерело перевіреної інформації про чай, здоровий спосіб життя та бізнес можливості.
-          </p>
+      {/* Main Content */}
+      <section className="py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Breadcrumbs */}
+          <div className="mb-8">
+            <Breadcrumbs
+              items={[
+                { label: 'Головна', href: '/' },
+                { label: 'Блог', href: '/blog' },
+                ...(activeCategory ? [{ label: CATEGORY_MAP[activeCategory]?.name || 'Категорія' }] : [])
+              ]}
+            />
+          </div>
+
+          {/* Search */}
+          <div className="max-w-2xl mx-auto mb-8">
+            <BlogSearch onSearch={handleSearch} />
+          </div>
+
+          {/* Filters */}
+          {searchResults === null && (
+            <div className="mb-8">
+              <BlogFilter 
+                activeCategory={activeCategory} 
+                onCategoryChange={handleCategoryChange} 
+              />
+            </div>
+          )}
+
+          {/* Section Title */}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="flex items-center justify-between mb-6"
+          >
+            <h2 className="text-4xl text-white font-black tracking-tight" style={{ fontFamily: '"Syne", sans-serif' }}>
+              {getPageTitle()}
+            </h2>
+            <span className="text-[#A89880] text-sm">
+              {displayedPosts.length} {displayedPosts.length === 1 ? 'стаття' : displayedPosts.length < 5 ? 'статті' : 'статей'}
+            </span>
+          </motion.div>
+
+          {/* Posts Grid */}
+          {displayedPosts.length > 0 ? (
+            <>
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+              >
+                {paginatedPosts.map((post, i) => (
+                  <motion.div
+                    key={post.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    transition={{ duration: 0.5, delay: i * 0.1 }}
+                  >
+                    <BlogCard post={post} />
+                  </motion.div>
+                ))}
+              </motion.div>
+
+              {/* Load More / Pagination */}
+              {(hasMore || totalPages > 1) && (
+                <div className="mt-12 flex justify-center">
+                  {hasMore ? (
+                    <button
+                      onClick={handleLoadMore}
+                      disabled={isLoading}
+                      className="px-8 py-3 bg-white/5 text-white border border-white/10 rounded-full hover:bg-white/10 hover:border-[#C4956A]/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-mono uppercase text-sm tracking-widest backdrop-blur-md"
+                    >
+                      {isLoading ? (
+                        <>
+                          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          Завантаження...
+                        </>
+                      ) : (
+                        <>
+                          Показати ще
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <div className="flex gap-2">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`w-10 h-10 rounded-lg font-medium transition-all ${
+                            currentPage === page
+                              ? 'bg-[#C4956A] text-[#0D0F14]'
+                              : 'bg-white/5 text-white/50 border border-white/10 hover:bg-white/10 hover:text-white'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-16">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-white/5 flex items-center justify-center">
+                <svg className="w-10 h-10 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl text-[#E8DDD0] mb-2">Статті не знайдені</h3>
+              <p className="text-[#A89880] mb-6">Спробуйте змінити фільтри або пошуковий запит</p>
+              <button
+                onClick={() => {
+                  setActiveCategory('');
+                  setSearchResults(null);
+                }}
+                className="px-6 py-2 bg-[#C4956A] text-[#0F0B08] rounded-lg hover:bg-[#D4A57A] transition-colors"
+              >
+                Скинути фільтри
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
+      {/* Categories Summary */}
+      {!activeCategory && searchResults === null && (
+        <section className="py-12 bg-white/[0.02] border-t border-white/5 relative overflow-hidden">
+          {/* Subtle Ambient Glow */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#C4956A]/5 rounded-full blur-[120px] pointer-events-none" />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.h2 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-3xl font-bold text-white mb-8 text-center tracking-tight" 
+              style={{ fontFamily: '"Syne", sans-serif' }}
+            >
+              Категорії
+            </motion.h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              {Object.values(CATEGORY_MAP).map((cat, i) => (
+                <motion.button
+                  key={cat.slug}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  onClick={() => setActiveCategory(cat.slug)}
+                  className="p-6 bg-white/[0.02] backdrop-blur-xl rounded-2xl border border-white/5 hover:border-white/20 hover:shadow-[0_0_30px_rgba(0,212,255,0.1)] transition-all group text-left"
+                >
+                  <span className="text-3xl mb-3 block transform group-hover:scale-110 transition-transform origin-left">{cat.emoji}</span>
+                  <h3 className="text-white font-medium mb-1 group-hover:text-[#00D4FF] transition-colors">
+                    {cat.name}
+                  </h3>
+                  <p className="text-[#A89880] text-sm">{cat.description}</p>
+                </motion.button>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Academy & Casting Promo Section */}
+      <section className="py-16 bg-[#0D0F14] border-t border-white/5 relative overflow-hidden">
+        {/* Abstract Background Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[800px] h-[400px] bg-[#C4956A]/5 blur-[120px] rounded-full pointer-events-none"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="bg-white/[0.02] backdrop-blur-2xl rounded-3xl p-8 md:p-12 border border-white/10 flex flex-col md:flex-row items-center gap-12"
+          >
+            <div className="flex-1 text-center md:text-left">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C4956A]/10 border border-[#C4956A]/20 mb-6">
+                <span className="w-2 h-2 rounded-full bg-[#C4956A] animate-pulse"></span>
+                <span className="text-xs font-medium text-[#C4956A] uppercase tracking-wider">Прийом Відкрито</span>
+              </div>
+              
+              <h2 className="text-3xl md:text-4xl font-black text-white mb-6 tracking-tight" style={{ fontFamily: '"Syne", sans-serif' }}>
+                BoosterTea <span className="text-[#C4956A]">Академія</span> & Кастинг
+              </h2>
+              
+              <p className="text-[#A89880] text-lg mb-8 leading-relaxed">
+                Шукаємо енергійних кріейторів! Навчайся безкоштовно у нашій Influencer LMS, користуйся <strong className="text-[#E8DDD0]">AI Prompt-генератором</strong> для вірусних відео та стань офіційним амбасадором українського чайного бренду.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                <Link
+                  href="/influencer"
+                  className="px-8 py-3.5 bg-[#C4956A] text-[#0F0B08] font-bold rounded-xl hover:bg-[#D4A57A] transition-all transform hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(196,149,106,0.4)] text-center"
+                >
+                  Подати заявку
+                </Link>
+                <Link
+                  href="/influencer"
+                  className="px-8 py-3.5 bg-transparent text-white border border-white/20 font-semibold rounded-xl hover:border-white/40 hover:bg-white/5 transition-all text-center"
+                >
+                  Детальніше про LMS
+                </Link>
+              </div>
+            </div>
+            
+            {/* Visual Decorative Element */}
+            <div className="hidden lg:flex flex-1 justify-center">
+              <div className="relative w-72 h-72">
+                <motion.div 
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0 rounded-full border border-[rgba(196,149,106,0.3)]"
+                />
+                <motion.div 
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-4 rounded-full border border-[rgba(196,149,106,0.5)] border-dashed"
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <motion.div 
+                    animate={{ y: [-10, 10, -10] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                    className="w-32 h-32 bg-white/[0.05] backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 transform rotate-12 shadow-[0_0_30px_rgba(0,212,255,0.15)]"
+                  >
+                    <span className="text-5xl">🎬</span>
+                  </motion.div>
+                  <motion.div 
+                    animate={{ y: [10, -10, 10] }}
+                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute w-24 h-24 bg-white/[0.05] backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 transform -translate-x-12 translate-y-12 shadow-[0_0_20px_rgba(0,212,255,0.15)]"
+                  >
+                     <span className="text-3xl">🤖</span>
+                  </motion.div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 bg-[#0D0F14] border-t border-white/5 relative overflow-hidden">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 
+            className="text-3xl font-black text-white mb-4 tracking-tight"
+            style={{ fontFamily: '"Syne", sans-serif' }}
+          >
+            Спробуйте наші чайні концентрати
+          </h2>
+          <p className="text-[#A89880] mb-8 text-lg">
+            Преміальний чай DA HONG PAO, PU-ERH та GABA у зручному рідкому форматі
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link
+              href="/products"
+              className="px-8 py-3 bg-[#C4956A] text-[#0F0B08] font-semibold rounded-xl hover:bg-[#D4A57A] transition-all"
+            >
+              Переглянути продукти
+            </Link>
+            <a
+              href="https://t.me/boostertea_bot"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-8 py-3 bg-[#1A1410] text-[#E8DDD0] border border-[#3A2E22] rounded-xl hover:border-[#C4956A] transition-all flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-3.043-1.197-4.99-4.337-5.143-4.539-.153-.202-1.226-1.632-1.226-3.114 0-1.483.772-2.206 1.045-2.51.274-.303.603-.378.803-.378.2 0 .4.002.574.012.183.01.427-.07.669.513.242.582.825 2.011.899 2.158.074.147.122.319.024.515-.098.196-.147.318-.293.487-.147.169-.306.354-.437.476-.147.137-.301.286-.133.566.168.279.747 1.23 1.604 1.99 1.102.975 2.032 1.278 2.319 1.418.287.14.454.117.622-.07.169-.188.712-.826.9-1.107.187-.281.375-.235.627-.141.253.094 1.617.763 1.893.901.275.138.458.208.526.325.068.117.05.677-.224 1.452z"/>
+              </svg>
+              Написати в Telegram
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+      <TelegramButton />
+
+      {/* Blog-specific CSS */}
       <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @media (max-width: 768px) { h1 { font-size: 1.8rem !important; } }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
       `}</style>
-    </main>
+    </div>
   );
 }
