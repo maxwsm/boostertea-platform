@@ -32,3 +32,8 @@ This skill documents the exact combination of Vercel Cloud constraints, Node.js 
 ## 5. Next.js `trailingSlash: true` Webhook Destruction
 **The Bug:** Third-party webhooks (e.g., Monobank POST) return 308 Redirects and their JSON payload is destroyed.
 **The Fix:** Remove `trailingSlash: true` in `next.config.js`. Vercel Edge Serverless functions will incorrectly 308 redirect `POST /api/webhooks` to `POST /api/webhooks/`, killing the `req.body` payload because 308 redirects automatically drop POST streams.
+
+## 6. The Vercel Prisma Edge Generation Trap
+**The Bug:** Vercel perfectly installs packages and passes Turbo validation, but Next.js compiler instantly crashes with `Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again`.
+**The Cause:** In local development, `postinstall` scripts trigger `prisma generate`, but Vercel caching natively skips or isolates nested `postinstall` steps for `bun` on monorepo workspaces, leaving the `.prisma/client` engine binaries missing.
+**The Fix:** Leverage Turborepo's dependency tree. Add `"build": "prisma generate"` natively inside your `packages/wsm-db/package.json`. Turborepo's `dependsOn: ["^build"]` rule will guarantee that Prisma recompiles its native Edge binaries BEFORE the Next.js `next build` command ever executes!

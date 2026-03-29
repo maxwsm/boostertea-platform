@@ -17,11 +17,11 @@ const bullConnection = {
 };
 
 // 2. Background Queue for Heavy Tasks (e.g. Telebot Video Analysis over OpenAI)
-export const videoAnalysisQueue = process.env.REDIS_HOST || process.env.NODE_ENV === 'production' 
+export const videoAnalysisQueue = process.env.REDIS_HOST 
   ? new Queue('casting-video-analysis', { connection: bullConnection })
   : null;
 
 // 3. Predictive Retention Queue (Delayed Jobs)
-export const retentionTriggerQueue = process.env.REDIS_HOST || process.env.NODE_ENV === 'production'
+export const retentionTriggerQueue = process.env.REDIS_HOST
   ? new Queue('predictive-retention', { connection: bullConnection })
   : null;
