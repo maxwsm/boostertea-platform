@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 
 interface MeadowProps {
     onRewind: () => void;
@@ -82,16 +83,16 @@ export function MeadowScene({ onRewind }: MeadowProps) {
             timeRef.current += 0.02;
             const time = timeRef.current;
 
-            // Day / Night Theme Variables
-            const bgSky = isDark ? '#010501' : '#f0f5f0';
-            const mtnBack = isDark ? '#000800' : '#d0dbd0';
-            const mtnMid = isDark ? '#001000' : '#b0c0b0';
-            const mtnFore = isDark ? '#001a00' : '#8fa08f';
-            const gridColor = isDark ? 'rgba(0, 255, 0, 0.15)' : 'rgba(0, 100, 0, 0.3)';
-            const yurtColor = isDark ? 'rgba(0, 255, 0, 0.4)' : 'rgba(0, 100, 0, 0.6)';
-            const obeliskColor = isDark ? 'rgba(0, 255, 0, 0.6)' : 'rgba(0, 80, 0, 0.8)';
+            // Cyberpunk Dark / Day Theme Variables
+            const bgSky = isDark ? '#020205' : '#0b0f19';
+            const mtnBack = isDark ? '#050a15' : '#0d1525';
+            const mtnMid = isDark ? '#101726' : '#141e30';
+            const mtnFore = isDark ? '#152035' : '#1e293b';
+            const gridColor = isDark ? 'rgba(0, 255, 204, 0.15)' : 'rgba(0, 200, 255, 0.3)';
+            const yurtColor = isDark ? 'rgba(255, 0, 255, 0.5)' : 'rgba(200, 0, 255, 0.6)';
+            const obeliskColor = isDark ? 'rgba(0, 255, 204, 0.6)' : 'rgba(0, 150, 255, 0.8)';
             const holoColor = isDark ? '#0ff' : '#0066cc';
-            const textColor = isDark ? '#fff' : '#000';
+            const textColor = isDark ? '#fff' : '#fff';
 
             // 0. Заливка фону (Небо)
             ctx.fillStyle = bgSky;
@@ -347,70 +348,79 @@ export function MeadowScene({ onRewind }: MeadowProps) {
     };
 
     return (
-        <div className={`fixed inset-0 z-[100] ${isDark ? 'bg-black' : 'bg-[#f0f5f0]'} overflow-hidden ${isRewinding ? 'animate-glitch-tear' : 'animate-fade-in'}`}>
-            <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
+        <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className={`fixed inset-0 z-[100] ${isDark ? 'bg-[#020205]' : 'bg-gray-900'} overflow-hidden ${isRewinding ? 'animate-glitch-tear' : ''}`}
+        >
+            <canvas ref={canvasRef} className="absolute inset-0 w-full h-full mix-blend-screen" />
 
             {/* THE ONLY FULL-COLOR OBJECT: 8K MATERIALIZATION SPHERE */}
-            <div className="absolute top-[20%] left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
-                <div className="relative w-64 h-64 md:w-96 md:h-96">
-                    {/* The 8K Sphere generated via complex CSS / drop shadows */}
-                    <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_30%,_rgba(255,255,255,1),_rgba(255,0,200,1)_20%,_rgba(0,100,255,1)_50%,_rgba(0,0,0,1)_90%)] shadow-[0_0_100px_rgba(255,0,200,0.8),_inset_0_0_50px_rgba(255,255,255,0.5)] animate-spin-slow"></div>
-                    <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_70%_70%,_rgba(0,255,255,0.8),_transparent_50%)]"></div>
-                </div>
+            <div className="absolute top-[10%] drop-shadow-2xl left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
+                <motion.div 
+                    initial={{ scale: 0, filter: 'blur(20px)' }}
+                    animate={{ scale: 1, filter: 'blur(0px)' }}
+                    transition={{ duration: 1.5, ease: "easeOut" }}
+                    className="relative w-48 h-48 md:w-80 md:h-80"
+                >
+                    <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_30%,_rgba(255,255,255,1),_rgba(255,0,200,0.8)_20%,_rgba(0,255,204,0.6)_50%,_rgba(0,0,0,1)_90%)] shadow-[0_0_120px_rgba(255,0,200,0.5),_inset_0_0_60px_rgba(255,255,255,0.6)] animate-spin-slow"></div>
+                </motion.div>
                 
-                <h1 className="mt-8 text-5xl md:text-7xl font-sans font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-pink-400 to-purple-400 tracking-tighter drop-shadow-[0_5px_15px_rgba(255,0,200,0.5)]">
+                <motion.h1 
+                    initial={{ y: 50, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.5, duration: 1 }}
+                    className="mt-8 text-6xl md:text-8xl font-sans font-black text-transparent bg-clip-text bg-gradient-to-br from-[#00ffcc] to-[#ff00ff] tracking-tight drop-shadow-[0_0_20px_rgba(0,255,204,0.6)] uppercase"
+                >
                     COMING SOON
-                </h1>
+                </motion.h1>
             </div>
 
             {/* DAO RECRUITMENT TEXT & TG CTA */}
-            <div className="absolute bottom-32 left-1/2 -translate-x-1/2 flex flex-col items-centertext-center w-[90%] md:w-1/2 pointer-events-auto">
-                <div className={`border p-6 backdrop-blur-md flex flex-col items-center text-center transition-colors ${
-                    isDark ? 'bg-black/80 border-[#0f0] shadow-[0_0_30px_rgba(0,255,0,0.2)]' : 'bg-white/80 border-[#0a0] shadow-[0_0_30px_rgba(0,150,0,0.1)]'
-                }`}>
-                    <p className={`font-mono text-sm md:text-lg mb-6 uppercase tracking-widest leading-relaxed ${isDark ? 'text-[#0f0]' : 'text-[#0a0]'}`}>
+            <motion.div 
+                initial={{ y: 100, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 1, duration: 0.8 }}
+                className="absolute bottom-28 left-1/2 -translate-x-1/2 flex flex-col items-center text-center w-[90%] lg:w-[600px] pointer-events-auto"
+            >
+                <div className="border border-white/10 bg-black/50 backdrop-blur-xl p-8 rounded-3xl flex flex-col items-center text-center shadow-[0_0_40px_rgba(0,255,204,0.15)] w-full">
+                    <p className="font-mono text-sm md:text-md mb-8 uppercase tracking-widest leading-relaxed text-[#00ffcc]">
                         Якщо хочеш стати частиною ДАО, заходь в ТГ, знайомся з правилами і будемо знайомитись.
                     </p>
                     <a 
-                        href="https://t.me/neuralnomad_13wsm13" // Fallback telegram link
+                        href="https://t.me/neuralnomad_13wsm13"
                         target="_blank"
                         rel="noreferrer"
-                        className={`px-10 py-4 font-mono font-bold text-lg hover:bg-black hover:text-[#0f0] transition-colors ${
-                            isDark ? 'bg-[#0f0] text-black' : 'bg-[#0a0] text-white'
-                        }`}
+                        className="group relative px-10 py-4 font-mono font-bold text-lg overflow-hidden flex items-center justify-center border border-[#ff00ff]/50 bg-black text-[#ff00ff] transition-all hover:bg-[#ff00ff] hover:text-white shadow-[0_0_20px_rgba(255,0,255,0.3)] hover:shadow-[0_0_40px_rgba(255,0,255,0.8)] rounded-xl w-full"
                     >
-                        [ TELEGRAM DAO ]
+                        <span className="relative z-10 tracking-[0.2em] uppercase">[ TELEGRAM DAO ]</span>
                     </a>
                 </div>
-            </div>
+            </motion.div>
 
             {/* FAST REWIND BUTTON TO RETURN TO FLOW */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-auto">
+            <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 2, duration: 1 }}
+                className="absolute bottom-8 left-1/2 -translate-x-1/2 pointer-events-auto"
+            >
                 <button 
                     onClick={handleRewind}
-                    className={`px-6 py-2 border-2 font-mono uppercase tracking-widest text-sm transition-all ${
-                        isDark ? 'border-white/50 text-white/50 hover:border-white hover:text-white' : 'border-black/50 text-black/50 hover:border-black hover:text-black'
-                    }`}
+                    className="px-6 py-2 border border-white/20 bg-black/40 backdrop-blur-md rounded-full font-mono uppercase tracking-widest text-xs text-white/50 hover:text-white hover:border-white/60 hover:bg-white/10 transition-all"
                 >
-                    &lt;&lt; Перемотати до Потоку (Форт)
+                    &lt;&lt; РЕВЕРС ДО ЯДРА (ФОРТ)
                 </button>
-            </div>
+            </motion.div>
 
             <style>{`
                 .animate-spin-slow {
-                    animation: spinBlob 10s linear infinite;
+                    animation: spinBlob 15s linear infinite;
                 }
                 @keyframes spinBlob {
-                    0% { transform: rotate(0deg) scale(1); }
-                    50% { transform: rotate(180deg) scale(1.05); }
-                    100% { transform: rotate(360deg) scale(1); }
-                }
-                .animate-fade-in {
-                    animation: fadeIn 1s ease-out forwards;
-                }
-                @keyframes fadeIn {
-                    from { opacity: 0; filter: brightness(0); }
-                    to { opacity: 1; filter: brightness(1); }
+                    0% { transform: rotate(0deg) scale(1); filter: hue-rotate(0deg); }
+                    50% { transform: rotate(180deg) scale(1.05); filter: hue-rotate(45deg); }
+                    100% { transform: rotate(360deg) scale(1); filter: hue-rotate(0deg); }
                 }
                 .animate-glitch-tear {
                     animation: glitchTear 0.5s linear forwards;
@@ -422,6 +432,6 @@ export function MeadowScene({ onRewind }: MeadowProps) {
                     100% { filter: hue-rotate(180deg) blur(50px) contrast(0); transform: scale(1.5) translateX(50px) opacity(0); }
                 }
             `}</style>
-        </div>
+        </motion.div>
     );
 }
