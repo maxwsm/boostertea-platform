@@ -12,18 +12,18 @@ export function buildSector0Identity(): { lines: PLine[], icons: PIcon[] } {
     const lines: PLine[] = [];
     const icons: PIcon[] = [];
 
-    // BIOME 0: Loading Matrix & Initial Approach (lat: 0 to 0.05)
+    // BIOME 0: Global Matrix Rain (Orbiting the entire sphere)
     for(let i=0; i<300; i++) {
-        const lat = Math.random() * 0.08;
-        const lon = (Math.random() - 0.5) * 0.1;
-        const elev = Math.random() * 300;
-        icons.push({ p: sphToCart(lat, lon, elev), char: RUNIC[Math.floor(Math.random()*RUNIC.length)], size: 10 + Math.random()*20, type: 'rune', meta: { isMatrixRune: true } });
+        const lat = (Math.random() - 0.5) * 0.8; // Spread globally (-0.4 to 0.4)
+        const lon = Math.random() * TAU; // Wrap fully around the 360 degree sphere
+        const elev = Math.random() * 600; // Float higher and wider
+        icons.push({ p: sphToCart(lat, lon, elev), char: RUNIC[Math.floor(Math.random()*RUNIC.length)], size: 4 + Math.random()*8, type: 'rune', meta: { isMatrixRune: true } });
     }
 
-    // Giant Floating Logo Manifest
-    const logoLat = 0.06;
-    icons.push({ p: sphToCart(logoLat, 0, 150), char: "13WSM13", size: 120, type: 'text' });
-    icons.push({ p: sphToCart(logoLat + 0.005, 0, 120), char: "PROJECT COLISEUM", size: 30, type: 'text' });
+    // Giant Floating Logo Manifest (Moved to Southern Hemisphere)
+    const logoLat = -0.15;
+    icons.push({ p: sphToCart(logoLat, 0, 180), char: "13WSM13", size: 120, type: 'text' });
+    icons.push({ p: sphToCart(logoLat + 0.005, 0, 150), char: "PROJECT COLISEUM", size: 30, type: 'text' });
 
     // Grid/Ground Lines for context starting from 0 to 0.15
     for(let lat=0; lat<0.15; lat+=0.02) {

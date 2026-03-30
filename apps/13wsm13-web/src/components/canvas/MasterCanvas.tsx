@@ -261,7 +261,7 @@ export default function MasterCanvas({ onHoverChange, highlightTopic }: MasterCa
         const sy = cy - cyl * scale + shakeY;
         
         // Procedural hover (only for ecosystem objects)
-        const hoverY = ic.type === 'obj' ? Math.sin(t * 3 + i) * 15 * scale : 0;
+        const hoverY = ic.type === 'obj' ? Math.sin(t * 1.5 + i) * 15 * scale : 0;
         
         const finalX = sx;
         const finalY = sy + hoverY;
@@ -398,7 +398,7 @@ export default function MasterCanvas({ onHoverChange, highlightTopic }: MasterCa
           ctx.font = `${fs}px serif`;
           
           // Matrix fall effect relative to ground
-          const matrixOffY = ((t * 200 + i * 140) % 500) * item.scale;
+          const matrixOffY = ((t * 50 + i * 140) % 500) * item.scale;
            ctx.fillText(item.ic.char, item.x, item.y + matrixOffY);
         }
         else {
@@ -411,7 +411,7 @@ export default function MasterCanvas({ onHoverChange, highlightTopic }: MasterCa
       }
 
       // IT-Gothic Glitch Post-Processing (On Scroll Speed Spikes)
-      if (Math.random() > 0.98 || isTransition) {
+      if (Math.random() > 0.995 || isTransition) {
         ctx.globalCompositeOperation = isDark ? "screen" : "multiply";
         ctx.fillStyle = "rgba(255, 0, 50, 0.1)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
