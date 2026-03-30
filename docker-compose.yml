@@ -25,7 +25,7 @@ services:
     working_dir: /app
     ports:
       - "3000:3000"
-    command: sh -c "corepack enable pnpm && cd apps/wsm-dashboard && pnpm run dev"
+    command: sh -c "corepack enable pnpm && cd apps/wsm-dashboard && pnpm run build && pnpm run start"
     volumes:
       - .:/app
     restart: unless-stopped
@@ -39,7 +39,7 @@ services:
     working_dir: /app
     ports:
       - "3004:3004"
-    command: sh -c "corepack enable pnpm && cd apps/dinoslush-web && pnpm run dev"
+    command: sh -c "corepack enable pnpm && cd apps/dinoslush-web && pnpm run build && pnpm run start"
     volumes:
       - .:/app
     restart: unless-stopped
@@ -53,7 +53,7 @@ services:
     working_dir: /app
     ports:
       - "3005:3005"
-    command: sh -c "corepack enable pnpm && cd apps/funnydrops-web && pnpm run dev"
+    command: sh -c "corepack enable pnpm && cd apps/funnydrops-web && pnpm run build && pnpm run start"
     volumes:
       - .:/app
     restart: unless-stopped
@@ -67,7 +67,7 @@ services:
     working_dir: /app
     ports:
       - "3006:3006"
-    command: sh -c "corepack enable pnpm && cd apps/tlab-web && pnpm run dev"
+    command: sh -c "corepack enable pnpm && cd apps/tlab-web && pnpm run build && pnpm run start"
     volumes:
       - .:/app
     restart: unless-stopped
