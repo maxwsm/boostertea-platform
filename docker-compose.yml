@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   boostertea-web:
-    image: node:22-alpine
+    image: node:22-slim
     container_name: wsm-boostertea
     dns:
       - 8.8.8.8
@@ -17,7 +17,7 @@ services:
     restart: unless-stopped
 
   wsm-dashboard:
-    image: node:22-alpine
+    image: node:22-slim
     container_name: wsm-dashboard
     dns:
       - 8.8.8.8
@@ -31,7 +31,7 @@ services:
     restart: unless-stopped
 
   dinoslush-web:
-    image: node:22-alpine
+    image: node:22-slim
     container_name: wsm-dinoslush
     dns:
       - 8.8.8.8
@@ -45,7 +45,7 @@ services:
     restart: unless-stopped
 
   funnydrops-web:
-    image: node:22-alpine
+    image: node:22-slim
     container_name: wsm-funnydrops
     dns:
       - 8.8.8.8
@@ -59,7 +59,7 @@ services:
     restart: unless-stopped
 
   tlab-web:
-    image: node:22-alpine
+    image: node:22-slim
     container_name: wsm-tlab
     dns:
       - 8.8.8.8
