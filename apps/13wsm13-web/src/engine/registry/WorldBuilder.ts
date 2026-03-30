@@ -13,6 +13,7 @@ import { buildSector4BabylonMarket } from "./Sector_4_BabylonMarket";
 import { buildSector5Gatekeeper } from "./Sector_5_Gatekeeper";
 import { buildSector6BrandsGallery } from "./Sector_6_BrandsGallery";
 import { buildSector7OrganicHeart } from "./Sector_7_OrganicHeart";
+import { buildSector8Meadow } from "./Sector_8_Meadow";
 
 export interface WorldData {
     lines: PLine[];
@@ -51,6 +52,9 @@ export class WorldBuilder {
 
         // 8. Internal Core (Deep Elev -150): The Organic Heart
         merge(buildSector7OrganicHeart());
+
+        // 9. Far South (-0.35 Lat): The DAO Meadow
+        merge(buildSector8Meadow(0));
 
         return world;
     }
