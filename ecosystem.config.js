@@ -24,7 +24,7 @@ module.exports = {
       name: 'funnydrops-web',
       script: '../../node_modules/next/dist/bin/next',
       interpreter: 'node',
-      args: 'start -H 0.0.0.0 -p 3011',
+      args: 'start -H 0.0.0.0 -p 3005',
       cwd: './apps/funnydrops-web',
       env: {
         NODE_ENV: 'production',
@@ -34,7 +34,7 @@ module.exports = {
       name: 'dinoslush-web',
       script: '../../node_modules/next/dist/bin/next',
       interpreter: 'node',
-      args: 'start -H 0.0.0.0 -p 3012',
+      args: 'start -H 0.0.0.0 -p 3004',
       cwd: './apps/dinoslush-web',
       env: {
         NODE_ENV: 'production',
@@ -44,7 +44,7 @@ module.exports = {
       name: 'tlab-web',
       script: '../../node_modules/next/dist/bin/next',
       interpreter: 'node',
-      args: 'start -H 0.0.0.0 -p 3013',
+      args: 'start -H 0.0.0.0 -p 3006',
       cwd: './apps/tlab-web',
       env: {
         NODE_ENV: 'production',
@@ -54,7 +54,7 @@ module.exports = {
       name: 'wsm-dashboard',
       script: '../../node_modules/next/dist/bin/next',
       interpreter: 'node',
-      args: 'start -H 0.0.0.0 -p 3014',
+      args: 'start -H 0.0.0.0 -p 3000',
       cwd: './apps/wsm-dashboard',
       env: {
         NODE_ENV: 'production',
