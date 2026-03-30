@@ -1,0 +1,58 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./*"
+      ],
+      "@/components/*": [
+        "./src/web/components/*"
+      ],
+      "@/lib/*": [
+        "./src/web/lib/*"
+      ]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "src/web/**/*.ts",
+    "src/web/**/*.tsx",
+    "src/web/types/**/*.d.ts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "src/api",
+    "apps",
+    "src/web/components/admin",
+    "src/web/components/layout/ComingSoon.tsx",
+    "src/web/pages/admin.tsx",
+    "src/web/pages/admin.tsx.backup",
+    "src/web/main.tsx",
+    "src/web/vite-env.d.ts"
+  ]
+}

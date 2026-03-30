@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+  <url>
+    <loc>https://www.boostertea.com.ua/catalog/pu-erh</loc>
+    <lastmod>2026-03-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://www.boostertea.com.ua/catalog/pu-erh"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.boostertea.com.ua/catalog/pu-erh?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.boostertea.com.ua/catalog/pu-erh?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.boostertea.com.ua/catalog/pu-erh"/>
+    <image:image>
+      <image:loc>https://www.boostertea.com.ua/2c48187c-dfae-4491-8a85-29ceb65cf85c.png</image:loc>
+      <image:title>BoosterTea PU-ERH — Преміальний чайний концентрат Пуер</image:title>
+      <image:caption>Пуер — чайний концентрат з Юньнань, Китай. 900₴/1L. Готовий напій за 15 секунд.</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.boostertea.com.ua/catalog/da-hong-pao</loc>
+    <lastmod>2026-03-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://www.boostertea.com.ua/catalog/da-hong-pao"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.boostertea.com.ua/catalog/da-hong-pao?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.boostertea.com.ua/catalog/da-hong-pao?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.boostertea.com.ua/catalog/da-hong-pao"/>
+    <image:image>
+      <image:loc>https://www.boostertea.com.ua/e188ef51-7d4a-41dd-87fb-d6756d50f7b1.png</image:loc>
+      <image:title>BoosterTea DA HONG PAO — Улун Великий Червоний Халат</image:title>
+      <image:caption>Да Хун Пао — легендарний улун з Уішань, Китай. 936₴/1L. Зігріваючий ефект.</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.boostertea.com.ua/catalog/gaba</loc>
+    <lastmod>2026-03-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://www.boostertea.com.ua/catalog/gaba"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.boostertea.com.ua/catalog/gaba?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.boostertea.com.ua/catalog/gaba?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.boostertea.com.ua/catalog/gaba"/>
+    <image:image>
+      <image:loc>https://www.boostertea.com.ua/584c19ed-170d-4d1e-b258-5603552bab8d.png</image:loc>
+      <image:title>BoosterTea GABA — Чайний концентрат для релаксації</image:title>
+      <image:caption>ГАБА чай — унікальний концентрат для розслаблення без сонливості. 1068₴/1L.</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://www.boostertea.com.ua/catalog/set-all-three</loc>
+    <lastmod>2026-03-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://www.boostertea.com.ua/catalog/set-all-three"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.boostertea.com.ua/catalog/set-all-three?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://www.boostertea.com.ua/catalog/set-all-three?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.boostertea.com.ua/catalog/set-all-three"/>
+    <image:image>
+      <image:loc>https://www.boostertea.com.ua/2c48187c-dfae-4491-8a85-29ceb65cf85c.png</image:loc>
+      <image:title>BoosterTea Сет «Три смаки» — Колекція чайних концентратів</image:title>
+      <image:caption>Сет: Пуер + Да Хун Пао + ГАБА. 2033₴/3×1L. Знижка 30% порівняно з окремою покупкою.</image:caption>
+    </image:image>
+  </url>
+
+</urlset>
