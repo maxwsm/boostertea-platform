@@ -72,6 +72,28 @@ services:
       - .:/app
     restart: unless-stopped
 
+  db:
+    image: postgres:15-alpine
+    container_name: wsm-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: wsm_admin
+      POSTGRES_PASSWORD: wsm_password
+      POSTGRES_DB: wsm_omniverse
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: wsm-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
 volumes:
   wsm_db_volume:
     name: wsm_db_persistent_storage
+  pgdata:
+    name: wsm_pgdata
