@@ -7,8 +7,18 @@ import { MDXRenderer } from '../../../src/web/components/scrollytelling/MDXRende
 
 // Generate static params for all blog articles
 export async function generateStaticParams() {
-  const isRoot = !process.cwd().endsWith('boostertea-web')
-  const articlesDir = join(process.cwd(), isRoot ? 'apps/boostertea-web/content/blog/articles' : 'content/blog/articles')
+  const cwd = process.cwd()
+  const isRoot = !cwd.includes('/apps/')
+  const isBoosterteaPath = cwd.endsWith('boostertea-web')
+  
+  let articlesDir;
+  if (isBoosterteaPath) {
+    articlesDir = join(cwd, 'content/blog/articles')
+  } else if (isRoot) {
+    articlesDir = join(cwd, 'apps/boostertea-web/content/blog/articles')
+  } else {
+    articlesDir = join(cwd, '../../apps/boostertea-web/content/blog/articles')
+  }
   const files = await readdir(articlesDir)
   
   return files
@@ -29,8 +39,18 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     return notFound()
   }
 
-  const isRoot = !process.cwd().endsWith('boostertea-web')
-  const articlesDir = join(process.cwd(), isRoot ? 'apps/boostertea-web/content/blog/articles' : 'content/blog/articles')
+  const cwd = process.cwd()
+  const isRoot = !cwd.includes('/apps/')
+  const isBoosterteaPath = cwd.endsWith('boostertea-web')
+  
+  let articlesDir;
+  if (isBoosterteaPath) {
+    articlesDir = join(cwd, 'content/blog/articles')
+  } else if (isRoot) {
+    articlesDir = join(cwd, 'apps/boostertea-web/content/blog/articles')
+  } else {
+    articlesDir = join(cwd, '../../apps/boostertea-web/content/blog/articles')
+  }
   
   // Reconstruct filename like '001-slug.mdx'
   const paddedId = String(meta.id).padStart(3, '0')
