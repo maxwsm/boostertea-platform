@@ -291,11 +291,10 @@ export const SmartCartDrawer = () => {
                         trackEvent('InitiateCheckout', { value: finalTotal, currency: 'UAH', content_category: 'B2B' });
                         handleClose();
                       }}
+                      className="w-full bg-[var(--text-primary)] text-black font-extrabold uppercase py-4 rounded-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all shadow-xl block text-center"
                     >
-                      <button className="w-full bg-[var(--text-primary)] text-black font-extrabold uppercase py-4 rounded-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all shadow-xl">
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                        Згенерувати IBAN Інвойс
-                      </button>
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                      Згенерувати IBAN Інвойс
                     </Link>
                   ) : (
                     <div className="space-y-3">
@@ -313,10 +312,9 @@ export const SmartCartDrawer = () => {
                           trackEvent('InitiateCheckout', { value: finalTotal, currency: 'UAH' });
                           handleClose();
                         }}
+                        className="w-full bg-[var(--accent)] text-black font-extrabold uppercase py-4 rounded-xl shadow-[0_4px_15px_rgba(159,211,86,0.3)] hover:shadow-[0_6px_20px_rgba(159,211,86,0.5)] transition-all outline-none flex items-center justify-center block text-center"
                       >
-                        <button className="w-full bg-[var(--accent)] text-black font-extrabold uppercase py-4 rounded-xl shadow-[0_4px_15px_rgba(159,211,86,0.3)] hover:shadow-[0_6px_20px_rgba(159,211,86,0.5)] transition-all outline-none">
-                          Завершити Оформлення
-                        </button>
+                        Завершити Оформлення
                       </Link>
 
                       {/* Payment Methods Trust Badges */}
