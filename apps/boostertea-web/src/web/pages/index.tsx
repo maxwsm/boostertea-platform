@@ -10,7 +10,6 @@ import { products } from '../lib/store';
 import { ScrollReveal, SteamParticles } from '../components/animations';
 import { useTranslation } from '../lib/i18n';
 import { SEO, useSEOConfig } from '../components/SEO';
-import { ActivityLeaderboard } from '../components/ActivityLeaderboard';
 import { MagneticButton } from '../components/scrollytelling/MagneticButton';
 import { ScrollVideoScrubber } from '../components/scrollytelling/ScrollVideoScrubber';
 
@@ -28,22 +27,13 @@ const Home = () => {
         ]}
       />
       <Header />
-        <LiveActivity />
       <main>
         <HeroSection />
         <ProductsPreview />
         <HowItWorks />
         <UsageScenarios />
         <Testimonials />
-        <section className="py-24 bg-[var(--bg-primary)] border-t border-[var(--border)] relative overflow-hidden">
-          {/* subtle background effect matching the page design */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[var(--accent)]/5 to-[var(--bg-tertiary)]" />
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <ActivityLeaderboard />
-          </div>
-        </section>
         <TrustAndQuality />
-        <InstagramFeed />
       </main>
       <Footer />
       <TelegramButton />

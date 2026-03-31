@@ -81,8 +81,8 @@ interface StoreContextType {
   setUsedCoins: (coins: number) => void;
 }
 
-export const products = configProducts;
-export const accessoryProducts = configAccessoryProducts;
+export const products = configProducts.filter(p => ['puerh-classic-001', 'dahongpao-oolong-002', '6bf02c5d-7949-4254-9943-acf1bd62f288'].includes(p.id));
+export const accessoryProducts: Accessory[] = []; // Disabled per MVP requirement
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
