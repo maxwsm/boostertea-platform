@@ -71,7 +71,7 @@ const Header = () => {
             </div>
 
             {/* Desktop Navigation - Separate Glassmorphism Pills */}
-            <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-2" aria-label="Головна навігація">
+            <nav className="hidden xl:flex absolute left-1/2 -translate-x-1/2 items-center gap-2" aria-label="Головна навігація">
               {navLinks.map(link => (
                 <Link
                   key={link.href}

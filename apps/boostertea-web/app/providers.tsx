@@ -7,6 +7,8 @@ import { I18nProvider } from '@/src/web/lib/i18n'
 import { ThemeProvider } from '@/src/web/lib/theme'
 import { Provider } from '@/src/web/components/provider'
 
+import { SmartCartDrawer } from '@/src/web/components/SmartCartDrawer'
+
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <Router>
@@ -16,6 +18,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <AuthProvider>
               <StoreProvider>
                 {children}
+                <SmartCartDrawer />
               </StoreProvider>
             </AuthProvider>
           </I18nProvider>

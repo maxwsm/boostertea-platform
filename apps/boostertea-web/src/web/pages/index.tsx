@@ -31,7 +31,6 @@ const Home = () => {
         <LiveActivity />
       <main>
         <HeroSection />
-        <ScrollytellingShowcase />
         <ProductsPreview />
         <HowItWorks />
         <UsageScenarios />
@@ -54,26 +53,9 @@ const Home = () => {
 };
 
 const HeroSection = () => {
-  const [seconds, setSeconds] = useState(15);
   const [parallaxY, setParallaxY] = useState(0);
   const sectionRef = useRef<HTMLElement>(null);
   const { t } = useTranslation();
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSeconds(prev => {
-        if (prev <= 0) {
-          setTimeout(() => {
-            setSeconds(15);
-          }, 800);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   // Parallax effect
   useEffect(() => {
@@ -88,9 +70,6 @@ const HeroSection = () => {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  const circumference = 2 * Math.PI * 45;
-  const progress = ((15 - seconds) / 15) * circumference;
 
   return (
     <section ref={sectionRef} className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">

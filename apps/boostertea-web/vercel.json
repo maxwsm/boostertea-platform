@@ -1,7 +1,5 @@
 {
   "regions": ["fra1"],
-  "cleanUrls": true,
-  "trailingSlash": false,
   "env": {
     "NEXT_PUBLIC_SITE_URL": "https://www.boostertea.com.ua"
   },
