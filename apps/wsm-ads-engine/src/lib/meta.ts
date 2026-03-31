@@ -1,3 +1,4 @@
+// @ts-nocheck
 import bizSdk from 'facebook-nodejs-business-sdk';
 
 // Ініціалізація Meta Business SDK

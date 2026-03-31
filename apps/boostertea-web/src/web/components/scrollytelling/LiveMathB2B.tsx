@@ -29,8 +29,8 @@ export const LiveMathB2B: React.FC<LiveMathB2BProps> = ({
   // Dynamic graph data generated based on the Slider value
   const data = Array.from({ length: 6 }).map((_, i) => ({
     month: `Місяць ${i + 1}`,
-    втрати: (value * multiplier * (i + 1)) / 12,
-    економія: (value * multiplier * (i + 1)) / 12 * 0.8 // 80% saved with the product
+    втрати: Math.round((value * multiplier * (i + 1)) / 12),
+    економія: Math.round((value * multiplier * (i + 1)) / 12 * 0.8) // 80% saved with the product
   }));
 
   const totalLoss = (value * multiplier).toLocaleString('uk-UA');

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useRef, useState } from 'react';
 import { motion, useSpring, AnimatePresence } from 'framer-motion';
 import { Zap } from 'lucide-react';

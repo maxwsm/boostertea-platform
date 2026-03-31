@@ -34,7 +34,6 @@ const Header = () => {
   const navLinks = [
     { href: '/', label: t('nav.home') },
     { href: '/products', label: t('nav.products') },
-    { href: '/accessories', label: 'Аксесуари та Сухий Чай' },
     { href: '/influencer', label: 'Академія & Кастинг' },
     { href: '/b2b', label: t('nav.b2b') },
     { href: '/blog', label: t('nav.blog') },
@@ -43,7 +42,6 @@ const Header = () => {
 
   return (
     <>
-      {/* Skip to content link for accessibility */}
       <a 
         href="#main-content" 
         className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[60] focus:bg-[var(--bg-primary)] focus:text-[var(--text-primary)] focus:p-3 focus:rounded-lg focus:ring-2 focus:ring-[var(--accent)]"
@@ -63,33 +61,28 @@ const Header = () => {
             {/* Logo */}
             <div className="flex flex-1">
               <Link href="/" className="flex items-center gap-2 group">
-
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-hover)] flex items-center justify-center group-hover:scale-110 transition-transform">
-                <span className="text-[var(--bg-primary)] font-bold text-lg" style={{ fontFamily: 'var(--font-heading)' }}>B</span>
-              </div>
-              <span className="text-[var(--text-primary)] text-xl font-semibold tracking-tight hidden sm:block">
-                Booster<span className="text-[var(--accent)]">Tea</span>
-              </span>
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--accent)] to-[var(--accent-hover)] flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <span className="text-[var(--bg-primary)] font-bold text-lg" style={{ fontFamily: 'var(--font-heading)' }}>B</span>
+                </div>
+                <span className="text-[var(--text-primary)] text-xl font-semibold tracking-tight hidden lg:block">
+                  Booster<span className="text-[var(--accent)]">Tea</span>
+                </span>
               </Link>
             </div>
 
-            {/* Desktop Navigation - Centered Floating Glassmorphism Pill */}
-            <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-1 px-3 py-2 rounded-[2rem] bg-gradient-to-r from-white/5 via-white/20 to-white/5 dark:from-black/5 dark:via-white/10 dark:to-black/5 border border-black/5 dark:border-white/10 backdrop-blur-3xl shadow-[0_8px_32px_rgba(0,0,0,0.05)] shadow-black/10 transition-all duration-300" aria-label="Головна навігація">
+            {/* Desktop Navigation - Separate Glassmorphism Pills */}
+            <nav className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-2" aria-label="Головна навігація">
               {navLinks.map(link => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`relative px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 overflow-hidden group ${
+                  className={`px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 border backdrop-blur-md shadow-sm whitespace-nowrap ${
                     location === link.href 
-                      ? 'text-[var(--accent)]' 
-                      : 'text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white'
+                      ? 'bg-[#1a1a1a] border-[#C9A55C]/30 text-[#C9A55C]' 
+                      : 'bg-[#1a1a1a]/60 border-white/5 text-white/70 hover:bg-[#1a1a1a] hover:text-white hover:border-white/10'
                   }`}
                 >
-                  {/* Subtle hover background that adapts cleanly */}
-                  <div className={`absolute inset-0 rounded-full transition-opacity duration-300 ${
-                    location === link.href ? 'bg-black/5 dark:bg-white/10 opacity-100' : 'bg-black/5 dark:bg-white/10 opacity-0 group-hover:opacity-100'
-                  }`} />
-                  <span className="relative z-10">{link.label}</span>
+                  {link.label}
                 </Link>
               ))}
             </nav>

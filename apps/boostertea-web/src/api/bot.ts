@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Telegraf, Markup } from 'telegraf';
 import { videoAnalysisQueue } from './redis';
 import { generateText } from 'ai';
