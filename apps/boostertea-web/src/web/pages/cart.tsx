@@ -285,12 +285,10 @@ const Cart = () => {
                   </div>
                 </div>
 
-                <Link href="/checkout" className="block w-full">
-                  <button className="w-full group relative overflow-hidden py-5 bg-white text-black font-black uppercase tracking-widest text-sm rounded-2xl transition-all hover:bg-[#C4956A] hover:shadow-[0_0_30px_rgba(196,149,106,0.3)]">
+                <Link href="/checkout" className="block w-full group relative overflow-hidden py-5 bg-white text-black font-black uppercase tracking-widest text-sm rounded-2xl transition-all hover:bg-[#C4956A] hover:shadow-[0_0_30px_rgba(196,149,106,0.3)] text-center cursor-pointer">
                     <span className="relative z-10 flex items-center justify-center gap-2">
                        Ініціювати Трансфер <Zap size={16} className="group-hover:animate-bounce" />
                     </span>
-                  </button>
                 </Link>
 
                 <div className="mt-6 flex items-center justify-center gap-2 flex-col">
