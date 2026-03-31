@@ -285,17 +285,17 @@ export const SmartCartDrawer = () => {
 
                   {/* Mod 6 & 7: Express Checkout vs B2B */}
                   {isB2B ? (
-                    <Link 
-                      href="/checkout" 
+                    <button 
                       onClick={() => {
                         trackEvent('InitiateCheckout', { value: finalTotal, currency: 'UAH', content_category: 'B2B' });
                         handleClose();
+                        window.location.href = '/checkout';
                       }}
-                      className="w-full bg-[var(--text-primary)] text-black font-extrabold uppercase py-4 rounded-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all shadow-xl block text-center"
+                      className="w-full bg-[var(--text-primary)] text-black font-extrabold uppercase py-4 rounded-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all shadow-xl block text-center cursor-pointer"
                     >
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                       Згенерувати IBAN Інвойс
-                    </Link>
+                    </button>
                   ) : (
                     <div className="space-y-3">
                       <div className="grid grid-cols-2 gap-3">
@@ -306,16 +306,16 @@ export const SmartCartDrawer = () => {
                           <svg className="w-4 h-4" viewBox="0 0 488 512" fill="currentColor"><path d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"/></svg> <span>Pay</span>
                         </button>
                       </div>
-                      <Link 
-                        href="/checkout" 
+                      <button 
                         onClick={() => {
                           trackEvent('InitiateCheckout', { value: finalTotal, currency: 'UAH' });
                           handleClose();
+                          window.location.href = '/checkout';
                         }}
-                        className="w-full bg-[var(--accent)] text-black font-extrabold uppercase py-4 rounded-xl shadow-[0_4px_15px_rgba(159,211,86,0.3)] hover:shadow-[0_6px_20px_rgba(159,211,86,0.5)] transition-all outline-none flex items-center justify-center block text-center"
+                        className="w-full bg-[var(--accent)] text-black font-extrabold uppercase py-4 rounded-xl shadow-[0_4px_15px_rgba(159,211,86,0.3)] hover:shadow-[0_6px_20px_rgba(159,211,86,0.5)] transition-all outline-none flex items-center justify-center block text-center cursor-pointer"
                       >
                         Завершити Оформлення
-                      </Link>
+                      </button>
 
                       {/* Payment Methods Trust Badges */}
                       <div className="flex items-center justify-center gap-4 pt-4 pb-2 opacity-50 text-[var(--text-secondary)]">
