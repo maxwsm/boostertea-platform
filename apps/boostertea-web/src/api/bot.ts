@@ -38,6 +38,9 @@ bot.action('MYTHBUSTERS_INFO', async (ctx) => {
 
 // Gemini Live Chat Integration for Conversational Workflows
 bot.on('text', async (ctx) => {
+  // ⛔ Спам-Фільтр: Реплай AI тільки в приватних повідомленнях
+  if (ctx.chat.type !== 'private') return;
+
   const userMessage = ctx.message.text;
   await simulateTyping(ctx, 1500);
 
