@@ -199,19 +199,7 @@ const HeroSection = () => {
             className="relative flex items-center justify-center animate-fade-in-up animation-delay-200"
             style={{ transform: `translateY(${-parallaxY * 0.1}px)` }}
           >
-            {/* Large animated "15" behind everything */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div 
-                className={`text-[200px] sm:text-[280px] font-bold text-transparent bg-clip-text bg-gradient-to-b from-[var(--accent)]/20 to-[var(--accent)]/5 countdown-number transition-all duration-300`}
-                style={{ 
-                  fontFamily: 'var(--font-heading)',
-                  filter: seconds <= 3 ? 'drop-shadow(0 0 60px rgba(159, 211, 86, 0.6))' : 'drop-shadow(0 0 30px rgba(159, 211, 86, 0.3))',
-                  transform: seconds === 0 ? 'scale(1.1)' : 'scale(1)'
-                }}
-              >
-                {seconds.toString().padStart(2, '0')}
-              </div>
-            </div>
+            {/* Large animated background removed for clarity */}
 
             {/* Timer Ring */}
             <div className="absolute w-80 h-80 sm:w-96 sm:h-96 z-20 pointer-events-none">
