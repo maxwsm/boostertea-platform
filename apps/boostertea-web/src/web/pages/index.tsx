@@ -47,6 +47,11 @@ const HeroSection = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const { t } = useTranslation();
 
+  // Static badge for MVP
+  const circumference = 2 * Math.PI * 45;
+  const progress = 0; // Full circle
+  const seconds = 15;
+
   // Parallax effect
   useEffect(() => {
     const handleScroll = () => {

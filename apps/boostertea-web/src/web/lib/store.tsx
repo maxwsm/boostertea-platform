@@ -192,14 +192,9 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
       return [...prev, { product, volume, quantity }];
     });
     
-    // Taidrink Syndicate Doctrine: Programmable Consumption Upsell (-30% Set Offer)
-    if (volume === '1L') {
-      // Trigger the block screen offer instead of just adding to cart quietly
-      setUpsellActive(true);
-    } else {
-      showToast('toast.addedToCart');
-      setCartDrawerOpen(true);
-    }
+    // Always show cart drawer for MVP (disable Upsell blockers)
+    showToast('toast.addedToCart');
+    setCartDrawerOpen(true);
   };
 
   const addAccessoryToCart = (accessory: Accessory, quantity: number) => {
