@@ -208,7 +208,7 @@ const ProfitCalculator = () => {
   const [cupsPerDay, setCupsPerDay] = useState(30);
   const [sellingPrice, setSellingPrice] = useState(65);
   const [drinkType, setDrinkType] = useState<'hot' | 'cold' | 'mixed'>('mixed');
-  const [pumps, setPumps] = useState<1 | 2>(2); // The Taidrink Syndicate Doctrine
+  const [pumps, setPumps] = useState<1 | 2>(1); // The Taidrink Syndicate Doctrine
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
@@ -368,9 +368,9 @@ const ProfitCalculator = () => {
                   <div>
                     <label className="block text-[var(--text-primary)] text-lg mb-4">
                       {t('b2b.calculator.cupsPerDay')}: <span className="text-[var(--accent)] font-bold">{cupsPerDay}</span>
-                      {seasonalCoef !== 1 && (
+                      {(seasonalCoef !== 1 || loyaltyMultiplier !== 1) && (
                         <span className="text-[var(--text-muted)] text-sm ml-2">
-                          → {adjustedCupsPerDay} {language === 'uk' ? '(з сезонністю)' : '(with seasonality)'}
+                          → {adjustedCupsPerDay} {language === 'uk' ? '(фактично продані)' : '(actual sold)'}
                         </span>
                       )}
                     </label>

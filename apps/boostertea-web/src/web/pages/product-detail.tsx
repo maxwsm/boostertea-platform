@@ -21,7 +21,7 @@ const DosageCalculator = ({ selectedVolume }: { selectedVolume: '1L' | '0.25L' |
   const [strength, setStrength] = useState<'light' | 'normal' | 'strong'>('normal');
 
   const getDosage = () => {
-    let base = cupSize === 250 ? 25 : cupSize === 350 ? 35 : 50;
+    let base = cupSize === 250 ? 30 : cupSize === 350 ? 40 : 60;
     if (strength === 'light') base = Math.floor(base * 0.8);
     if (strength === 'strong') base = Math.floor(base * 1.3);
     return base;
@@ -645,7 +645,7 @@ const ProductDetail = () => {
                       <span className="text-[var(--accent)] text-3xl font-bold">{totalPrice.toLocaleString()}₴</span>
                       {selectedVolume === '1L' && (
                         <p className="text-xs text-[var(--text-muted)] mt-1 font-medium bg-white/5 border border-white/10 px-2 py-0.5 rounded-md inline-block">
-                          ~ 26 грн за чашку ідеального {product.nameUk.includes('Пуєр') ? 'пуеру' : 'чаю'}
+                          ≈ {Math.round(currentPrice / (selectedVolume === '1L' ? 33 : 8))} грн за порцію (собівартість)
                         </p>
                       )}
                     </div>

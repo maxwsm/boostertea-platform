@@ -52,12 +52,31 @@ const HeroSection = () => {
   const circumference = 2 * Math.PI * 45;
   const progress = 0; // Full circle
   const [seconds, setSeconds] = useState(15);
+  const [productIndex, setProductIndex] = useState(0);
+
+  const heroProducts = [
+    { name: 'PU-ERH', color: '#9FD356', hueRotate: '0deg', tag: t('hero.energy') },
+    { name: 'DA HONG PAO', color: '#C9A55C', hueRotate: '45deg', tag: t('hero.focus') },
+    { name: 'GABA', color: '#8B7355', hueRotate: '-30deg', tag: t('hero.relax') }
+  ];
 
   useEffect(() => {
     if (seconds <= 0) return;
-    const t = setInterval(() => setSeconds(s => s - 1), 1000);
+    const t = setInterval(() => {
+      setSeconds(s => {
+        if (s <= 1) {
+          // Change product every time timer hits 0, then reset to 15
+          setTimeout(() => {
+            setProductIndex(prev => (prev + 1) % heroProducts.length);
+            setSeconds(15);
+          }, 1500); // stay at 0 for 1.5s
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
     return () => clearInterval(t);
-  }, [seconds]);
+  }, []);
 
   // Parallax effect
   useEffect(() => {
@@ -130,8 +149,7 @@ const HeroSection = () => {
               className="text-5xl sm:text-6xl lg:text-7xl text-[var(--text-primary)] leading-[1.1] mb-6 animate-fade-in-up animation-delay-100"
               style={{ fontFamily: 'var(--font-heading)' }}
             >
-              {t('hero.title')}{' '}
-              <span className="gradient-text">"Енергія за 15 секунд"</span>
+              Чиста <span className="gradient-text">Енергія</span><br/>за 15 Секунд
             </h1>
             
             <p className="text-xl text-[var(--text-secondary)] mb-8 max-w-xl mx-auto lg:mx-0 animate-fade-in-up animation-delay-200">
@@ -169,7 +187,7 @@ const HeroSection = () => {
                 <p className="text-[var(--text-muted)] text-sm mt-1">{t('hero.stats.natural')}</p>
               </div>
               <div>
-                <p className="text-3xl sm:text-4xl font-bold text-[var(--accent)]" style={{ fontFamily: 'var(--font-heading)' }}>34</p>
+                <p className="text-3xl sm:text-4xl font-bold text-[var(--accent)]" style={{ fontFamily: 'var(--font-heading)' }}>33</p>
                 <p className="text-[var(--text-muted)] text-sm mt-1">{t('hero.stats.portions')}</p>
               </div>
             </div>
@@ -233,31 +251,34 @@ const HeroSection = () => {
             </div>
 
             {/* Product image with steam */}
-            <div className="relative w-56 h-56 sm:w-72 sm:h-72 animate-float">
+            <div className="relative w-56 h-56 sm:w-72 sm:h-72 animate-float transition-all duration-1000" style={{ filter: `hue-rotate(${heroProducts[productIndex].hueRotate})` }}>
               {/* Steam particles rising from the bottle */}
               <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-40 h-40 pointer-events-none">
                 <SteamParticles count={8} />
               </div>
               
               <img 
-                src="./puerh-tea-concentrate-premium.png"
-                alt="BoosterTea PU-ERH"
-                className="w-full h-full object-contain drop-shadow-2xl relative z-10"
+                src="./puerh-tea-concentrate-premium.webp"
+                alt={`BoosterTea ${heroProducts[productIndex].name}`}
+                className="w-full h-full object-contain drop-shadow-2xl relative z-10 mix-blend-screen"
                 style={{
                   filter: 'drop-shadow(0 20px 40px rgba(0, 0, 0, 0.4))'
                 }}
               />
               
               {/* Reflection glow beneath */}
-              <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-3/4 h-8 bg-gradient-to-t from-transparent via-[var(--accent)]/10 to-transparent rounded-full blur-xl" />
+              <div 
+                className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-3/4 h-8 rounded-full blur-xl transition-all duration-1000" 
+                style={{ background: `linear-gradient(to top, transparent, ${heroProducts[productIndex].color}40, transparent)` }} 
+              />
             </div>
 
             {/* Floating badges with enhanced styling */}
             <div className="absolute -left-4 top-1/3 bg-[var(--bg-secondary)]/90 backdrop-blur-md border border-[var(--border)] rounded-xl px-4 py-2 animate-fade-in-up animation-delay-400 hover:border-[var(--border-accent)] transition-colors">
               <p className="text-[var(--accent)] text-sm font-medium">{t('hero.organic')}</p>
             </div>
-            <div className="absolute -right-4 bottom-1/3 bg-[var(--bg-secondary)]/90 backdrop-blur-md border border-[var(--border)] rounded-xl px-4 py-2 animate-fade-in-up animation-delay-500 hover:border-[var(--tea-gold)]/30 transition-colors">
-              <p className="text-[var(--tea-gold)] text-sm font-medium">{t('hero.energy')}</p>
+            <div className="absolute -right-4 bottom-1/3 bg-[var(--bg-secondary)]/90 backdrop-blur-md border border-[var(--border)] rounded-xl px-4 py-2 hover:border-[var(--tea-gold)]/30 transition-all duration-500">
+              <p className="text-sm font-medium transition-colors duration-500" style={{ color: heroProducts[productIndex].color }}>{heroProducts[productIndex].tag || heroProducts[productIndex].name}</p>
             </div>
 
             {/* Completion burst when timer hits 0 */}

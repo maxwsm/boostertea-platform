@@ -27,7 +27,7 @@ const LanguageSwitcher = () => {
         aria-label="Select language"
       >
         <span className="text-lg">{languageFlags[language]}</span>
-        <span className="text-[var(--text-primary)] font-medium hidden sm:inline">{language.toUpperCase()}</span>
+        <span className="text-[var(--text-primary)] font-medium hidden sm:inline">{language === 'uk' ? 'UA' : language.toUpperCase()}</span>
         <svg 
           className={`w-4 h-4 text-[var(--text-muted)] transition-transform ${isOpen ? 'rotate-180' : ''}`} 
           fill="none" 

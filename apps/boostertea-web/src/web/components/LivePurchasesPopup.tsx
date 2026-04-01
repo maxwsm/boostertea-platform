@@ -129,22 +129,25 @@ export const LivePurchasesPopup = () => {
     <AnimatePresence>
       {purchase && (
         <motion.div
-          initial={{ opacity: 0, y: 50, scale: 0.9, rotateX: 20 }}
-          animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
-          exit={{ opacity: 0, y: 30, scale: 0.8, filter: 'blur(10px)' }}
-          transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-          className="fixed bottom-6 left-6 z-50 max-w-sm glass border border-[var(--accent)]/30 p-4 rounded-3xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] flex items-start gap-4 pointer-events-none"
-        >
-          <div className={`w-10 h-10 rounded-full flex flex-shrink-0 items-center justify-center shadow-inner ${purchase.isEasterEgg ? 'bg-gradient-to-tr from-purple-600 to-pink-500 animate-pulse' : 'bg-[var(--accent)]'}`}>
-            {purchase.isEasterEgg ? (
-              <span className="text-white text-lg">💡</span>
-            ) : (
-              <svg className="w-5 h-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-            )}
-          </div>
-          <div className="flex-1 pr-2">
+            initial={{ opacity: 0, y: 50, x: -20 }}
+            animate={{ opacity: 1, y: 0, x: 0 }}
+            exit={{ opacity: 0, y: 20, filter: 'blur(10px)' }}
+            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            className="fixed bottom-6 left-6 z-50 max-w-sm bg-[#0D0D0D]/95 backdrop-blur-xl border-2 border-[var(--accent)] p-4 rounded-[2rem] shadow-[0_0_30px_rgba(159,211,86,0.2),_inset_0_0_15px_rgba(159,211,86,0.05)] flex items-start gap-4 pointer-events-none"
+          >
+            <div className={`w-12 h-12 rounded-2xl flex flex-shrink-0 items-center justify-center shadow-inner relative overflow-hidden ${purchase.isEasterEgg ? 'bg-[#1A1A1A] border-2 border-purple-500' : 'bg-[#1a1a1a] border-2 border-[var(--accent)]'}`}>
+              {purchase.isEasterEgg ? (
+                 <div className="absolute inset-0 bg-gradient-to-tr from-purple-600/20 to-pink-500/20 animate-pulse" />
+              ) : null}
+              {purchase.isEasterEgg ? (
+                <span className="text-white text-xl relative z-10">💡</span>
+              ) : (
+                <svg className="w-6 h-6 text-[var(--accent)] relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+              )}
+            </div>
+            <div className="flex-1 pr-2">
             {purchase.isEasterEgg ? (
               <p className="text-[var(--text-primary)] text-sm mb-1 leading-snug font-medium italic">
                 {purchase.easterEggText}
