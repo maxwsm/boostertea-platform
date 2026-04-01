@@ -12,7 +12,7 @@ export default function ChatWidget() {
 
   // We connect directly to the Master Dashboard API proxy
   // In production, this would be an environment variable
-  const API_PROXY_URL = process.env.NEXT_PUBLIC_AI_PROXY_URL || 'http://localhost:3014/api/chat/gemini';
+  const API_PROXY_URL = process.env.NEXT_PUBLIC_AI_PROXY_URL || 'https://boostertea.com.ua/api/chat/gemini';
 
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
     api: API_PROXY_URL,

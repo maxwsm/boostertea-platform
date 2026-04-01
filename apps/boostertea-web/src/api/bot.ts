@@ -4,7 +4,7 @@ import { videoAnalysisQueue } from './redis';
 import { generateText } from 'ai';
 import { google } from '@ai-sdk/google';
 
-const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN || 'mock-token-for-dev';
+const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_TOKEN || 'mock-token-for-dev';
 export const bot = new Telegraf(TELEGRAM_TOKEN);
 
 // Humanization helper: Typing indicators

@@ -185,11 +185,11 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
       
       if (existingIndex >= 0) {
         const updated = [...prev];
-        updated[existingIndex].quantity += quantity;
+        updated[existingIndex].quantity = Math.min(3, updated[existingIndex].quantity + quantity);
         return updated;
       }
       
-      return [...prev, { product, volume, quantity }];
+      return [...prev, { product, volume, quantity: Math.min(3, quantity) }];
     });
     
     // Always show cart drawer for MVP (disable Upsell blockers)
@@ -249,7 +249,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     
     setCart(prev => prev.map(item => 
       item.product.id === productId && item.volume === volume
-        ? { ...item, quantity }
+        ? { ...item, quantity: Math.min(3, quantity) }
         : item
     ));
   };

@@ -147,6 +147,26 @@ app.get('/auth/me', async (c) => {
 
 app.get('/health', (c) => c.json({ status: 'wsm-global-auth-active' }));
 
+// Nova Poshta Proxy
+app.post('/novaposhta', async (c) => {
+  try {
+    const body = await c.req.json();
+    // Usually Nova Poshta requires apiKey in body. If not provided from frontend, we could inject from env.
+    const apiKey = process.env.NOVAPOSHTA_API_KEY || '';
+    const payload = apiKey ? { ...body, apiKey } : body;
+
+    const response = await fetch('https://api.novaposhta.ua/v2.0/json/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await response.json();
+    return c.json(data);
+  } catch (e: any) {
+    return c.json({ success: false, errors: [e.message] }, 500);
+  }
+});
+
 // WSM Gamification & Order Processing
 app.post('/orders', async (c) => {
   try {
@@ -239,53 +259,26 @@ app.post('/orders', async (c) => {
       finalTotal = Math.floor(total * 0.90); // 10% off for valid ambassador
     }
 
-    // 2. Create Master Transaction & Order atomically (Anti Double-Spend)
-    const { transaction, order } = await prisma.$transaction(async (tx) => {
-      const t = await tx.transaction.create({
-        data: {
-          brandId: brand.id,
-          userId: resolvedUserId,
-          totalAmount: finalTotal,
-          status: 'FROZEN',
-          unfreezeDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days hold
-          paymentGateway: body.paymentGateway || 'monobank',
-          ipAddress,
-          deviceId,
-          referredById
-        }
-      });
-
-      const o = await tx.order.create({
-        data: {
-          userId: safeUserIdStr,
-          brandId: brand.id,
-          transactionId: t.id,
-          status: 'PENDING',
-          totalAmount: finalTotal,
-          items: {
-            create: body.items.map((i: any) => {
-               let price = 0;
-               if (i.productId.startsWith('acc-')) {
-                  const accItem = accessoryProducts.find(a => a.id === i.productId);
-                  if (accItem) price = accItem.price;
-               } else {
-                  const prodItem = products.find(p => p.id === String(i.productId));
-                  if (prodItem) {
-                    price = i.volume === '1L' ? prodItem.price1L : prodItem.price025L;
-                  }
-               }
-               return {
-                  productId: String(i.productId),
-                  quantity: i.quantity,
-                  priceAtBuy: price
-               };
-            })
-          }
-        }
-      });
-
-      return { transaction: t, order: o };
-    });
+    // 2. Write straight to CSV (Bypass Database)
+    const fs = require('fs');
+    const path = require('path');
+    const csvPath = path.resolve(process.cwd(), 'leads.csv');
+    
+    // Header creation if doesn't exist
+    if (!fs.existsSync(csvPath)) {
+      fs.writeFileSync(csvPath, 'Date,ClientName,Phone,Email,City,Warehouse,TotalAmount,Items\n');
+    }
+    
+    const itemsListStr = body.items.map((i: any) => `${i.productId}(x${i.quantity})`).join('|');
+    const csvLine = `"${new Date().toISOString()}","${body.customerName || ''}","${body.customerPhone || ''}","${body.customerEmail || ''}","${body.deliveryCity || ''}","${body.deliveryWarehouse || ''}","${finalTotal}","${itemsListStr}"\n`;
+    
+    fs.appendFileSync(csvPath, csvLine);
+    
+    const mockTransactionId = 'tx_' + Date.now();
+    const mockOrderId = 'ord_' + Date.now();
+    
+    const transaction = { id: mockTransactionId, totalAmount: finalTotal, ipAddress };
+    const order = { id: mockOrderId };
 
     // Update telemetry for known user (Moved out of transaction to avoid blocking main path)
     if (resolvedUserId) {
@@ -443,30 +436,27 @@ app.post('/ambassadors/click', async (c) => {
 // Real MonoBank Payment Endpoint for Sequential Checkout
 app.post('/payment/create-invoice', async (c) => {
   try {
-    const { transactionId, merchantId, redirectUrl } = await c.req.json();
+    const { transactionId, merchantId, redirectUrl, totalAmount } = await c.req.json();
     
-    const transaction = await prisma.transaction.findUnique({
-      where: { id: transactionId }
-    });
-
-    if (!transaction) return c.json({ success: false, error: 'Transaction not found' }, 404);
-
+    // Parse totalAmount received from the checkout body, fallback to 500 if missing or invalid
+    const parsedTransactionTotal = Number(totalAmount) || 500; 
+    
     // Use different tokens based on the merchant FOP
     const token = merchantId === 'funnydrops' 
       ? process.env.MONOBANK_TOKEN_FUNNYDROPS || process.env.MONOBANK_TOKEN_BOOSTERTEA
       : process.env.MONOBANK_TOKEN_BOOSTERTEA;
 
     if (!token) {
-      console.warn('[MonoBank] Token missing. Simulating success redirect for local development.');
-      return c.json({ success: true, transactionId, pageUrl: redirectUrl });
+      console.warn('[MonoBank] Token missing. Returning error 503 instead of bypassing for real payment.');
+      return c.json({ success: false, error: 'MONOBANK_TOKEN is missing. Payment gateway is not configured.' }, 503);
     }
 
     const mBody = {
-      amount: Math.round(Number(transaction.totalAmount) * 100), // in kopecks
+      amount: Math.round(Number(parsedTransactionTotal) * 100), // in kopecks
       ccy: 980,
       merchantPaymInfo: {
-        reference: transaction.id,
-        destination: `Оплата замовлення ${transaction.id.slice(0, 8).toUpperCase()}`,
+        reference: transactionId,
+        destination: `Оплата замовлення ${transactionId.slice(0, 8).toUpperCase()}`,
       },
       redirectUrl,
       webhooks: `https://boostertea.com.ua/api/webhooks/monobank`

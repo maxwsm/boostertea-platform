@@ -133,81 +133,8 @@ const Products = () => {
         </section>
 
         
-        {/* Accessories Section */}
-        <section className="py-24 bg-[var(--bg-tertiary)] border-t border-[var(--border)]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#8B7355]/20 text-[#8B7355] text-sm font-medium mb-4">
-                🛍️ Аксесуари та Сухий чай
-              </span>
-              <h2 
-                className="text-4xl sm:text-5xl text-[var(--text-primary)] mb-4"
-                style={{ fontFamily: 'var(--font-heading)' }}
-              >
-                Все для <span className="text-[#8B7355]">ідеального</span> чаювання
-              </h2>
-            </div>
-            
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {accessoryProducts.map((product, index) => (
-                    <div key={product.id} className="group bg-gradient-to-b from-[#1A1A1A] to-[#141414] rounded-2xl overflow-hidden border border-[var(--card-border)] hover:border-[#8B7355]/30 transition-all duration-300">
-                      <div className="relative aspect-square p-6 bg-gradient-to-br from-[#F5F0E8]/5 to-transparent overflow-hidden">
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-8xl opacity-30 grayscale">{
-                            product.subcategory === 'thermos' ? '🧴' :
-                            product.subcategory === 'mug' ? '☕' :
-                            product.subcategory === 'cup' ? '🍵' :
-                            product.subcategory === 'piala' ? '🥣' :
-                            product.subcategory === 'dry_tea' ? '🍃' : '🛍️'
-                          }</span>
-                        </div>
-                        {product.image && (
-                          <img 
-                            src={product.image} 
-                            alt={product.nameUk}
-                            className="w-full h-full object-contain transition-all duration-500 group-hover:scale-110 relative z-10"
-                          />
-                        )}
-                        {!product.inStock && (
-                          <div className="absolute top-4 right-4 z-10">
-                            <span className="px-3 py-1 bg-red-500/20 text-red-400 text-xs font-medium rounded-full">
-                              Немає в наявності
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-5">
-                        <h3 className="text-lg text-[var(--text-primary)] mb-2 group-hover:text-[#8B7355] transition-colors line-clamp-1" style={{ fontFamily: 'var(--font-heading)' }}>
-                          {product.nameUk}
-                        </h3>
-                        <p className="text-[var(--text-primary)]/50 text-sm mb-4 line-clamp-2">
-                          {product.descriptionUk}
-                        </p>
-                        <div className="flex items-end justify-between">
-                          <p className="text-[#8B7355] text-2xl font-bold">
-                            {product.price}₴
-                          </p>
-                          <button
-                            onClick={() => addAccessoryToCart(product, 1)}
-                            disabled={!product.inStock}
-                            className="px-4 py-2 bg-[#8B7355] text-[var(--bg-primary)] text-sm font-semibold rounded-lg hover:bg-[#9F8465] transition-all disabled:opacity-50"
-                          >
-                            {t('accessories.addToCart') || 'В кошик'}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-              ))}
-            </div>
-            
-            <div className="mt-16 text-center">
-               <a href="/accessories" className="inline-flex px-8 py-3 bg-[#8B7355]/20 text-[#8B7355] font-semibold rounded-full hover:bg-[#8B7355]/30 transition-colors">
-                  Дивитись всі аксесуари та сухий чай
-               </a>
-            </div>
-          </div>
-        </section>
-
+        {/* Accessories Section Removed per user request */}
+        
         {/* Info Section */}
         <section className="py-16 bg-[var(--bg-tertiary)]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

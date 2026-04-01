@@ -45,7 +45,12 @@ export function BlogHero({ featuredPosts }: BlogHeroProps) {
             href={`/blog/${mainPost.slug}`}
             className="group relative rounded-2xl overflow-hidden aspect-[4/3] lg:aspect-auto lg:row-span-2"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-[#2D1810] to-[#1A1410]" />
+            <img 
+               src={`/blog/covers/${mainPost.coverImage}`} 
+               alt={mainPost.title} 
+               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
+            />
+            <div className="absolute inset-0 bg-gradient-to-br from-black/60 to-black/30" />
             
             {/* Category badge */}
             <div 
@@ -90,28 +95,36 @@ export function BlogHero({ featuredPosts }: BlogHeroProps) {
               href={`/blog/${post.slug}`}
               className="group relative rounded-2xl overflow-hidden bg-[#1A1410] border border-[#3A2E22] hover:border-[#C4956A]/40 transition-all p-5 flex flex-col"
             >
-              <div className="flex items-start justify-between mb-3">
+              <div className="absolute inset-0 z-0">
+                <img 
+                   src={`/blog/covers/${post.coverImage}`} 
+                   alt={post.title} 
+                   className="w-full h-full object-cover opacity-30 group-hover:opacity-40 transition-opacity" 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1A1410] via-[#1A1410]/80 to-[#1A1410]/40" />
+              </div>
+              <div className="flex items-start justify-between mb-3 relative z-10">
                 <span 
                   className="px-3 py-1 rounded-full text-xs font-medium text-white"
                   style={{ backgroundColor: `${CATEGORY_MAP[post.category]?.color}99` || '#C4956A99' }}
                 >
-                  {CATEGORY_MAP[post.category]?.emoji} {CATEGORY_MAP[post.category]?.name}
+                  {CATEGORY_MAP[post.category]?.name}
                 </span>
                 <span className="text-[#A89880] text-xs">{post.readingTime} хв</span>
               </div>
               
               <h3 
-                className="text-lg text-[#E8DDD0] font-semibold mb-2 group-hover:text-[#C4956A] transition-colors line-clamp-2 flex-1"
+                className="text-lg text-[#E8DDD0] font-semibold mb-2 group-hover:text-[#C4956A] transition-colors line-clamp-2 flex-1 relative z-10"
                 style={{ fontFamily: '"Playfair Display", serif' }}
               >
                 {post.title}
               </h3>
               
-              <p className="text-[#A89880] text-sm line-clamp-2">
+              <p className="text-[#A89880] text-sm line-clamp-2 relative z-10">
                 {post.seoDescription}
               </p>
               
-              <div className="flex items-center gap-2 text-[#C4956A] text-sm font-medium mt-4 group-hover:gap-3 transition-all">
+              <div className="flex items-center gap-2 text-[#C4956A] text-sm font-medium mt-4 group-hover:gap-3 transition-all relative z-10">
                 Читати
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

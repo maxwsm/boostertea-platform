@@ -34,7 +34,7 @@ const Header = () => {
   const navLinks = [
     { href: '/', label: t('nav.home') },
     { href: '/products', label: t('nav.products') },
-    { href: '/influencer', label: 'Академія & Кастинг' },
+    // { href: '/influencer', label: 'Академія & Кастинг' },
     { href: '/b2b', label: t('nav.b2b') },
     { href: '/blog', label: t('nav.blog') },
     { href: '/contacts', label: t('nav.contacts') },
@@ -71,7 +71,7 @@ const Header = () => {
             </div>
 
             {/* Desktop Navigation - Separate Glassmorphism Pills */}
-            <nav className="hidden xl:flex absolute left-1/2 -translate-x-1/2 items-center gap-2" aria-label="Головна навігація">
+            <nav className="hidden lg:flex flex-2 justify-center items-center gap-2 overflow-x-auto scrollbar-hide px-2" aria-label="Головна навігація">
               {navLinks.map(link => (
                 <Link
                   key={link.href}

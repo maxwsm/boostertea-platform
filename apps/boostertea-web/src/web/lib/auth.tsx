@@ -250,7 +250,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string) => {
     try {
       // Step 1: Attempt to contact the Global WSM Auth Engine
-      const res = await fetch('http://localhost:3000/api/auth/login', {
+      const res = await fetch('https://boostertea.com.ua/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })

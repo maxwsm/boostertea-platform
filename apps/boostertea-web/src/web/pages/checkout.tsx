@@ -197,27 +197,8 @@ const Checkout = () => {
     return product.name;
   };
 
-  const formatPhone = (value: string) => {
-    // Keep only digits and '+'
-    return value.replace(/[^\d+]/g, '');
-  };
-
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value;
-    
-    // Add + at start if typing digits without it
-    if (value && /^\d/.test(value)) {
-      value = '+' + value;
-    }
-    
-    const formatted = formatPhone(value);
-    
-    // Ensure only one plus at start
-    const clean = formatted.startsWith('+') 
-      ? '+' + formatted.substring(1).replace(/\+/g, '')
-      : formatted.replace(/\+/g, '');
-      
-    setContactInfo({ ...contactInfo, phone: clean });
+    setContactInfo({ ...contactInfo, phone: e.target.value });
   };
 
   const validateContactInfo = () => {
@@ -352,7 +333,8 @@ const Checkout = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-           transactionId: orderData.transaction.id, 
+           transactionId: orderData.transaction.id,
+           totalAmount: orderData.transaction.totalAmount,
            merchantId,
            redirectUrl: `${window.location.origin}/checkout?payment=success&paidMerchant=${merchantId}` 
         })
@@ -610,52 +592,16 @@ const Checkout = () => {
                           warehouseAddress: '',
                           fullAddress: ''
                         })}
-                        className={`p-5 rounded-xl border-2 transition-all text-left ${
-                          deliveryInfo.method === 'nova_poshta'
-                            ? 'border-[#6B8E4E] bg-[var(--accent)]/10'
-                            : 'border-[var(--border)] hover:border-[#F5F0E8]/30'
-                        }`}
+                        className={`p-5 rounded-xl border-2 transition-all text-left border-[#6B8E4E] bg-[var(--accent)]/10`}
                       >
                         <div className="flex items-center gap-3 mb-2">
                           <span className="text-2xl">📦</span>
-                          <span className={`font-bold ${
-                            deliveryInfo.method === 'nova_poshta' ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]'
-                          }`}>
+                          <span className={`font-bold text-[var(--accent)]`}>
                             {language === 'uk' ? 'Нова Пошта' : 'Nova Poshta'}
                           </span>
                         </div>
                         <p className="text-[var(--text-primary)]/60 text-sm">
                           {language === 'uk' ? 'Доставка у відділення 1-3 дні' : 'Delivery to warehouse 1-3 days'}
-                        </p>
-                      </button>
-                      
-                      <button
-                        onClick={() => setDeliveryInfo({ 
-                          ...deliveryInfo, 
-                          method: 'pickup',
-                          city: 'Львів',
-                          cityRef: '',
-                          warehouse: '',
-                          warehouseRef: '',
-                          warehouseAddress: '',
-                          fullAddress: 'м. Львів, вул. Богдана Хмельницького 66а'
-                        })}
-                        className={`p-5 rounded-xl border-2 transition-all text-left ${
-                          deliveryInfo.method === 'pickup'
-                            ? 'border-[#6B8E4E] bg-[var(--accent)]/10'
-                            : 'border-[var(--border)] hover:border-[#F5F0E8]/30'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="text-2xl">🏪</span>
-                          <span className={`font-bold ${
-                            deliveryInfo.method === 'pickup' ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]'
-                          }`}>
-                            {language === 'uk' ? 'Самовивіз' : 'Pickup'}
-                          </span>
-                        </div>
-                        <p className="text-[var(--text-primary)]/60 text-sm">
-                          {language === 'uk' ? 'Львів, безкоштовно' : 'Lviv, free'}
                         </p>
                       </button>
                     </div>
@@ -692,27 +638,7 @@ const Checkout = () => {
                     </div>
                   )}
                   
-                  {/* Pickup Info */}
-                  {deliveryInfo.method === 'pickup' && (
-                    <div className="p-5 bg-[var(--accent)]/10 rounded-xl border border-[#6B8E4E]/30">
-                      <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 bg-[var(--accent)] rounded-xl flex items-center justify-center flex-shrink-0">
-                          <span className="text-2xl">📍</span>
-                        </div>
-                        <div>
-                          <p className="text-[var(--accent)] font-bold text-lg">
-                            {language === 'uk' ? 'Адреса самовивозу' : 'Pickup Address'}
-                          </p>
-                          <p className="text-[var(--text-primary)] mt-1 text-lg">
-                            м. Львів, вул. Богдана Хмельницького 66а
-                          </p>
-                          <p className="text-[var(--text-primary)]/60 text-sm mt-2">
-                            {language === 'uk' ? 'Пн-Пт: 9:00-18:00, Сб: 10:00-15:00' : 'Mon-Fri: 9:00-18:00, Sat: 10:00-15:00'}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  {/* Pickup Info Removed */}
                   
                   <div className="flex gap-4 mt-8">
                     <button

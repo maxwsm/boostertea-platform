@@ -316,12 +316,12 @@ export default function BlogPost({ slug, meta, toc, children }: BlogPostProps) {
 
             {/* Cover Image Parallax Container */}
             <div className="relative aspect-video bg-gradient-to-br from-[#0D0F14] to-black rounded-3xl mb-12 flex items-center justify-center border border-white/5 overflow-hidden group shadow-2xl">
-              {/* Animated Inner Glow */}
-              <div className="absolute inset-0 bg-[#C4956A]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 blur-3xl" />
-              <div className="text-center relative z-10 scale-100 group-hover:scale-110 transition-transform duration-1000 ease-out">
-                <span className="text-8xl">{category?.emoji}</span>
-                <p className="text-[#A89880] mt-4 text-sm">{meta.coverAlt}</p>
-              </div>
+              <img 
+                 src={`/blog/covers/${meta.coverImage}`} 
+                 alt={meta.coverAlt || meta.title} 
+                 className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-1000 group-hover:scale-105" 
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0D0F14] via-transparent to-transparent" />
             </div>
 
             {/* Server-Side Compiled MDX Content */}
@@ -503,6 +503,42 @@ export default function BlogPost({ slug, meta, toc, children }: BlogPostProps) {
           border: none;
           border-top: 1px solid #3A2E22;
           margin: 2rem 0;
+        }
+        .blog-content table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 2.5rem 0;
+          background: ${isDark ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.4)'};
+          backdrop-filter: blur(10px);
+          border-radius: 16px;
+          overflow: hidden;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+          border: 1px solid rgba(196,149,106,0.2);
+        }
+        .blog-content th {
+          background: ${isDark ? 'rgba(196,149,106,0.15)' : 'rgba(196,149,106,0.2)'};
+          color: #E8DDD0;
+          font-family: 'Syne', sans-serif;
+          font-weight: 800;
+          text-align: left;
+          padding: 1rem 1.5rem;
+          border-bottom: 1px solid rgba(196,149,106,0.3);
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          font-size: 0.85rem;
+        }
+        .blog-content td {
+          padding: 1rem 1.5rem;
+          color: ${isDark ? '#A89880' : '#444'};
+          border-bottom: 1px solid rgba(255,255,255,0.05);
+          transition: all 0.2s ease;
+        }
+        .blog-content tr {
+          transition: background 0.3s ease;
+        }
+        .blog-content tr:hover td {
+          background: ${isDark ? 'rgba(196,149,106,0.05)' : 'rgba(196,149,106,0.1)'};
+          color: ${isDark ? '#E8DDD0' : '#222'};
         }
         .blog-content img {
           max-width: 100%;

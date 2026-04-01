@@ -227,7 +227,7 @@ const NovaPoshtaSelector = ({
               <button
                 key={city.Ref || index}
                 type="button"
-                onClick={() => handleCitySelect(city)}
+                onMouseDown={(e) => { e.preventDefault(); handleCitySelect(city); }}
                 className="w-full px-4 py-3 text-left hover:bg-[#9FD356]/10 transition-colors border-b border-[#F5F0E8]/5 last:border-0"
               >
                 <div className="text-[#F5F0E8] font-medium">
@@ -328,7 +328,7 @@ const NovaPoshtaSelector = ({
                     <button
                       key={warehouse.Ref}
                       type="button"
-                      onClick={() => handleWarehouseSelect(warehouse)}
+                      onMouseDown={(e) => { e.preventDefault(); handleWarehouseSelect(warehouse); }}
                       className="w-full px-4 py-3 text-left hover:bg-[#9FD356]/10 transition-colors border-b border-[#F5F0E8]/5 last:border-0"
                     >
                       <div className="flex items-start gap-3">

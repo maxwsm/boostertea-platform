@@ -48,9 +48,16 @@ const HeroSection = () => {
   const { t } = useTranslation();
 
   // Static badge for MVP
+  // Timer state for visual completion effects (0 for demo of completion ping)
   const circumference = 2 * Math.PI * 45;
   const progress = 0; // Full circle
-  const seconds = 15;
+  const [seconds, setSeconds] = useState(15);
+
+  useEffect(() => {
+    if (seconds <= 0) return;
+    const t = setInterval(() => setSeconds(s => s - 1), 1000);
+    return () => clearInterval(t);
+  }, [seconds]);
 
   // Parallax effect
   useEffect(() => {
@@ -175,45 +182,46 @@ const HeroSection = () => {
           >
             {/* Large animated background removed for clarity */}
 
-            {/* Timer Ring */}
-            <div className="absolute w-80 h-80 sm:w-96 sm:h-96 z-20 pointer-events-none">
-              <svg className="w-full h-full -rotate-90">
+            {/* Timer Ring (Organic & Minimalist Redesign) */}
+            <div className="absolute w-72 h-72 sm:w-80 sm:h-80 z-20 pointer-events-none">
+              <svg className="w-full h-full -rotate-90 filter drop-shadow-[0_0_20px_rgba(159,211,86,0.3)]">
                 <defs>
+                  <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#9FD356" />
+                    <stop offset="50%" stopColor="#C9A55C" />
+                    <stop offset="100%" stopColor="#9FD356" />
+                  </linearGradient>
                   <filter id="glow">
-                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                    <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
                     <feMerge>
                       <feMergeNode in="coloredBlur"/>
                       <feMergeNode in="SourceGraphic"/>
                     </feMerge>
                   </filter>
                 </defs>
+                {/* Single minimalist track */}
                 <circle
                   cx="50%"
                   cy="50%"
-                  r="45%"
-                  stroke="rgba(159, 211, 86, 0.1)"
-                  strokeWidth="6"
+                  r="48%"
+                  stroke="rgba(159, 211, 86, 0.05)"
+                  strokeWidth="2"
                   fill="none"
                 />
+                {/* Organic pulsing glow ring */}
                 <circle
                   cx="50%"
                   cy="50%"
-                  r="45%"
+                  r="48%"
                   stroke="url(#timerGradient)"
-                  strokeWidth="8"
+                  strokeWidth="3"
                   fill="none"
                   strokeLinecap="round"
                   strokeDasharray={circumference}
                   strokeDashoffset={circumference - progress}
-                  className="transition-all duration-1000 ease-linear drop-shadow-[0_0_15px_rgba(159,211,86,0.5)]"
+                  className="transition-all duration-1000 ease-linear"
                   filter="url(#glow)"
                 />
-                <defs>
-                  <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#9FD356" />
-                    <stop offset="100%" stopColor="#C9A55C" />
-                  </linearGradient>
-                </defs>
               </svg>
             </div>
 

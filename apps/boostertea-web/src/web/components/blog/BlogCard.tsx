@@ -64,10 +64,14 @@ export function BlogCard({ post }: BlogCardProps) {
         {/* Cover Image */}
         <div className="relative h-56 overflow-hidden bg-gradient-to-br from-[#1A1410] to-[#0D0F14]">
           <motion.div 
-            className="absolute inset-0 flex items-center justify-center transition-transform duration-700 ease-out group-hover:scale-110"
+            className="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-110"
             style={{ transform: "translateZ(20px)" }}
           >
-            <div className="text-7xl opacity-40 mix-blend-screen">{category?.emoji || '🍵'}</div>
+            <img 
+               src={`/blog/covers/${post.coverImage}`} 
+               alt={post.title} 
+               className="w-full h-full object-cover opacity-80" 
+            />
           </motion.div>
           
           {/* Category Badge */}

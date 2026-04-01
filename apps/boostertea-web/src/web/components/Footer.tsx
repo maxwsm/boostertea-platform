@@ -23,8 +23,8 @@ const Footer = () => {
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-hover)] flex items-center justify-center shadow-lg shadow-[var(--accent-muted)] card-3d-tilt">
                 <span className="text-[var(--bg-primary)] font-bold text-2xl" style={{ fontFamily: 'var(--font-heading)' }}>B</span>
               </div>
-              <span className="text-[var(--text-primary)] text-2xl font-bold tracking-tight">
-                Booster<span className="text-[var(--accent)]">Tea</span>
+              <span className="text-white text-2xl font-black tracking-tighter" style={{ fontFamily: '"Syne", sans-serif', textShadow: '0 0 20px rgba(159, 211, 86, 0.4)' }}>
+                Booster<span className="text-[#9FD356]">Tea</span>
               </span>
             </Link>
             <p className="text-[var(--text-muted)] text-sm leading-relaxed mb-8 max-w-sm">
@@ -66,7 +66,7 @@ const Footer = () => {
 
           {/* Navigation Column */}
           <nav className="lg:col-span-2" aria-label="Додаткова навігація">
-            <h4 className="text-[var(--text-primary)] font-bold mb-6 text-lg tracking-wide uppercase text-sm" style={{ fontFamily: 'var(--font-heading)' }}>{t('footer.navigation')}</h4>
+            <h4 className="text-[#E8DDD0] font-black mb-6 text-sm tracking-widest uppercase" style={{ fontFamily: '"Syne", sans-serif', textShadow: '0 0 10px rgba(232, 221, 208, 0.2)' }}>{t('footer.navigation')}</h4>
             <ul className="space-y-3">
               <li><Link href="/" className="text-[var(--text-muted)] hover:text-[var(--accent)] hover:translate-x-1 inline-block transition-all text-sm font-medium">{t('nav.home')}</Link></li>
               <li><Link href="/products" className="text-[var(--text-muted)] hover:text-[var(--accent)] hover:translate-x-1 inline-block transition-all text-sm font-medium">{t('nav.catalog')}</Link></li>
@@ -79,7 +79,7 @@ const Footer = () => {
 
           {/* Products Column */}
           <div className="lg:col-span-3">
-            <h4 className="text-[var(--text-primary)] font-bold mb-6 text-lg tracking-wide uppercase text-sm" style={{ fontFamily: 'var(--font-heading)' }}>{t('footer.products')}</h4>
+            <h4 className="text-[#E8DDD0] font-black mb-6 text-sm tracking-widest uppercase" style={{ fontFamily: '"Syne", sans-serif', textShadow: '0 0 10px rgba(232, 221, 208, 0.2)' }}>{t('footer.products')}</h4>
             <ul className="space-y-3">
               <li><Link href="/products/pu-erh" className="text-[var(--text-muted)] hover:text-[var(--accent)] hover:translate-x-1 inline-block transition-all text-sm font-medium">✨ Premium PU-ERH</Link></li>
               <li><Link href="/products/da-hong-pao" className="text-[var(--text-muted)] hover:text-[var(--accent)] hover:translate-x-1 inline-block transition-all text-sm font-medium">✨ Authentic DA HONG PAO</Link></li>
@@ -89,7 +89,7 @@ const Footer = () => {
 
           {/* Contact Column */}
           <div className="lg:col-span-3">
-            <h4 className="text-[var(--text-primary)] font-bold mb-6 text-lg tracking-wide uppercase text-sm" style={{ fontFamily: 'var(--font-heading)' }}>{t('footer.contacts')}</h4>
+            <h4 className="text-[#E8DDD0] font-black mb-6 text-sm tracking-widest uppercase" style={{ fontFamily: '"Syne", sans-serif', textShadow: '0 0 10px rgba(232, 221, 208, 0.2)' }}>{t('footer.contacts')}</h4>
             <ul className="space-y-4">
               <li>
                 <a href="tel:+380963109622" className="group flex items-center gap-3 p-3 rounded-xl border border-transparent hover:border-[var(--border)] hover:bg-[var(--bg-secondary)] transition-all">

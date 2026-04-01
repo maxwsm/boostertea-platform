@@ -301,8 +301,8 @@ export default function Blog() {
         </section>
       )}
 
-      {/* Academy & Casting Promo Section */}
-      <section className="py-16 bg-[#0D0F14] border-t border-white/5 relative overflow-hidden">
+      {/* Academy & Casting Promo Section (Hidden based on user request) */}
+      <section className="hidden py-16 bg-[#0D0F14] border-t border-white/5 relative overflow-hidden">
         {/* Abstract Background Glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[800px] h-[400px] bg-[#C4956A]/5 blur-[120px] rounded-full pointer-events-none"></div>
         
