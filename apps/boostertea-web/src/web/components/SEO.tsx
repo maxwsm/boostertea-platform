@@ -151,7 +151,23 @@ const generateProductSchema = (product: SEOProps['product'], title: string, desc
     },
     sku: product.sku,
     mpn: product.sku,
-    category: 'Beverages > Tea',
+    category: 'Health & Wellness > Supplements > Nootropics',
+    audience: {
+      '@type': 'Audience',
+      audienceType: 'Biohackers, Professionals, Wellness Enthusiasts'
+    },
+    isSimilarTo: [
+      {
+        '@type': 'Product',
+        name: 'Natural Nootropics'
+      },
+      {
+        '@type': 'Product',
+        name: 'L-Theanine Supplements'
+      }
+    ],
+    // Deep semantic categorization
+    keywords: 'біохакінг, ноотропи, фокус, енергія, енергетик без цукру, натуральний енергетик, теанін, здоров\'я',
     manufacturer: {
       '@type': 'Organization',
       name: 'BoosterTea',

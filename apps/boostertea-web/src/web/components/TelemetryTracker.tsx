@@ -1,5 +1,6 @@
 // @ts-nocheck
 import React, { useEffect } from 'react';
+import { useLocation } from 'wouter';
 
 declare global {
   interface Window {
@@ -9,11 +10,13 @@ declare global {
   }
 }
 
-// GTM ID - To be injected via .env in absolute Production
-const GTM_ID = (import.meta as any).env?.VITE_GTM_ID || 'GTM-XXXXXXX';
+// GTM ID - To be injected via .env in absolute Production, fallback to project-specific ID
+const GTM_ID = (import.meta as any).env?.VITE_GTM_ID || 'GTM-K2GKFPKH';
 const PIXEL_ID = (import.meta as any).env?.VITE_META_PIXEL_ID || '1234567890';
 
 export const TelemetryTracker = () => {
+  const [location] = useLocation();
+
   useEffect(() => {
     // 1. Google Tag Manager Injector
     if (!(window as any).dataLayer) {
@@ -37,10 +40,22 @@ export const TelemetryTracker = () => {
       s.parentNode.insertBefore(t,s)}(window, document,'script',
       'https://connect.facebook.net/en_US/fbevents.js');
       window.fbq('init', PIXEL_ID);
-      window.fbq('track', 'PageView');
-      console.log('👁 [Telemetry] Meta Pixel Injected & PageView fired');
+      console.log('👁 [Telemetry] Meta Pixel Injected');
     }
   }, []);
+
+  // Track Page Views on every route change (SPA)
+  useEffect(() => {
+    // Ping GTM
+    if ((window as any).dataLayer) {
+      (window as any).dataLayer.push({ event: 'virtual_page_view', pageUrl: location });
+    }
+    // Ping Meta Pixel
+    if (typeof window.fbq !== 'undefined') {
+      window.fbq('track', 'PageView');
+    }
+    console.log(`👁 [Telemetry] SPA Navigation -> PageView tracked at ${location}`);
+  }, [location]);
 
   return null;
 };
@@ -50,8 +65,16 @@ export const trackEvent = (eventName: string, data?: any) => {
   if ((window as any).dataLayer) {
     (window as any).dataLayer.push({ event: eventName, ...data });
   }
-  if ((window as any).fbq && (eventName === 'Purchase' || eventName === 'AddToCart' || eventName === 'InitiateCheckout')) {
-    (window as any).fbq('track', eventName, data);
+  
+  if ((window as any).fbq) {
+    // Map ecommerce standard events
+    if (eventName === 'Purchase' || eventName === 'AddToCart' || eventName === 'InitiateCheckout') {
+      (window as any).fbq('track', eventName, data);
+    } 
+    // Otherwise treat as a custom event, useful for biohacking/engagement tracking
+    else {
+      (window as any).fbq('trackCustom', eventName, data);
+    }
   }
   console.log(`📊 [Telemetry] Event: ${eventName}`, data || '');
 };

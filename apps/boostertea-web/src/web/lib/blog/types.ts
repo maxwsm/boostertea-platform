@@ -132,7 +132,17 @@ export type GTMEvent =
   | { event: 'blog_cta_click'; article_slug: string; product: string }
   | { event: 'blog_quiz_complete'; article_slug: string; score: number }
   | { event: 'blog_time_on_page'; article_slug: string; seconds: number }
-  | { event: 'blog_related_click'; from_slug: string; to_slug: string };
+  | { event: 'blog_related_click'; from_slug: string; to_slug: string }
+  | { event: 'blog_mechanic_interaction'; article_slug: string; mechanic_type: string; mechanic_value: string | number }
+  | { event: 'b2b_mechanic_interaction'; mechanic_type: string; mechanic_value: string | number }
+  | { event: 'b2b_protocol_completed'; mechanic_type: string; mechanic_value: string }
+  | { event: 'b2b_resource_download'; resource_id: string; format: string }
+  | { event: 'b2b_lead_submission'; business_type: string }
+  | { event: 'b2b_faq_read'; question_index: number }
+  | { event: 'cabinet_profile_sync'; completion_score: number }
+  | { event: 'cabinet_bonus_claimed'; points: number }
+  | { event: 'cabinet_referral_shared'; platform: string }
+  | { event: 'cabinet_c2b2b_lead'; cafe_name: string };
 
 declare global {
   interface Window {
@@ -144,6 +154,7 @@ declare global {
 // Helper to push GTM events
 export const pushGTMEvent = (event: GTMEvent) => {
   if (typeof window !== 'undefined') {
+    // Google Tag Manager
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push(event);
     
@@ -152,6 +163,63 @@ export const pushGTMEvent = (event: GTMEvent) => {
       window.gtag('event', event.event, Object.fromEntries(
         Object.entries(event).filter(([k]) => k !== 'event')
       ));
+    }
+
+    // Meta Pixel Deep Integration for Biohacking Context
+    if ((window as any).fbq) {
+      const fbq = (window as any).fbq;
+      const eventData = Object.fromEntries(
+        Object.entries(event).filter(([k]) => k !== 'event')
+      );
+
+      // We explicitly map 'blog_view' and high-engagement scrolls to 'ViewContent'
+      // This is crucial to inform the ad network about the exact content flavor (biohacking vs recipes)
+      if (event.event === 'blog_view') {
+        fbq('track', 'ViewContent', {
+          content_name: event.article_slug,
+          content_category: event.category,
+          content_type: 'product_interest', // Treating blog read as product interest
+          ...eventData
+        });
+      } else if (event.event === 'blog_scroll_50' || event.event === 'blog_scroll_75') {
+        fbq('trackCustom', 'DeepEngagement', {
+          content_name: event.article_slug,
+          scroll_depth: event.event.split('_').pop(),
+        });
+      } else if (event.event === 'blog_mechanic_interaction') {
+        fbq('trackCustom', 'DeepEngagement', {
+          content_name: event.article_slug,
+          action: 'mechanic',
+          type: event.mechanic_type,
+          value: event.mechanic_value
+        });
+      } else if (event.event === 'b2b_mechanic_interaction' || event.event === 'b2b_protocol_completed' || event.event === 'b2b_resource_download' || event.event === 'b2b_faq_read' || event.event === 'b2b_lead_submission') {
+        fbq('trackCustom', 'B2BEngagement', {
+          action: event.event,
+          ...eventData
+        });
+      } else if (event.event.startsWith('cabinet_')) {
+        // Cabinet Events map to B2C Engagement and specific bottom-funnel events
+        if (event.event === 'cabinet_c2b2b_lead') {
+          fbq('track', 'Lead', {
+            content_name: 'C2B2B Hunt',
+            ...eventData
+          });
+        } else if (event.event === 'cabinet_profile_sync') {
+          fbq('track', 'CompleteRegistration', {
+            content_name: 'Profile Synergy',
+            ...eventData
+          });
+        } else {
+          fbq('trackCustom', 'B2CEngagement', {
+            action: event.event,
+            ...eventData
+          });
+        }
+      } else {
+        // Track other blog custom actions
+        fbq('trackCustom', event.event, eventData);
+      }
     }
   }
 };

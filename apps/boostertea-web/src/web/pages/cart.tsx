@@ -49,8 +49,8 @@ const Cart = () => {
 
   // FBQ Tracker
   useEffect(() => {
-    if (cart.length > 0 && (window as any).fbq) {
-      (window as any).fbq('track', 'AddToCart', {
+    if ((window as any).fbq) {
+      (window as any).fbq('trackCustom', 'ViewCart', {
         content_ids: cart.map(i => i.product.id),
         content_type: 'product',
         value: getCartTotal(),
@@ -94,9 +94,9 @@ const Cart = () => {
     <div className="text-center py-24 min-h-screen bg-[#0D0F14] flex flex-col text-white">
       <Header />
       <main className="flex-1 flex flex-col items-center justify-center">
-        <h1 className="text-4xl font-bold mb-4 font-mono uppercase tracking-widest text-[#A89880]">Інвентар порожній</h1>
-        <p className="mb-8 opacity-70 max-w-md mx-auto">Ваш системний відсік не містить активних артефактів. Екіпіруйте зарядні модулі, щоб продовжити.</p>
-        <Link href="/products" className="bg-[#C4956A] text-[#0F0B08] px-8 py-3 rounded-xl font-bold hover:scale-105 transition-transform">Перейти до симуляції (Каталог)</Link>
+        <h1 className="text-4xl font-bold mb-4 font-mono uppercase tracking-widest text-[#A89880]">Кошик порожній</h1>
+        <p className="mb-8 opacity-70 max-w-md mx-auto">Ваш кошик наразі порожній. Перейдіть до каталогу, щоб вибрати потужні чайні концентрати.</p>
+        <Link href="/products" className="bg-[#C4956A] text-[#0F0B08] px-8 py-4 rounded-xl font-bold tracking-widest uppercase text-xs hover:scale-105 hover:bg-[#D4A57A] transition-all">Перейти до Каталогу</Link>
       </main>
       <Footer />
     </div>
@@ -119,9 +119,9 @@ const Cart = () => {
           <div className="flex justify-between items-end mb-12 border-b border-white/5 pb-6">
             <div>
               <p className="text-[#00D4FF] tracking-widest uppercase text-xs mb-3 font-mono flex items-center gap-2 decoration-transparent">
-                <Box size={14} /> Omniverse Inventory / System-01
+                <Box size={14} /> Ваше Замовлення
               </p>
-              <h1 className="text-5xl md:text-6xl font-black tracking-tighter uppercase" style={{ fontFamily: '"Syne", sans-serif' }}>Ваш Інвентар</h1>
+              <h1 className="text-5xl md:text-6xl font-black tracking-tighter uppercase" style={{ fontFamily: '"Syne", sans-serif' }}>Кошик</h1>
             </div>
             <div className="hidden md:block text-right opacity-50 text-[10px] font-mono leading-relaxed">
               SESSION_ID: {localStorage.getItem('wsm_session')?.slice(0, 8) || 'GUEST_PROTO'} <br />
@@ -154,7 +154,7 @@ const Cart = () => {
                           <button onClick={() => updateQuantity(item.product.id, item.volume, item.quantity - 1)} className="w-8 h-8 rounded-full border border-white/10 hover:bg-white/10 active:scale-95 transition-all">-</button>
                           <span className="font-bold w-4 text-center text-lg">{item.quantity}</span>
                           <button onClick={() => updateQuantity(item.product.id, item.volume, item.quantity + 1)} className="w-8 h-8 rounded-full border border-white/10 hover:bg-white/10 active:scale-95 transition-all">+</button>
-                          <button onClick={() => removeFromCart(item.product.id, item.volume)} className="ml-auto text-[10px] uppercase tracking-widest text-red-400 hover:text-red-300 opacity-50 hover:opacity-100 transition-opacity flex items-center gap-1"><ShieldCheck size={12}/> Вилучити</button>
+                          <button onClick={() => removeFromCart(item.product.id, item.volume)} className="ml-auto text-[10px] uppercase tracking-widest text-red-400 hover:text-red-300 opacity-50 hover:opacity-100 transition-opacity flex items-center gap-1"><ShieldCheck size={12}/> Видалити</button>
                         </div>
                       </div>
                       
@@ -169,7 +169,7 @@ const Cart = () => {
               {/* Аксесуари */}
               {accessoryCart.length > 0 && (
                 <div className="mt-8 space-y-4">
-                  <h3 className="font-bold text-sm uppercase tracking-widest opacity-50 font-mono flex items-center gap-2"><Sparkles size={14} /> Екіпіровані Артефакти</h3>
+                  <h3 className="font-bold text-sm uppercase tracking-widest opacity-50 font-mono flex items-center gap-2"><Sparkles size={14} /> Додаткові Товари</h3>
                   {accessoryCart.map((item) => (
                     <div key={item.accessory.id} className="backdrop-blur-xl bg-purple-900/10 border border-purple-500/20 rounded-3xl p-6 flex flex-col md:flex-row justify-between items-center gap-6">
                       <div className="flex items-center gap-6">
@@ -204,7 +204,7 @@ const Cart = () => {
                       <p className="text-[#A89880] text-sm leading-relaxed">Ці краплі посилюють дію твого чаю на 40% завдяки міксу елементів TLab. Ексклюзивна пропозиція для тебе.</p>
                     </div>
                     <Link href="/products" className="shrink-0 px-8 py-4 bg-[#00D4FF]/10 text-[#00D4FF] border border-[#00D4FF]/30 font-black uppercase text-sm tracking-tighter rounded-full hover:bg-[#00D4FF] hover:text-black transition-all hover:shadow-[0_0_30px_rgba(0,212,255,0.4)]">
-                      Екіпірувати Drop
+                      Відкрити Каталог
                     </Link>
                   </div>
                 </div>
@@ -270,24 +270,33 @@ const Cart = () => {
 
                 <div className="space-y-4 mb-8">
                   <div className="flex justify-between text-[#A89880] text-sm">
-                    <span>Базові Артефакти ({getCartItemCount()} од)</span>
+                    <span>Товари ({getCartItemCount()} од)</span>
                     <span className="font-mono">{teaSubtotal}₴</span>
                   </div>
                   {accessoryCart.length > 0 && (
                     <div className="flex justify-between text-[#A89880] text-sm">
-                      <span>Вторинна Екіпіровка</span>
+                      <span>Аксесуари та Додатки</span>
                       <span className="font-mono">{accessoryCart.reduce((acc, curr) => acc + curr.accessory.price * curr.quantity, 0)}₴</span>
                     </div>
                   )}
                   <div className="pt-6 mt-6 border-t border-white/10 flex justify-between items-end">
-                    <span className="uppercase font-black text-sm tracking-tight text-white/50">Ресурси до списання</span>
+                    <span className="uppercase font-black text-sm tracking-tight text-white/50">До сплати</span>
                     <span className="text-4xl font-black tracking-tighter text-[#C4956A]">{Math.round(total)}₴</span>
                   </div>
                 </div>
 
-                <Link href="/checkout" className="block w-full group relative overflow-hidden py-5 bg-white text-black font-black uppercase tracking-widest text-sm rounded-2xl transition-all hover:bg-[#C4956A] hover:shadow-[0_0_30px_rgba(196,149,106,0.3)] text-center cursor-pointer">
+                <Link href="/checkout" onClick={() => {
+                  if ((window as any).fbq) {
+                    (window as any).fbq('track', 'InitiateCheckout', {
+                      value: total,
+                      currency: 'UAH',
+                      content_ids: cart.map(i => i.product.id),
+                      num_items: getCartItemCount()
+                    });
+                  }
+                }} className="block w-full group relative overflow-hidden py-5 bg-white text-black font-black uppercase tracking-widest text-sm rounded-2xl transition-all hover:bg-[#C4956A] hover:shadow-[0_0_30px_rgba(196,149,106,0.3)] text-center cursor-pointer">
                     <span className="relative z-10 flex items-center justify-center gap-2">
-                       Ініціювати Трансфер <Zap size={16} className="group-hover:animate-bounce" />
+                       Оформити Замовлення <Zap size={16} className="group-hover:translate-x-1 transition-transform" />
                     </span>
                 </Link>
 

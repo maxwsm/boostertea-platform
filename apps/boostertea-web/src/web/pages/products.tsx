@@ -59,17 +59,14 @@ const Products = () => {
 
         {/* Hero */}
         <section className="py-16 relative">
-          <div className="absolute inset-0 bg-gradient-to-b from-[#9FD356]/5 to-transparent" />
-          
+          <div className="absolute inset-0 bg-gradient-to-b from-[#141414] to-transparent noise-overlay opacity-30" />
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-            <div className="text-center mb-12">
-              <h1 
-                className="text-5xl sm:text-6xl text-[var(--text-primary)] mb-4"
-                style={{ fontFamily: 'var(--font-heading)' }}
-              >
-                {t('products.title')} <span className="gradient-text">{t('products.titleAccent')}</span>
+            <div className="text-center mb-16">
+              <span className="text-[#C4956A] font-mono text-xs uppercase tracking-[0.3em] font-bold mb-4 block">Bio-Catalog</span>
+              <h1 className="archival-heading text-5xl sm:text-7xl text-white mb-6 uppercase tracking-tight">
+                {t('products.title')} <span className="text-[#C4956A]">{t('products.titleAccent')}</span>
               </h1>
-              <p className="text-[var(--text-primary)]/var(--text-muted) text-lg max-w-2xl mx-auto">
+              <p className="text-[#A89880] text-lg max-w-2xl mx-auto font-medium">
                 {t('products.subtitle')}
               </p>
             </div>
@@ -82,10 +79,10 @@ const Products = () => {
                   <button
                     key={cat.id}
                     onClick={() => setActiveFilter(cat.id)}
-                    className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+                    className={`px-6 py-2.5 rounded-xl text-xs uppercase tracking-widest font-bold transition-all ${
                       activeFilter === cat.id
-                        ? 'bg-[var(--accent)] text-[#0D0D0D]'
-                        : 'bg-[#F5F0E8]/10 text-[var(--text-primary)]/var(--text-secondary) hover:bg-[#F5F0E8]/20'
+                        ? 'bg-[#C4956A] text-black shadow-[0_0_15px_rgba(196,149,106,0.3)]'
+                        : 'bg-white/5 text-[#A89880] hover:bg-white/10 hover:text-white'
                     }`}
                   >
                     {cat.label}
@@ -99,10 +96,10 @@ const Products = () => {
                   <button
                     key={vol.id}
                     onClick={() => setVolumeFilter(vol.id)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    className={`px-5 py-2.5 rounded-xl text-xs uppercase tracking-widest font-bold transition-all ${
                       volumeFilter === vol.id
-                        ? 'bg-[#8B7355] text-[var(--text-primary)]'
-                        : 'bg-[#F5F0E8]/5 text-[var(--text-primary)]/var(--text-muted) hover:bg-[#F5F0E8]/10'
+                        ? 'bg-white text-black'
+                        : 'bg-white/5 text-[#A89880] hover:bg-white/10 hover:text-white'
                     }`}
                   >
                     {vol.label}
@@ -114,11 +111,13 @@ const Products = () => {
         </section>
 
         {/* Products Grid */}
-        <section className="pb-24">
+        <section className="pb-24 relative z-10 noise-overlay">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="bento-grid">
               {filteredProducts.map((product, index) => (
-                <ProductCard key={product.id} product={product} index={index} defaultVolume={volumeFilter} />
+                <div key={product.id} className={index === 0 ? "md:col-span-2" : ""}>
+                   <ProductCard product={product} index={index} defaultVolume={volumeFilter} isHero={index === 0} />
+                </div>
               ))}
             </div>
 
@@ -132,53 +131,114 @@ const Products = () => {
           </div>
         </section>
 
-        
-        {/* Accessories Section Removed per user request */}
+        {/* Accessories Section */}
+        {accessoryProducts && accessoryProducts.length > 0 && (
+          <section className="py-24 relative z-10 border-t border-white/5">
+            <div className="absolute inset-0 bg-[#050505] opacity-50" />
+            <div className="absolute inset-0 noise-overlay opacity-30" />
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+              <div className="text-center mb-16">
+                <span className="text-[#C4956A] font-mono text-xs uppercase tracking-[0.3em] font-bold mb-4 block">Hardware & Add-ons</span>
+                <h2 className="archival-heading text-4xl sm:text-5xl text-white mb-6 uppercase tracking-tight">
+                  Сухий Чай та <span className="text-[#C4956A]">Аксесуари</span>
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {accessoryProducts.map((acc, index) => (
+                  <article
+                    key={acc.id}
+                    className="bento-card group relative overflow-hidden transition-all duration-500 shadow-2xl flex flex-col h-full bg-[#0a0a0c]"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <div className="absolute inset-0 noise-overlay opacity-30 mix-blend-overlay pointer-events-none" />
+                    
+                    <figure className="relative bg-[#050505] overflow-hidden m-0 aspect-square p-6 border-b border-white/5">
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-transparent to-transparent z-10 opacity-90 pointer-events-none" />
+                      <div className="absolute inset-0 flex items-center justify-center z-0 p-8">
+                        <img
+                          src={acc.image || 'https://placehold.co/400x400/050505/C4956A?text=Image+Not+Found'}
+                          alt={acc.nameUk}
+                          loading="lazy"
+                          className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-700 ease-out drop-shadow-[0_20px_20px_rgba(0,0,0,1)] relative z-10"
+                        />
+                      </div>
+                    </figure>
+
+                    <div className="p-6 flex flex-col flex-grow relative z-20">
+                      <h3 className="archival-heading text-white mb-2 text-xl hover:opacity-80 transition-opacity">
+                        {acc.nameUk}
+                      </h3>
+                      <p className="text-[#A89880] mb-5 text-sm line-clamp-3 leading-relaxed flex-grow">
+                        {acc.descriptionUk}
+                      </p>
+
+                      <div className="mt-auto">
+                        <div className="flex justify-between items-end mb-4 bg-white/5 p-3 rounded-xl border border-white/5">
+                           <span className="text-[10px] uppercase font-mono tracking-widest text-[#A89880]">Ціна</span>
+                           <span className="data-heavy text-[#E8DDD0] text-2xl tracking-tight" style={{ textShadow: `0 0 10px rgba(196,149,106,0.4)` }}>
+                             {acc.price} ₴
+                           </span>
+                        </div>
+                        <button
+                          onClick={(e) => { e.preventDefault(); addAccessoryToCart(acc, 1); }}
+                          className="w-full relative py-4 bg-white/5 hover:bg-[#C4956A] text-[#E8DDD0] hover:text-black text-xs font-black uppercase tracking-[0.2em] rounded-xl transition-all duration-300 flex items-center justify-center gap-3 group border border-white/10 hover:border-transparent active:scale-[0.98]"
+                        >
+                          <span>До кошика</span>
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
         
         {/* Info Section */}
-        <section className="py-16 bg-[var(--bg-tertiary)]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="text-center p-8 bg-[var(--bg-secondary)] rounded-2xl border border-[var(--card-border)]">
-                <div className="w-16 h-16 mx-auto mb-4 bg-[var(--accent)]/20 rounded-full flex items-center justify-center">
+        <section className="py-24 bg-[#0a0a0c] relative overflow-hidden">
+          <div className="absolute inset-0 noise-overlay opacity-50" />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="bento-grid grid-cols-1 md:grid-cols-3">
+              <div className="bento-card text-center p-10 flex flex-col items-center">
+                <div className="w-20 h-20 mb-6 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.05)]">
                   <svg className="w-8 h-8 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                   </svg>
                 </div>
-                <h3 className="text-xl text-[var(--text-primary)] mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
+                <h3 className="archival-heading text-2xl text-white mb-3">
                   {t('products.info.minOrder')}
                 </h3>
-                <p className="text-[var(--text-primary)]/var(--text-muted) text-sm">
+                <p className="text-[#A89880] text-sm">
                   {t('products.info.minOrderDesc1L')}<br />
                   {t('products.info.minOrderDesc025L')}
                 </p>
               </div>
 
-              <div className="text-center p-8 bg-[var(--bg-secondary)] rounded-2xl border border-[var(--card-border)]">
-                <div className="w-16 h-16 mx-auto mb-4 bg-[var(--accent)]/20 rounded-full flex items-center justify-center">
-                  <svg className="w-8 h-8 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bento-card text-center p-10 flex flex-col items-center">
+                <div className="w-20 h-20 mb-6 rounded-2xl bg-[#C4956A]/10 border border-[#C4956A]/20 flex items-center justify-center shadow-[0_0_30px_rgba(196,149,106,0.1)]">
+                  <svg className="w-10 h-10 text-[#C4956A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="text-xl text-[var(--text-primary)] mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
+                <h3 className="archival-heading text-2xl text-white mb-3">
                   {t('products.info.discount')}
                 </h3>
-                <p className="text-[var(--text-primary)]/var(--text-muted) text-sm">
+                <p className="text-[#A89880] text-sm">
                   {t('products.info.discountDesc')}<br />
                   {t('products.info.comingSoon')}
                 </p>
               </div>
 
-              <div className="text-center p-8 bg-[var(--bg-secondary)] rounded-2xl border border-[var(--card-border)]">
-                <div className="w-16 h-16 mx-auto mb-4 bg-[var(--accent)]/20 rounded-full flex items-center justify-center">
-                  <svg className="w-8 h-8 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="bento-card text-center p-10 flex flex-col items-center">
+                <div className="w-20 h-20 mb-6 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shadow-[0_0_30px_rgba(255,255,255,0.05)]">
+                  <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
                 </div>
-                <h3 className="text-xl text-[var(--text-primary)] mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
+                <h3 className="archival-heading text-2xl text-white mb-3">
                   {t('products.info.freeDelivery')}
                 </h3>
-                <p className="text-[var(--text-primary)]/var(--text-muted) text-sm">
+                <p className="text-[#A89880] text-sm">
                   {t('products.info.freeDeliveryDesc')}<br />
                   {t('products.info.allUkraine')}
                 </p>

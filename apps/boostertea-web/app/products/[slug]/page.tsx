@@ -60,7 +60,7 @@ export async function generateMetadata({
     brand: { '@type': 'Brand', name: 'BoosterTea' },
     offers: {
       '@type': 'Offer',
-      url: `${SITE_URL}/catalog/${slug}`,
+      url: `${SITE_URL}/products/${slug}`,
       priceCurrency: 'UAH',
       price: product.price,
       availability: 'https://schema.org/InStock',
@@ -77,7 +77,7 @@ export async function generateMetadata({
     openGraph: {
       title: `${product.name} | BoosterTea`,
       description: product.description,
-      url: `${SITE_URL}/catalog/${slug}`,
+      url: `${SITE_URL}/products/${slug}`,
       images: [{ url: product.image, width: 800, height: 800, alt: product.nameUk }],
     },
   }

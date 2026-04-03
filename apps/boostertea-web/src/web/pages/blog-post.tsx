@@ -253,50 +253,41 @@ export default function BlogPost({ slug, meta, toc, children }: BlogPostProps) {
             <span>{category?.name}</span>
           </motion.div>
 
-          {/* Title */}
+          {/* Title - Monumental Data-First Type */}
           <motion.h1 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="text-4xl sm:text-5xl lg:text-7xl text-white mb-8 font-black leading-[1.05] tracking-tighter"
-            style={{ fontFamily: '"Syne", sans-serif' }}
+            className="archival-heading data-heavy text-5xl sm:text-7xl lg:text-8xl text-white mb-10 font-black leading-[0.95] tracking-tighter"
           >
             {meta.title}
           </motion.h1>
 
-          {/* Meta */}
+          {/* Meta Data-Blocks */}
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="flex flex-wrap items-center gap-4 text-xs font-mono uppercase tracking-widest text-white/50"
+            className="grid grid-cols-2 sm:grid-cols-3 gap-4"
           >
-            <span className="flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              {meta.author}
-            </span>
-            <span className="text-[#3A2E22]">•</span>
-            <span className="flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              {formatDate(meta.date)}
-            </span>
-            <span className="text-[#3A2E22]">•</span>
-            <span className="flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {meta.readingTime} хв читання
-            </span>
+            <div className="bento-card p-4 flex flex-col justify-center">
+               <span className="text-white/40 text-xs uppercase tracking-widest mb-1">Клінічний Автор</span>
+               <span className="text-white font-bold data-heavy">{meta.author}</span>
+            </div>
+            <div className="bento-card p-4 flex flex-col justify-center">
+               <span className="text-white/40 text-xs uppercase tracking-widest mb-1">Дата Публікації</span>
+               <span className="text-white font-bold data-heavy text-lg">{formatDate(meta.date)}</span>
+            </div>
+            <div className="bento-card p-4 flex flex-col justify-center col-span-2 sm:col-span-1">
+               <span className="text-white/40 text-xs uppercase tracking-widest mb-1">Час Екстракції Сенсів</span>
+               <span className="text-[#C4956A] font-bold data-heavy text-2xl">{meta.readingTime} ХВ</span>
+            </div>
           </motion.div>
         </div>
       </header>
 
-      {/* Main Content - Encapsulated in the Full-Width Frosted Glassmorphism Layer */}
-      <div className={`w-[96vw] max-w-6xl mx-auto xl:w-[90vw] p-4 sm:p-8 lg:p-12 mb-24 rounded-[3rem] shadow-2xl backdrop-blur-3xl border transition-colors duration-1000 ${
+      {/* Main Content - Encapsulated in the Full-Width Frosted Glassmorphism Layer with Tactile Noise */}
+      <div className={`noise-overlay relative w-[96vw] max-w-6xl mx-auto xl:w-[90vw] p-4 sm:p-8 lg:p-12 mb-24 rounded-[3rem] shadow-2xl backdrop-blur-3xl border transition-colors duration-1000 ${
         isDark ? 'bg-black/50 border-white/10 text-white/90 shadow-[0_20px_60px_-15px_rgba(0,0,0,1)]' : 'bg-white/60 border-black/10 text-black/90 shadow-[0_20px_60px_-15px_rgba(200,200,200,0.5)]'
       }`}>
         <div className="grid lg:grid-cols-[280px_1fr_200px] gap-8">
@@ -447,7 +438,8 @@ export default function BlogPost({ slug, meta, toc, children }: BlogPostProps) {
           color: ${isDark ? '#E8DDD0' : '#2A2A2A'};
           margin: 3.5rem 0 1.5rem;
           font-weight: 800;
-          letter-spacing: -0.02em;
+          letter-spacing: -0.04em;
+          text-transform: uppercase;
           scroll-margin-top: 100px;
           font-family: 'Syne', sans-serif;
         }

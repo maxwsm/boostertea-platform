@@ -157,14 +157,14 @@ export default function Blog() {
             </div>
           )}
 
-          {/* Section Title */}
+          {/* Section Title - Brutalist Archival Index Style */}
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="flex items-center justify-between mb-6"
+            className="flex items-center justify-between mb-8 border-b border-white/5 pb-4"
           >
-            <h2 className="text-4xl text-white font-black tracking-tight" style={{ fontFamily: '"Syne", sans-serif' }}>
+            <h2 className="archival-heading text-4xl" style={{ fontFamily: '"Syne", sans-serif' }}>
               {getPageTitle()}
             </h2>
             <span className="text-[#A89880] text-sm">
@@ -172,25 +172,44 @@ export default function Blog() {
             </span>
           </motion.div>
 
-          {/* Posts Grid */}
+          {/* Archival Background Ambience */}
+          <div className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#C4956A]/20 to-transparent my-10" />
+
+          {/* Posts Grid - Bento 2.0 */}
           {displayedPosts.length > 0 ? (
             <>
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+                className="bento-grid relative z-10"
               >
-                {paginatedPosts.map((post, i) => (
+                {/* Ambient Tea Leaf Drop Shadow */}
+                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#C4956A]/10 rounded-full blur-[120px] pointer-events-none -z-10" />
+
+                {paginatedPosts.map((post, i) => {
+                  // Asymmetric Archival Bento sizing
+                  // Item 0 is hero, Item 1 & 2 are side columns, etc.
+                  let spanClass = 'col-span-12 md:col-span-6 lg:col-span-4';
+                  if (i % 7 === 0) {
+                     spanClass = 'col-span-12 lg:col-span-8'; // Hero block
+                  } else if (i % 7 === 3) {
+                     spanClass = 'col-span-12 md:col-span-12 lg:col-span-6'; // Wide block
+                  } else if (i % 7 === 4) {
+                     spanClass = 'col-span-12 md:col-span-12 lg:col-span-6'; // Wide block
+                  }
+
+                  return (
                   <motion.div
                     key={post.id}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: "-50px" }}
                     transition={{ duration: 0.5, delay: i * 0.1 }}
+                    className={spanClass}
                   >
                     <BlogCard post={post} />
                   </motion.div>
-                ))}
+                )})}
               </motion.div>
 
               {/* Load More / Pagination */}

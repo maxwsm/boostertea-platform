@@ -82,7 +82,7 @@ interface StoreContextType {
 }
 
 export const products = configProducts.filter(p => ['puerh-classic-001', 'dahongpao-oolong-002', '6bf02c5d-7949-4254-9943-acf1bd62f288'].includes(p.id));
-export const accessoryProducts: Accessory[] = []; // Disabled per MVP requirement
+export const accessoryProducts: Accessory[] = configAccessoryProducts; // Re-enabled per user request
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 

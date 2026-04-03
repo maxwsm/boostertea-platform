@@ -1,0 +1,16 @@
+{
+  "name": "mykyta-invest-bot",
+  "version": "1.0.0",
+  "description": "Telegram bot to mentor Mykyta in attracting $20k for BoosterTea",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "@google/genai": "latest",
+    "dotenv": "^16.4.5",
+    "telegraf": "^4.16.3"
+  }
+}

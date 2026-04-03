@@ -54,10 +54,10 @@ export function BlogCard({ post }: BlogCardProps) {
         whileInView={{ opacity: 1, y: 0, scale: 1 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="group relative flex flex-col h-full bg-[#0D0F14] rounded-2xl overflow-hidden border border-white/5 hover:border-[#C4956A]/40 transition-colors cursor-pointer"
+        className="bento-card group flex flex-col h-full cursor-pointer min-h-[420px]"
       >
         <div 
-          className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" 
+          className="absolute inset-0 bg-gradient-to-br from-[#0D0F14]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" 
           style={{ transform: "translateZ(30px)" }}
         />
 
@@ -115,7 +115,7 @@ export function BlogCard({ post }: BlogCardProps) {
           </div>
           
           {/* Title */}
-          <h3 className="text-white font-black text-2xl mb-3 group-hover:text-[#C4956A] transition-colors leading-[1.1] tracking-tight" style={{ fontFamily: '"Syne", sans-serif' }}>
+          <h3 className="archival-heading data-heavy text-2xl mb-3 group-hover:text-[#C4956A] transition-colors leading-[1.1]" style={{ transform: "translateZ(10px)" }}>
             {post.title}
           </h3>
           

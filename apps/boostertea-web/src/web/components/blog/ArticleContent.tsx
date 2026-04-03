@@ -1,7 +1,9 @@
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import type { BlogPostMeta, TocItem } from '../../lib/blog/types';
 import { RecipeCard } from './RecipeCard';
 import { TeaTimeline } from './TeaTimeline';
+import { EnergyImpactCalculator } from './EnergyImpactCalculator';
+import { BlogMechanics } from './mechanics/BlogMechanics';
 
 interface ArticleContentProps {
   content: string;
@@ -16,46 +18,49 @@ export function ArticleContent({ content, meta, onTocExtract }: ArticleContentPr
     const toc: TocItem[] = [];
     let counter = 0;
     
-    // Split content by RecipeCard and TeaTimeline components
-    const parts: React.ReactNode[] = [];
-    let lastIndex = 0;
-    
-    // Regex patterns
-    const recipeCardRegex = /<RecipeCard\s+([^>]+)\/>/gs;
-    const teaTimelineRegex = /<TeaTimeline\s+([^>]+)\/>/gs;
-    const headingRegex = /^(#{2,3})\s+(.+)$/gm;
-    
     // Extract headings for TOC
+    const headingRegex = /^(#{2,3})\s+(.+)$/gm;
     let match;
-    const headingMatches: { index: number; level: number; text: string }[] = [];
     while ((match = headingRegex.exec(content)) !== null) {
       const level = match[1].length;
       const text = match[2].replace(/\*\*/g, '');
       const id = `heading-${counter++}`;
       toc.push({ id, text, level });
-      headingMatches.push({ index: match.index, level, text });
     }
     
     onTocExtract?.(toc);
     
-    // For now, return simple markdown parsing
-    // In production, you'd use a proper MDX parser
     const html = parseMarkdown(content);
     
     return { parsedContent: html, tocItems: toc };
   }, [content, onTocExtract]);
 
+  // We need to render custom React components that were injected into the markdown
+  // Split by the specific token <EnergyImpactCalculator />
+  const parts = parsedContent.split('<EnergyImpactCalculator />');
+
   return (
-    <div 
-      className="blog-content prose prose-invert prose-lg max-w-none"
-      dangerouslySetInnerHTML={{ __html: parsedContent }}
-    />
+    <div className="blog-content prose prose-invert prose-lg max-w-none">
+      <BlogMechanics slug={meta.slug} />
+      
+      {parts.map((part, index) => (
+        <React.Fragment key={index}>
+          <div dangerouslySetInnerHTML={{ __html: part }} />
+          {index < parts.length - 1 && (
+             <div className="my-8">
+               <EnergyImpactCalculator />
+             </div>
+          )}
+        </React.Fragment>
+      ))}
+    </div>
   );
 }
 
 // Simple markdown to HTML parser
 function parseMarkdown(md: string): string {
   let html = md;
+
   
   // Escape HTML
   html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -64,12 +69,12 @@ function parseMarkdown(md: string): string {
   let headingCounter = 0;
   html = html.replace(/^## (.+)$/gm, (_, text) => {
     const id = `heading-${headingCounter++}`;
-    return `<h2 id="${id}" class="text-2xl font-bold text-[#E8DDD0] mt-12 mb-4 scroll-mt-24" style="font-family: 'Playfair Display', serif;">${parseInline(text)}</h2>`;
+    return `<h2 id="${id}" class="archival-heading text-3xl font-bold text-[#E8DDD0] mt-12 mb-4 scroll-mt-24">${parseInline(text)}</h2>`;
   });
   
   html = html.replace(/^### (.+)$/gm, (_, text) => {
     const id = `heading-${headingCounter++}`;
-    return `<h3 id="${id}" class="text-xl font-semibold text-[#E8DDD0] mt-8 mb-3 scroll-mt-24">${parseInline(text)}</h3>`;
+    return `<h3 id="${id}" class="archival-heading text-xl font-semibold text-[#E8DDD0] mt-8 mb-3 scroll-mt-24">${parseInline(text)}</h3>`;
   });
   
   // Bold

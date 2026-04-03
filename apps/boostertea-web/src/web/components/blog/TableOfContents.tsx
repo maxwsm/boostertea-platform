@@ -41,13 +41,13 @@ export function TableOfContents({ items }: TableOfContentsProps) {
   if (items.length === 0) return null;
 
   return (
-    <div className="bg-white/[0.02] backdrop-blur-md rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
+    <div className="bento-card overflow-hidden">
       {/* Header */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
         className="w-full flex items-center justify-between p-5 hover:bg-white/5 transition-colors"
       >
-        <h3 className="text-xs font-mono uppercase tracking-widest text-[#00D4FF] flex items-center gap-2 font-bold">
+        <h3 className="archival-heading text-xs tracking-widest text-[#C4956A] flex items-center gap-2">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
           </svg>
@@ -82,7 +82,7 @@ export function TableOfContents({ items }: TableOfContentsProps) {
                 >
                   <div className="flex items-center gap-2">
                     {activeId === item.id && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#00D4FF] animate-pulse shadow-[0_0_10px_#00D4FF]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#C4956A] animate-pulse shadow-[0_0_10px_#C4956A]" />
                     )}
                     <span className="line-clamp-2">{item.text}</span>
                   </div>

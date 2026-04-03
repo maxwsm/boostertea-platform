@@ -7,6 +7,7 @@ import TelegramButton from '../components/TelegramButton';
 import { ScrollReveal } from '../components/animations';
 import { SEO, useSEOConfig } from '../components/SEO';
 import { useTranslation } from '../lib/i18n';
+import { pushGTMEvent } from '../lib/blog/types';
 
 const Adaptation = () => {
   const seoConfig = useSEOConfig('adaptation');
@@ -41,21 +42,15 @@ const Adaptation = () => {
 
 const HeroSection = () => {
   return (
-    <section className="pt-32 pb-20 relative overflow-hidden">
+    <section className="pt-32 pb-20 relative overflow-hidden bg-[#050505]">
       {/* Animated background elements */}
+      <div className="absolute inset-0 noise-overlay opacity-40 mix-blend-overlay pointer-events-none" />
       <div className="absolute inset-0">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-[var(--accent)]/10 rounded-full blur-[100px] animate-pulse" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#8B7355]/10 rounded-full blur-[120px] animate-pulse animation-delay-500" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#C9A55C]/5 rounded-full blur-[150px]" />
+        <div className="absolute top-20 left-10 w-72 h-72 bg-[#C4956A]/10 rounded-full blur-[100px] animate-pulse" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#9FD356]/5 rounded-full blur-[150px]" />
       </div>
       
-      {/* Grid pattern overlay */}
-      <div className="absolute inset-0 opacity-[0.03]" style={{
-        backgroundImage: `linear-gradient(rgba(159, 211, 86, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(159, 211, 86, 0.5) 1px, transparent 1px)`,
-        backgroundSize: '60px 60px'
-      }} />
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           {/* Breadcrumb */}
           <nav className="flex items-center justify-center gap-2 mb-8 animate-fade-in-up">
@@ -69,66 +64,56 @@ const HeroSection = () => {
           </nav>
           
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--accent)]/10 rounded-full mb-8 animate-fade-in-up animation-delay-100">
-            <div className="w-2 h-2 bg-[var(--accent)] rounded-full animate-pulse" />
-            <span className="text-[var(--accent)] text-sm font-medium">
-              Покроковий гайд
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-black/50 border border-white/5 rounded-full mb-8 animate-fade-in-up animation-delay-100 shadow-[0_0_15px_rgba(196,149,106,0.1)]">
+            <div className="w-2 h-2 bg-[#C4956A] rounded-full animate-pulse shadow-[0_0_10px_rgba(196,149,106,0.8)]" />
+            <span className="text-[#C4956A] text-xs font-mono uppercase tracking-[0.2em] font-bold">
+              Integration Protocol
             </span>
           </div>
           
-          <h1 
-            className="text-5xl sm:text-6xl lg:text-7xl text-[var(--text-primary)] leading-tight mb-6 animate-fade-in-up animation-delay-200"
-            style={{ fontFamily: 'var(--font-heading)' }}
-          >
-            Повний гайд з{' '}
-            <span className="relative">
-              <span className="gradient-text">адаптації</span>
-              <svg className="absolute -bottom-2 left-0 w-full h-3 text-[var(--accent)]/30" viewBox="0 0 200 12" fill="none">
-                <path d="M2 8c50-8 150-8 196 0" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
-              </svg>
-            </span>
-            {' '}BoosterTea у ваш бізнес
+          <h1 className="archival-heading text-5xl sm:text-6xl lg:text-7xl text-white mb-6 uppercase tracking-tight leading-none animate-fade-in-up animation-delay-200">
+            ПРОТОКОЛ <span className="text-[#C4956A]">АДАПТАЦІЇ</span>
+            <br /> <span className="text-4xl text-[#A89880]">BOOSTER.TEA</span>
           </h1>
           
-          <p className="text-xl text-[var(--text-primary)]/var(--text-secondary) mb-10 leading-relaxed max-w-2xl mx-auto animate-fade-in-up animation-delay-300">
-            Дізнайтеся, як легко та швидко впровадити преміальний чай у ваш заклад. 
-            Від замовлення до першого проданого напою — всього 6 простих кроків.
+          <p className="text-[#A89880] mb-10 leading-relaxed max-w-2xl mx-auto animate-fade-in-up animation-delay-300">
+            Система інтеграції преміального чайного екстракту у ваш заклад. Від ініціації замовлення до першого проливу — 6 біологічних циклів.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up animation-delay-400">
             <a 
               href="#steps"
-              className="group relative px-8 py-4 bg-[var(--accent)] text-[#0D0D0D] font-semibold rounded-xl hover:bg-[var(--accent-hover)] transition-all inline-flex items-center justify-center gap-2 overflow-hidden"
+              className="group relative px-8 py-5 bg-[#C4956A] text-black font-black uppercase tracking-[0.2em] rounded-xl hover:bg-[#D4A57A] transition-all inline-flex items-center justify-center gap-3 overflow-hidden shadow-[0_0_25px_rgba(196,149,106,0.3)]"
             >
-              <span className="relative z-10">Почати навчання</span>
-              <svg className="w-5 h-5 relative z-10 group-hover:translate-y-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              <span className="relative z-10 text-xs">Ініціювати протокол</span>
+              <svg className="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7-7m7-7H3" />
               </svg>
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-500 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
             </a>
             <a 
               href="#resources"
-              className="px-8 py-4 bg-transparent text-[var(--text-primary)] font-semibold rounded-xl border border-[#F5F0E8]/30 hover:bg-[#F5F0E8]/10 transition-all inline-flex items-center justify-center gap-2"
+              className="px-8 py-5 bg-transparent text-[#E8DDD0] font-bold uppercase tracking-widest text-xs rounded-xl border border-white/10 hover:bg-white/5 transition-all inline-flex items-center justify-center gap-2"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
-              Завантажити матеріали
+              Завантажити базу
             </a>
           </div>
           
           {/* Quick stats */}
-          <div className="grid grid-cols-3 gap-6 mt-16 animate-fade-in-up animation-delay-500">
+          <div className="grid grid-cols-3 gap-6 mt-16 animate-fade-in-up animation-delay-500 max-w-2xl mx-auto bento-card p-6 rounded-3xl relative overflow-hidden bg-black/40 border border-white/5">
+            <div className="absolute inset-0 noise-overlay opacity-30" />
             {[
-              { value: '5', label: 'хвилин на навчання' },
-              { value: '6', label: 'простих кроків' },
-              { value: '24/7', label: 'підтримка' }
+              { value: '5', label: 'Хвилин інсталяції' },
+              { value: '6', label: 'Етапів протоколу' },
+              { value: '24/7', label: 'Телеметрія сапорту' }
             ].map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="text-3xl sm:text-4xl font-bold text-[var(--accent)] mb-1" style={{ fontFamily: 'var(--font-heading)' }}>
+              <div key={index} className="text-center relative z-10">
+                <div className="data-heavy text-4xl sm:text-5xl text-white mb-2" style={{ textShadow: '0 0 15px rgba(255,255,255,0.2)' }}>
                   {stat.value}
                 </div>
-                <div className="text-sm text-[var(--text-primary)]/var(--text-muted)">{stat.label}</div>
+                <div className="text-[10px] font-mono uppercase tracking-widest text-[#A89880]">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -259,117 +244,148 @@ const ImplementationSteps = () => {
     }
   ];
 
+  const handleStepChange = (index: number) => {
+    setActiveStep(index);
+    pushGTMEvent({
+      event: 'b2b_mechanic_interaction',
+      mechanic_type: 'protocol_slider',
+      mechanic_value: `step_${index + 1}`
+    });
+    // Check if Protocol is complete
+    if (index === steps.length - 1) {
+       pushGTMEvent({
+          event: 'b2b_protocol_completed',
+          mechanic_type: 'protocol_completed',
+          mechanic_value: '1'
+       });
+    }
+  };
+
   return (
-    <section id="steps" className="py-24 bg-[var(--bg-tertiary)] relative">
-      {/* Decorative line connecting steps */}
-      <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-[#9FD356]/20 to-transparent hidden lg:block" />
+    <section id="steps" className="py-24 bg-[#0a0a0c] relative overflow-hidden">
+      <div className="absolute inset-0 noise-overlay opacity-30 pointer-events-none" />
+      {/* Decorative center line */}
+      <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-[#C4956A]/20 to-transparent hidden lg:block" />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <ScrollReveal>
           <div className="text-center mb-16">
-            <h2 
-              className="text-4xl sm:text-5xl text-[var(--text-primary)] mb-4"
-              style={{ fontFamily: 'var(--font-heading)' }}
-            >
-              <span className="gradient-text">6 кроків</span> до успіху
+            <h2 className="archival-heading text-4xl sm:text-6xl text-white mb-4 uppercase tracking-tighter">
+              ПРОТОКОЛ <span className="text-[#C4956A]">ВПРОВАДЖЕННЯ</span>
             </h2>
-            <p className="text-[var(--text-primary)]/var(--text-muted) text-lg max-w-2xl mx-auto">
-              Простий та зрозумілий процес впровадження BoosterTea у ваш бізнес
+            <p className="text-[#A89880] text-lg max-w-2xl mx-auto uppercase tracking-widest font-mono text-[10px]">
+              6 послідовних стадій розгортання BoosterTea у вашому бізнесі
             </p>
           </div>
         </ScrollReveal>
 
-        {/* Step Navigation */}
-        <div className="flex flex-wrap justify-center gap-3 mb-12">
-          {steps.map((step, index) => (
-            <button
-              key={index}
-              onClick={() => setActiveStep(index)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
-                activeStep === index
-                  ? 'bg-[var(--accent)] text-[#0D0D0D]'
-                  : 'bg-[var(--bg-secondary)] text-[var(--text-primary)]/var(--text-muted) hover:bg-[var(--bg-secondary)]/80 hover:text-[var(--text-primary)]'
-              }`}
-            >
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${
-                activeStep === index ? 'bg-[var(--bg-primary)]/20' : 'bg-[#F5F0E8]/10'
-              }`}>
-                {step.number}
-              </span>
-              <span className="hidden sm:inline text-sm font-medium">{step.title}</span>
-            </button>
-          ))}
+        {/* Step Navigation Protocol */}
+        <div className="mb-12 max-w-4xl mx-auto">
+          <input 
+             type="range" 
+             min="0" 
+             max={steps.length - 1} 
+             value={activeStep}
+             onChange={(e) => handleStepChange(parseInt(e.target.value))}
+             className="w-full h-2 bg-black rounded-lg appearance-none cursor-pointer border border-[#C4956A]/30 mb-8"
+             style={{
+               background: `linear-gradient(to right, #C4956A ${(activeStep / (steps.length - 1)) * 100}%, rgba(196,149,106,0.1) ${(activeStep / (steps.length - 1)) * 100}%)`
+             }}
+          />
+          <div className="flex justify-between relative px-2">
+            {steps.map((step, index) => (
+              <button
+                key={index}
+                onClick={() => handleStepChange(index)}
+                className={`flex flex-col items-center gap-2 relative z-10 transition-all ${
+                  activeStep === index
+                    ? 'scale-110 opacity-100'
+                    : 'opacity-40 hover:opacity-100'
+                }`}
+              >
+                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border ${
+                  activeStep >= index 
+                     ? 'bg-[#C4956A] text-black border-[#C4956A] shadow-[0_0_15px_rgba(196,149,106,0.5)]' 
+                     : 'bg-black text-[#A89880] border-white/10'
+                }`}>
+                  {step.number}
+                </span>
+                <span className="hidden md:block text-[10px] font-mono uppercase tracking-widest text-center max-w-[80px] break-words text-[#A89880]">
+                   {step.title}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Active Step Content */}
         <ScrollReveal key={activeStep}>
           <div className="max-w-4xl mx-auto">
-            <div className="bg-[var(--bg-secondary)] rounded-3xl p-8 md:p-12 border border-[var(--card-border)] hover:border-[#9FD356]/20 transition-colors">
-              <div className="flex flex-col md:flex-row gap-8">
+            <div className="bento-card p-8 md:p-12 relative overflow-hidden border border-white/5 bg-black/40 shadow-2xl">
+              <div className="absolute inset-0 noise-overlay opacity-20 pointer-events-none" />
+              <div className="relative z-10 flex flex-col md:flex-row gap-8">
                 {/* Step Header */}
                 <div className="md:w-1/3">
-                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-colors ${
+                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-colors shadow-inner ${
                     activeStep === steps.length - 1 
-                      ? 'bg-gradient-to-br from-[#9FD356] to-[#C9A55C]' 
-                      : 'bg-[var(--accent)]/20'
+                      ? 'bg-[#C4956A] border border-[#ff003c]/20' 
+                      : 'bg-white/5 border border-white/10'
                   }`}>
-                    <div className={activeStep === steps.length - 1 ? 'text-[#0D0D0D]' : 'text-[var(--accent)]'}>
+                    <div className={activeStep === steps.length - 1 ? 'text-black' : 'text-[#C4956A]'}>
                       {steps[activeStep].icon}
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-[var(--accent)] text-sm font-bold">Крок {steps[activeStep].number}</span>
-                    <div className="flex-1 h-px bg-[var(--accent)]/30" />
+                  <div className="flex items-center gap-3 mb-2 opacity-60">
+                    <span className="text-[#C4956A] text-[10px] uppercase tracking-widest font-mono">Цикл {steps[activeStep].number}</span>
+                    <div className="flex-1 h-px bg-[#C4956A]/30" />
                   </div>
                   
-                  <h3 
-                    className="text-2xl text-[var(--text-primary)] mb-2"
-                    style={{ fontFamily: 'var(--font-heading)' }}
-                  >
+                  <h3 className="archival-heading text-3xl text-white mb-2 leading-none uppercase">
                     {steps[activeStep].title}
                   </h3>
-                  <p className="text-[var(--text-primary)]/var(--text-muted) text-sm">{steps[activeStep].subtitle}</p>
+                  <p className="text-[#A89880] text-xs font-mono uppercase tracking-widest">{steps[activeStep].subtitle}</p>
                 </div>
 
                 {/* Step Content */}
                 <div className="md:w-2/3 space-y-6">
-                  <p className="text-[var(--text-primary)]/80 text-lg leading-relaxed">
+                  <p className="text-[#E8DDD0] text-base leading-relaxed p-4 bg-white/5 border-l-2 border-[#C4956A]">
                     {steps[activeStep].content.description}
                   </p>
 
-                  <div className="grid gap-4">
+                  <div className="grid gap-3">
                     {steps[activeStep].content.details.map((detail, i) => (
                       <div 
                         key={i}
-                        className="flex justify-between items-center py-3 px-4 bg-[var(--bg-primary)] rounded-xl"
+                        className="flex justify-between items-center py-4 px-5 bg-black/50 border border-white/5 rounded-xl shadow-[inset_0_0_15px_rgba(0,0,0,0.8)]"
                       >
-                        <span className="text-[var(--text-primary)]/var(--text-muted) text-sm">{detail.label}</span>
-                        <span className="text-[var(--text-primary)] font-medium text-sm">{detail.value}</span>
+                        <span className="text-[#A89880] text-xs font-mono uppercase tracking-widest">{detail.label}</span>
+                        <span className="text-[#E8DDD0] font-bold text-sm tracking-tight">{detail.value}</span>
                       </div>
                     ))}
                   </div>
 
                   {/* Video placeholder */}
                   {steps[activeStep].content.hasVideo && (
-                    <div className="relative aspect-video bg-[var(--bg-primary)] rounded-xl overflow-hidden group cursor-pointer">
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#9FD356]/20 to-[#8B7355]/20" />
+                    <div className="relative aspect-video bg-black/80 border border-white/10 rounded-2xl overflow-hidden group cursor-pointer">
+                      <div className="absolute inset-0 noise-overlay opacity-30" />
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-20 h-20 rounded-full bg-[var(--accent)] flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <svg className="w-8 h-8 text-[#0D0D0D] ml-1" fill="currentColor" viewBox="0 0 24 24">
+                        <div className="w-20 h-20 rounded-full border border-[#C4956A] flex items-center justify-center group-hover:bg-[#C4956A]/20 transition-colors">
+                          <svg className="w-8 h-8 text-[#C4956A] ml-1" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M8 5v14l11-7z"/>
                           </svg>
                         </div>
                       </div>
-                      <div className="absolute bottom-4 left-4">
-                        <span className="text-[var(--text-primary)]/80 text-sm">Відеоінструкція з приготування</span>
+                      <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center bg-black/60 backdrop-blur px-4 py-2 rounded-lg border border-white/5">
+                        <span className="text-white text-xs font-mono uppercase tracking-widest">Відео-інструкція протоколу</span>
+                        <span className="text-[#C4956A] text-[10px] uppercase animate-pulse">LIVE</span>
                       </div>
                     </div>
                   )}
 
                   {/* Tip box */}
-                  <div className="bg-[var(--accent)]/10 rounded-xl p-4 border border-[#9FD356]/20">
-                    <p className="text-[var(--text-primary)]/80 text-sm">
+                  <div className="bg-[#C4956A]/10 rounded-xl p-4 border border-[#C4956A]/20">
+                    <p className="text-[#E8DDD0] text-sm">
                       {steps[activeStep].content.tip}
                     </p>
                   </div>
@@ -377,30 +393,30 @@ const ImplementationSteps = () => {
               </div>
 
               {/* Navigation buttons */}
-              <div className="flex justify-between items-center mt-8 pt-8 border-t border-[var(--border)]">
+              <div className="relative z-10 flex justify-between items-center mt-12 pt-8 border-t border-white/10">
                 <button
-                  onClick={() => setActiveStep(Math.max(0, activeStep - 1))}
+                  onClick={() => handleStepChange(Math.max(0, activeStep - 1))}
                   disabled={activeStep === 0}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                  className={`flex items-center gap-2 px-4 py-3 rounded-lg uppercase tracking-widest text-xs font-bold transition-all ${
                     activeStep === 0
-                      ? 'text-[var(--text-primary)]/30 cursor-not-allowed'
-                      : 'text-[var(--text-primary)]/var(--text-secondary) hover:text-[var(--text-primary)] hover:bg-[#F5F0E8]/5'
+                      ? 'text-white/20 cursor-not-allowed'
+                      : 'text-[#E8DDD0] hover:text-[#C4956A] hover:bg-white/5 border border-white/5'
                   }`}
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
-                  Попередній крок
+                  РЕВЕРС
                 </button>
                 
                 {activeStep < steps.length - 1 ? (
                   <button
-                    onClick={() => setActiveStep(activeStep + 1)}
-                    className="flex items-center gap-2 px-6 py-3 bg-[var(--accent)] text-[#0D0D0D] font-semibold rounded-lg hover:bg-[var(--accent-hover)] transition-all"
+                    onClick={() => handleStepChange(activeStep + 1)}
+                    className="flex items-center gap-2 px-6 py-3 bg-[#C4956A] text-black font-black uppercase tracking-[0.2em] text-xs rounded-lg hover:bg-[#D4A57A] transition-all shadow-[0_0_15px_rgba(196,149,106,0.3)]"
                   >
-                    Наступний крок
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    НАСТУПНИЙ ЦИКЛ
+                    <svg className="w-4 h-4 border border-black/20 rounded-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
                 ) : (
@@ -408,10 +424,10 @@ const ImplementationSteps = () => {
                     href="https://t.me/boostertea_b2b_bot"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-6 py-3 bg-[var(--accent)] text-[#0D0D0D] font-semibold rounded-lg hover:bg-[var(--accent-hover)] transition-all"
+                    className="flex items-center gap-2 px-6 py-3 bg-[#ff003c] text-white font-black uppercase tracking-[0.2em] text-xs rounded-lg hover:bg-[#d40030] transition-all shadow-[0_0_25px_rgba(255,0,60,0.5)]"
                   >
-                    Почати співпрацю
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    АВТОРИЗАЦІЯ
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
                     </svg>
                   </a>
@@ -422,17 +438,17 @@ const ImplementationSteps = () => {
         </ScrollReveal>
 
         {/* Progress indicator */}
-        <div className="flex justify-center gap-2 mt-8">
+        <div className="flex justify-center gap-3 mt-8 relative z-10">
           {steps.map((_, index) => (
             <button
               key={index}
-              onClick={() => setActiveStep(index)}
-              className={`h-2 rounded-full transition-all ${
+              onClick={() => handleStepChange(index)}
+              className={`h-1.5 rounded-none transition-all duration-300 ${
                 index === activeStep
-                  ? 'w-8 bg-[var(--accent)]'
+                  ? 'w-12 bg-[#C4956A] shadow-[0_0_10px_rgba(196,149,106,0.5)]'
                   : index < activeStep
-                  ? 'w-2 bg-[var(--accent)]/var(--text-muted)'
-                  : 'w-2 bg-[#F5F0E8]/20'
+                  ? 'w-4 bg-white/20'
+                  : 'w-4 bg-white/5'
               }`}
             />
           ))}
@@ -444,7 +460,18 @@ const ImplementationSteps = () => {
 
 const FAQSection = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
-  
+
+  const handleFAQToggle = (index: number) => {
+    const isOpening = openIndex !== index;
+    setOpenIndex(isOpening ? index : null);
+    if (isOpening) {
+      pushGTMEvent({
+        event: 'b2b_faq_read',
+        question_index: index + 1
+      });
+    }
+  };
+
   const faqs = [
     {
       question: 'Яке мінімальне замовлення для бізнесу?',
@@ -481,18 +508,16 @@ const FAQSection = () => {
   ];
 
   return (
-    <section className="py-24 bg-[var(--bg-primary)]">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-24 bg-[#050505] relative border-t border-white/5">
+      <div className="absolute inset-0 noise-overlay opacity-20 pointer-events-none" />
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <ScrollReveal>
           <div className="text-center mb-16">
-            <h2 
-              className="text-4xl sm:text-5xl text-[var(--text-primary)] mb-4"
-              style={{ fontFamily: 'var(--font-heading)' }}
-            >
-              Часті <span className="gradient-text">питання</span>
+            <h2 className="archival-heading text-4xl sm:text-5xl text-white mb-4 uppercase tracking-tighter">
+              БАЗА <span className="text-[#C4956A]">ЗНАНЬ</span>
             </h2>
-            <p className="text-[var(--text-primary)]/var(--text-muted) text-lg max-w-2xl mx-auto">
-              Відповіді на найпопулярніші запитання від наших партнерів
+            <p className="text-[#A89880] text-xs font-mono uppercase tracking-widest max-w-2xl mx-auto">
+              Відповіді на найчастіші системні запити
             </p>
           </div>
         </ScrollReveal>
@@ -501,40 +526,44 @@ const FAQSection = () => {
           {faqs.map((faq, index) => (
             <ScrollReveal key={index} delay={index * 50}>
               <div 
-                className={`bg-[var(--bg-secondary)] rounded-2xl border transition-all duration-300 overflow-hidden ${
+                className={`bento-card border transition-all duration-300 overflow-hidden relative ${
                   openIndex === index 
-                    ? 'border-[var(--border-accent)]' 
-                    : 'border-[var(--card-border)] hover:border-[var(--border)]'
+                    ? 'border-[#C4956A]/50 bg-black/80 shadow-[0_0_20px_rgba(196,149,106,0.1)]' 
+                    : 'border-white/5 bg-black/40 hover:border-white/10 hover:bg-black/60'
                 }`}
               >
+                <div className="absolute inset-0 noise-overlay opacity-30 mix-blend-overlay pointer-events-none" />
                 <button
-                  onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                  className="w-full px-6 py-5 flex items-center justify-between text-left"
+                  onClick={() => handleFAQToggle(index)}
+                  className="w-full px-6 py-5 flex items-center justify-between text-left relative z-10"
                 >
-                  <span className="text-[var(--text-primary)] font-medium pr-4">{faq.question}</span>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all ${
+                  <div className="flex items-center gap-4">
+                    <span className="text-[#C4956A] font-mono text-[10px] uppercase tracking-widest">[{String(index + 1).padStart(2, '0')}]</span>
+                    <span className={`font-bold tracking-tight transition-colors ${openIndex === index ? 'text-white' : 'text-[#E8DDD0]'}`}>{faq.question}</span>
+                  </div>
+                  <div className={`w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-all ${
                     openIndex === index 
-                      ? 'bg-[var(--accent)] rotate-180' 
-                      : 'bg-[#F5F0E8]/10'
+                      ? 'bg-[#C4956A] border-[#C4956A] rotate-180 shadow-[0_0_15px_rgba(196,149,106,0.5)]' 
+                      : 'bg-black border-white/10'
                   }`}>
                     <svg 
                       className={`w-4 h-4 transition-colors ${
-                        openIndex === index ? 'text-[#0D0D0D]' : 'text-[var(--text-primary)]/var(--text-muted)'
+                        openIndex === index ? 'text-black' : 'text-[#A89880]'
                       }`} 
                       fill="none" 
                       stroke="currentColor" 
                       viewBox="0 0 24 24"
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
                 </button>
                 
-                <div className={`overflow-hidden transition-all duration-300 ${
+                <div className={`overflow-hidden transition-all duration-300 relative z-10 ${
                   openIndex === index ? 'max-h-96' : 'max-h-0'
                 }`}>
-                  <div className="px-6 pb-5">
-                    <p className="text-[var(--text-primary)]/var(--text-secondary) leading-relaxed">
+                  <div className="px-6 pb-6 pt-2 ml-10 border-t border-white/5">
+                    <p className="text-[#A89880] text-sm leading-relaxed">
                       {faq.answer}
                     </p>
                   </div>
@@ -545,17 +574,18 @@ const FAQSection = () => {
         </div>
 
         {/* Additional questions CTA */}
-        <div className="mt-12 text-center">
-          <p className="text-[var(--text-primary)]/var(--text-muted) mb-4">Не знайшли відповідь на своє питання?</p>
+        <div className="mt-16 pt-8 border-t border-white/5 text-center relative z-10 bento-card p-8 rounded-2xl bg-black/40 overflow-hidden">
+          <div className="absolute inset-0 noise-overlay opacity-20 pointer-events-none" />
+          <p className="text-[#A89880] text-xs font-mono uppercase tracking-widest mb-4">Не знайшли відповідний протокол?</p>
           <a 
             href="https://t.me/boostertea_b2b_bot"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-[var(--accent)] hover:text-[#7FB030] transition-colors"
+            className="inline-flex items-center gap-3 px-6 py-3 border border-[#C4956A]/30 text-[#C4956A] hover:bg-[#C4956A] hover:text-black hover:border-[#C4956A] transition-all font-bold text-xs uppercase tracking-widest rounded-lg shadow-[0_0_15px_rgba(196,149,106,0.1)]"
           >
-            <span>Напишіть нам у Telegram</span>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            <span>Написати сапорту</span>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7-7m7-7H3" />
             </svg>
           </a>
         </div>
@@ -565,100 +595,114 @@ const FAQSection = () => {
 };
 
 const DownloadableResources = () => {
+  const handleDownload = (resourceId: string, format: string) => {
+    pushGTMEvent({
+      event: 'b2b_resource_download',
+      resource_id: resourceId,
+      format: format
+    });
+    // In a real app, you would actually trigger the download here
+  };
+
   const resources = [
     {
+      id: 'menu_templates',
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       ),
       title: 'Шаблони меню',
-      description: 'Готові дизайни для інтеграції чаю в меню вашого закладу',
+      description: 'Готові UI/UX дизайни для інтеграції в меню вашого бару',
       format: 'PDF, AI',
       size: '2.4 MB'
     },
     {
+      id: 'video_instructions',
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
         </svg>
       ),
-      title: 'Відеоінструкція',
-      description: '5-хвилинне відео з приготування всіх видів чаю',
+      title: 'Докс: Відеоінструкції',
+      description: 'Відео-протокол екстракції та приготування',
       format: 'MP4',
       size: '45 MB'
     },
     {
+      id: 'pos_materials',
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
       ),
       title: 'POS матеріали',
-      description: 'Тейблтенти, постери, стікери для оформлення закладу',
+      description: 'Матричні тейблтенти, постери, стікери',
       format: 'PDF, PNG',
       size: '8.1 MB'
     },
     {
+      id: 'social_content',
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
         </svg>
       ),
-      title: 'Контент для соцмереж',
-      description: 'Шаблони сторіс, постів та Reels для Instagram',
-      format: 'PSD, Canva',
+      title: 'Social Медіа',
+      description: 'Рендери для Stories, макети для Reels',
+      format: 'PSD, Figma',
       size: '12.5 MB'
     }
   ];
 
   return (
-    <section id="resources" className="py-24 bg-[var(--bg-tertiary)]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="resources" className="py-24 bg-[#0a0a0c] relative">
+      <div className="absolute inset-0 noise-overlay opacity-30 pointer-events-none" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <ScrollReveal>
           <div className="text-center mb-16">
-            <h2 
-              className="text-4xl sm:text-5xl text-[var(--text-primary)] mb-4"
-              style={{ fontFamily: 'var(--font-heading)' }}
-            >
-              <span className="gradient-text">Матеріали</span> для завантаження
+            <h2 className="archival-heading text-4xl sm:text-6xl text-white mb-4 uppercase tracking-tighter">
+              СИСТЕМНІ <span className="text-[#C4956A]">РЕСУРСИ</span>
             </h2>
-            <p className="text-[var(--text-primary)]/var(--text-muted) text-lg max-w-2xl mx-auto">
-              Безкоштовні ресурси для успішного запуску чаю у вашому закладі
+            <p className="text-[#A89880] text-xs font-mono uppercase tracking-widest max-w-2xl mx-auto">
+              База даних для завантаження в екосистему вашого бару
             </p>
           </div>
         </ScrollReveal>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {resources.map((resource, index) => (
-            <ScrollReveal key={index} delay={index * 100}>
-              <div className="bg-[var(--bg-secondary)] rounded-2xl p-6 border border-[var(--card-border)] hover:border-[var(--border-accent)] transition-all duration-300 group h-full flex flex-col">
-                <div className="w-14 h-14 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center mb-6 text-[var(--accent)] group-hover:bg-[var(--accent)]/20 transition-colors">
-                  {resource.icon}
+            <ScrollReveal key={resource.id} delay={index * 100}>
+              <div className="bento-card bg-black/50 rounded-2xl p-6 border border-white/5 hover:border-[#C4956A]/30 transition-all duration-300 group h-full flex flex-col relative overflow-hidden">
+                <div className="absolute inset-0 noise-overlay opacity-20 pointer-events-none" />
+                <div className="relative z-10">
+                  <div className="w-14 h-14 rounded-xl border border-white/10 bg-black flex items-center justify-center mb-6 text-[#A89880] group-hover:text-[#C4956A] group-hover:border-[#C4956A]/50 transition-colors shadow-inner">
+                    {resource.icon}
+                  </div>
+                  
+                  <h3 className="archival-heading text-2xl text-white mb-2 uppercase leading-none">
+                    {resource.title}
+                  </h3>
+                  
+                  <p className="text-[#E8DDD0] text-sm mb-6 flex-grow leading-relaxed">
+                    {resource.description}
+                  </p>
+                  
+                  <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-widest text-[#A89880] mb-4 border-t border-white/5 pt-4">
+                    <span>{resource.format}</span>
+                    <span className="text-[#C4956A]">{resource.size}</span>
+                  </div>
+                  
+                  <button 
+                    onClick={() => handleDownload(resource.id, resource.format)}
+                    className="w-full py-3 bg-black border border-white/10 hover:border-[#C4956A] hover:bg-[#C4956A]/10 text-white rounded-lg transition-all flex items-center justify-center gap-2 group/btn shadow-[0_0_10px_rgba(0,0,0,0.5)]"
+                  >
+                    <svg className="w-4 h-4 text-[#C4956A] group-hover/btn:translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    <span className="text-xs uppercase font-bold tracking-widest">Викачати</span>
+                  </button>
                 </div>
-                
-                <h3 
-                  className="text-lg text-[var(--text-primary)] mb-2"
-                  style={{ fontFamily: 'var(--font-heading)' }}
-                >
-                  {resource.title}
-                </h3>
-                
-                <p className="text-[var(--text-primary)]/var(--text-muted) text-sm mb-6 flex-grow">
-                  {resource.description}
-                </p>
-                
-                <div className="flex items-center justify-between text-xs text-[var(--text-primary)]/var(--text-subtle) mb-4">
-                  <span>{resource.format}</span>
-                  <span>{resource.size}</span>
-                </div>
-                
-                <button className="w-full py-3 bg-[#F5F0E8]/5 hover:bg-[var(--accent)]/20 text-[var(--text-primary)] hover:text-[var(--accent)] rounded-xl transition-all flex items-center justify-center gap-2 group/btn">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                  <span className="text-sm font-medium">Завантажити</span>
-                </button>
               </div>
             </ScrollReveal>
           ))}
@@ -666,25 +710,26 @@ const DownloadableResources = () => {
 
         {/* All resources pack */}
         <ScrollReveal delay={400}>
-          <div className="mt-12 bg-gradient-to-br from-[#1A1A1A] to-[#141414] rounded-3xl p-8 border border-[#9FD356]/20 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent)]/10 rounded-full blur-3xl" />
+          <div className="mt-12 bento-card bg-black/60 rounded-3xl p-8 border border-[#C4956A]/20 relative overflow-hidden shadow-[0_0_30px_rgba(196,149,106,0.1)]">
+            <div className="absolute inset-0 noise-overlay opacity-30 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#C4956A]/10 rounded-full blur-[80px]" />
             
-            <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
               <div>
-                <h3 
-                  className="text-2xl text-[var(--text-primary)] mb-2"
-                  style={{ fontFamily: 'var(--font-heading)' }}
-                >
-                  Повний пакет матеріалів
+                <h3 className="archival-heading text-3xl text-white mb-2 uppercase tracking-tight">
+                  Повний <span className="text-[#C4956A]">Пакет</span> Матеріалів
                 </h3>
-                <p className="text-[var(--text-primary)]/var(--text-muted)">
-                  Завантажте всі ресурси одним архівом (68 MB)
+                <p className="text-[#A89880] font-mono text-xs uppercase tracking-widest">
+                  Синхронізація всіх ресурсів єдиним архівом (68 MB)
                 </p>
               </div>
               
-              <button className="px-8 py-4 bg-[var(--accent)] text-[#0D0D0D] font-semibold rounded-xl hover:bg-[var(--accent-hover)] transition-all flex items-center gap-3 shrink-0">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              <button 
+                onClick={() => handleDownload('full_pack', 'ZIP')}
+                className="px-8 py-4 bg-[#C4956A] text-black font-black uppercase tracking-[0.2em] text-xs rounded-xl hover:bg-[#D4A57A] transition-all flex items-center gap-3 shrink-0 shadow-[0_0_20px_rgba(196,149,106,0.4)]"
+              >
+                <svg className="w-5 h-5 border border-black/20 rounded-full p-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
                 Завантажити все
               </button>
@@ -719,40 +764,41 @@ const SuccessMetrics = () => {
   ];
 
   return (
-    <section className="py-24 bg-[var(--bg-primary)] relative">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#9FD356]/5 to-transparent" />
+    <section className="py-24 bg-[#0a0a0c] relative border-t border-white/5 overflow-hidden">
+      <div className="absolute inset-0 noise-overlay opacity-30 mix-blend-overlay pointer-events-none" />
+      <div className="absolute top-1/2 right-0 w-[500px] h-[500px] bg-[#9FD356]/10 rounded-full blur-[120px] pointer-events-none" />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <ScrollReveal>
           <div className="text-center mb-16">
-            <h2 
-              className="text-4xl sm:text-5xl text-[var(--text-primary)] mb-4"
-              style={{ fontFamily: 'var(--font-heading)' }}
-            >
-              Метрики <span className="gradient-text">успіху</span>
+            <h2 className="archival-heading text-4xl sm:text-6xl text-white mb-4 uppercase tracking-tighter">
+              СИСТЕМНА <span className="text-[#9FD356]">АНАЛІТИКА</span>
             </h2>
-            <p className="text-[var(--text-primary)]/var(--text-muted) text-lg max-w-2xl mx-auto">
-              Реальні результати наших партнерів
+            <p className="text-[#A89880] font-mono text-[10px] uppercase tracking-widest max-w-2xl mx-auto">
+              Метрики ефективності інтеграції BoosterTea у партнерські заклади
             </p>
           </div>
         </ScrollReveal>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-3 gap-6">
           {metrics.map((metric, index) => (
             <ScrollReveal key={index} delay={index * 150}>
-              <div className="bg-[var(--bg-secondary)] rounded-2xl p-8 border border-[var(--card-border)] hover:border-[#9FD356]/20 transition-all group text-center">
-                <div 
-                  className="text-5xl sm:text-6xl font-bold mb-4 transition-transform group-hover:scale-105"
-                  style={{ fontFamily: 'var(--font-heading)', color: metric.color }}
-                >
-                  {metric.value}
+              <div className="bento-card bg-black/60 rounded-2xl p-8 border border-white/5 hover:border-white/10 transition-all group text-center relative overflow-hidden">
+                <div className="absolute inset-0 noise-overlay opacity-20 pointer-events-none" />
+                <div className="relative z-10">
+                  <div 
+                    className="data-heavy text-6xl sm:text-7xl mb-4 transition-transform group-hover:scale-105"
+                    style={{ color: metric.color, textShadow: `0 0 20px ${metric.color}40` }}
+                  >
+                    {metric.value}
+                  </div>
+                  <h3 className="archival-heading text-xl text-white mb-4 uppercase tracking-tight">
+                    {metric.label}
+                  </h3>
+                  <p className="text-[#A89880] text-sm leading-relaxed">
+                    {metric.description}
+                  </p>
                 </div>
-                <h3 className="text-xl text-[var(--text-primary)] mb-3" style={{ fontFamily: 'var(--font-heading)' }}>
-                  {metric.label}
-                </h3>
-                <p className="text-[var(--text-primary)]/var(--text-muted) text-sm leading-relaxed">
-                  {metric.description}
-                </p>
               </div>
             </ScrollReveal>
           ))}
@@ -760,25 +806,24 @@ const SuccessMetrics = () => {
 
         {/* Testimonial */}
         <ScrollReveal delay={500}>
-          <div className="mt-16 bg-gradient-to-br from-[#1A1A1A] to-[#141414] rounded-3xl p-8 md:p-12 border border-[var(--card-border)] relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-32 h-32 text-[var(--accent)]/10">
-              <svg fill="currentColor" viewBox="0 0 24 24">
-                <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
-              </svg>
-            </div>
+          <div className="mt-6 bento-card bg-[#C4956A] rounded-3xl p-8 md:p-12 border border-[#C4956A]/30 relative overflow-hidden text-black shadow-[0_0_30px_rgba(196,149,106,0.2)]">
+            <div className="absolute inset-0 noise-overlay opacity-30 mix-blend-overlay pointer-events-none" />
+            <div className="absolute top-0 left-0 w-64 h-64 bg-black/5 rounded-full blur-2xl" />
             
-            <div className="relative max-w-3xl mx-auto text-center">
-              <p className="text-xl text-[var(--text-primary)]/80 leading-relaxed mb-8 italic">
-                "Ми впровадили BoosterTea в нашій кав'ярні за один день. Вже через тиждень чай став другим за популярністю напоєм після кави. Клієнти в захваті від якості, а ми — від маржинальності!"
+            <div className="relative z-10 max-w-4xl mx-auto text-center">
+              <div className="mb-8 opacity-40 mix-blend-multiply flex justify-center">
+                <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+                </svg>
+              </div>
+              <p className="archival-heading text-2xl md:text-3xl leading-tight mb-10 tracking-tight">
+                "ПРОТЯГОМ ОДНОГО ДНЯ МИ ІНТЕГРУВАЛИ BOOSTERTEA. ЧЕРЕЗ ТИЖДЕНЬ ВІН СТАВ ДРУГИМ НАЙБІЛЬШ ПРИБУТКОВИМ НАПОЄМ В ЕКОСИСТЕМІ КАВ'ЯРНІ."
               </p>
               
-              <div className="flex items-center justify-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#9FD356] to-[#7FB030] flex items-center justify-center text-[#0D0D0D] font-bold" style={{ fontFamily: 'var(--font-heading)' }}>
-                  О
-                </div>
-                <div className="text-left">
-                  <p className="text-[var(--text-primary)] font-medium">Олена Коваленко</p>
-                  <p className="text-[var(--text-primary)]/var(--text-muted) text-sm">Власниця кав'ярні "Затишок", Київ</p>
+              <div className="flex items-center justify-center gap-4 border-t border-black/10 pt-6">
+                <div className="text-right">
+                  <p className="font-black tracking-widest text-sm uppercase">Олена Коваленко</p>
+                  <p className="font-mono text-[10px] uppercase opacity-70">Оператор вузла "Затишок", Київ</p>
                 </div>
               </div>
             </div>
@@ -804,70 +849,73 @@ const ContactForm = () => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate form submission
+    // Fire B2B Telemetry Event for Lead Generation
+    pushGTMEvent({
+      event: 'b2b_lead_submission',
+      business_type: formData.business
+    });
+
+    // Simulate API request
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSubmitted(true);
       setFormData({ name: '', business: '', phone: '', email: '', message: '' });
-    }, 1500);
+    }, 1200);
   };
 
   return (
-    <section className="py-24 bg-[var(--bg-tertiary)]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-24 bg-[#050505] relative border-t border-white/5">
+      <div className="absolute inset-0 noise-overlay opacity-30 pointer-events-none" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-start">
           {/* Left column - Info */}
           <ScrollReveal direction="left">
             <div>
-              <h2 
-                className="text-4xl sm:text-5xl text-[var(--text-primary)] mb-6"
-                style={{ fontFamily: 'var(--font-heading)' }}
-              >
-                Готові <span className="gradient-text">почати</span>?
+              <h2 className="archival-heading text-4xl sm:text-6xl text-white mb-6 uppercase tracking-tighter leading-none">
+                ЗАПУСТИТИ <span className="text-[#C4956A]">ПРОТОКОЛ</span>
               </h2>
-              <p className="text-[var(--text-primary)]/var(--text-secondary) text-lg mb-10 leading-relaxed">
-                Залиште заявку, і наш менеджер зв'яжеться з вами протягом години, 
-                щоб обговорити деталі співпраці та відповісти на всі питання.
+              <p className="text-[#A89880] text-sm mb-10 leading-relaxed font-mono uppercase tracking-widest max-w-md">
+                Передайте координати вашого вузла, і наш оператор зв'яжеться з вами для ініціалізації поставок.
               </p>
               
               <div className="space-y-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center shrink-0">
-                    <svg className="w-6 h-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-start gap-4 group">
+                  <div className="w-12 h-12 rounded-xl border border-white/5 bg-black flex items-center justify-center shrink-0 group-hover:border-[#C4956A]/50 transition-colors shadow-inner">
+                    <svg className="w-5 h-5 text-[#A89880] group-hover:text-[#C4956A] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                     </svg>
                   </div>
                   <div>
-                    <p className="text-[var(--text-primary)] font-medium mb-1">Телефон</p>
-                    <a href="tel:+380963109622" className="text-[var(--text-primary)]/var(--text-muted) hover:text-[var(--accent)] transition-colors">
+                    <p className="text-[#A89880] font-mono text-[10px] uppercase tracking-widest mb-1">Голосовий канал зв'язку</p>
+                    <a href="tel:+380963109622" className="text-white font-bold tracking-widest hover:text-[#C4956A] transition-colors">
                       +380 96 310 96 22
                     </a>
                   </div>
                 </div>
                 
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center shrink-0">
-                    <svg className="w-6 h-6 text-[var(--accent)]" fill="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-start gap-4 group">
+                  <div className="w-12 h-12 rounded-xl border border-white/5 bg-black flex items-center justify-center shrink-0 group-hover:border-[#C4956A]/50 transition-colors shadow-inner">
+                    <svg className="w-5 h-5 text-[#A89880] group-hover:text-[#C4956A] transition-colors" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
                     </svg>
                   </div>
                   <div>
-                    <p className="text-[var(--text-primary)] font-medium mb-1">Telegram</p>
-                    <a href="https://t.me/boostertea_b2b_bot" target="_blank" rel="noopener noreferrer" className="text-[var(--text-primary)]/var(--text-muted) hover:text-[var(--accent)] transition-colors">
+                    <p className="text-[#A89880] font-mono text-[10px] uppercase tracking-widest mb-1">Захищений Телеграм Протокол</p>
+                    <a href="https://t.me/boostertea_b2b_bot" target="_blank" rel="noopener noreferrer" className="text-white font-bold tracking-widest hover:text-[#C4956A] transition-colors">
                       @boostertea_b2b_bot
                     </a>
                   </div>
                 </div>
                 
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-[var(--accent)]/10 flex items-center justify-center shrink-0">
-                    <svg className="w-6 h-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-start gap-4 group">
+                  <div className="w-12 h-12 rounded-xl border border-white/5 bg-black flex items-center justify-center shrink-0 group-hover:border-[#C4956A]/50 transition-colors shadow-inner">
+                    <svg className="w-5 h-5 text-[#A89880] group-hover:text-[#C4956A] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                   </div>
                   <div>
-                    <p className="text-[var(--text-primary)] font-medium mb-1">Email</p>
-                    <a href="mailto:office@boostertea.com.ua" className="text-[var(--text-primary)]/var(--text-muted) hover:text-[var(--accent)] transition-colors">
+                    <p className="text-[#A89880] font-mono text-[10px] uppercase tracking-widest mb-1">Електронна пошта</p>
+                    <a href="mailto:office@boostertea.com.ua" className="text-white font-bold tracking-widest hover:text-[#C4956A] transition-colors">
                       office@boostertea.com.ua
                     </a>
                   </div>
@@ -878,119 +926,120 @@ const ContactForm = () => {
 
           {/* Right column - Form */}
           <ScrollReveal direction="right">
-            <div className="bg-[var(--bg-secondary)] rounded-3xl p-8 border border-[var(--card-border)]">
-              {isSubmitted ? (
-                <div className="text-center py-12">
-                  <div className="w-20 h-20 rounded-full bg-[var(--accent)]/20 flex items-center justify-center mx-auto mb-6">
-                    <svg className="w-10 h-10 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+            <div className="bento-card bg-black/60 rounded-2xl p-8 border border-white/5 relative overflow-hidden">
+              <div className="absolute inset-0 noise-overlay opacity-30 mix-blend-overlay pointer-events-none" />
+              
+              <div className="relative z-10">
+                {isSubmitted ? (
+                  <div className="text-center py-12">
+                    <div className="w-20 h-20 rounded-full border border-[#C4956A] bg-black flex items-center justify-center mx-auto mb-6 shadow-[0_0_20px_rgba(196,149,106,0.3)]">
+                      <svg className="w-10 h-10 text-[#C4956A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <h3 className="archival-heading text-2xl text-white mb-3 uppercase">
+                      ДАНІ <span className="text-[#C4956A]">ЗАФІКСОВАНО</span>
+                    </h3>
+                    <p className="text-[#A89880] text-sm mb-8 font-mono uppercase tracking-widest">
+                      Оператор зв'яжеться з вами найближчим часом.
+                    </p>
+                    <button
+                      onClick={() => setIsSubmitted(false)}
+                      className="text-[#C4956A] hover:text-white transition-colors text-xs font-bold uppercase tracking-widest border-b border-[#C4956A]/30 pb-0.5"
+                    >
+                      Відправити ще один запит
+                    </button>
                   </div>
-                  <h3 
-                    className="text-2xl text-[var(--text-primary)] mb-3"
-                    style={{ fontFamily: 'var(--font-heading)' }}
-                  >
-                    Дякуємо за заявку!
-                  </h3>
-                  <p className="text-[var(--text-primary)]/var(--text-muted) mb-6">
-                    Наш менеджер зв'яжеться з вами протягом години.
-                  </p>
-                  <button
-                    onClick={() => setIsSubmitted(false)}
-                    className="text-[var(--accent)] hover:text-[#7FB030] transition-colors"
-                  >
-                    Надіслати ще одну заявку
-                  </button>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div>
-                    <label className="block text-[var(--text-primary)]/80 text-sm mb-2">Ваше ім'я *</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder:text-[var(--text-primary)]/30 focus:border-[#9FD356] transition-colors"
-                      placeholder="Як до вас звертатися?"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-[var(--text-primary)]/80 text-sm mb-2">Назва бізнесу *</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.business}
-                      onChange={(e) => setFormData({ ...formData, business: e.target.value })}
-                      className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder:text-[var(--text-primary)]/30 focus:border-[#9FD356] transition-colors"
-                      placeholder="Кав'ярня, ресторан, готель..."
-                    />
-                  </div>
-                  
-                  <div className="grid sm:grid-cols-2 gap-4">
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
-                      <label className="block text-[var(--text-primary)]/80 text-sm mb-2">Телефон *</label>
+                      <label className="block text-[#A89880] text-[10px] font-mono uppercase tracking-widest mb-2">Ваше ім'я *</label>
                       <input
-                        type="tel"
+                        type="text"
                         required
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder:text-[var(--text-primary)]/30 focus:border-[#9FD356] transition-colors"
-                        placeholder="+380"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        className="w-full px-4 py-3 bg-black border border-white/10 rounded-lg text-white font-mono text-sm placeholder:text-white/20 focus:border-[#C4956A] focus:ring-1 focus:ring-[#C4956A] transition-all"
+                        placeholder="ID ОПЕРАТОРА"
                       />
                     </div>
+                    
                     <div>
-                      <label className="block text-[var(--text-primary)]/80 text-sm mb-2">Email</label>
+                      <label className="block text-[#A89880] text-[10px] font-mono uppercase tracking-widest mb-2">Назва бізнесу *</label>
                       <input
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder:text-[var(--text-primary)]/30 focus:border-[#9FD356] transition-colors"
-                        placeholder="email@company.com"
+                        type="text"
+                        required
+                        value={formData.business}
+                        onChange={(e) => setFormData({ ...formData, business: e.target.value })}
+                        className="w-full px-4 py-3 bg-black border border-white/10 rounded-lg text-white font-mono text-sm placeholder:text-white/20 focus:border-[#C4956A] focus:ring-1 focus:ring-[#C4956A] transition-all"
+                        placeholder="КАВ'ЯРНЯ / РЕСТОРАН"
                       />
                     </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-[var(--text-primary)]/80 text-sm mb-2">Повідомлення</label>
-                    <textarea
-                      rows={4}
-                      value={formData.message}
-                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                      className="w-full px-4 py-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder:text-[var(--text-primary)]/30 focus:border-[#9FD356] transition-colors resize-none"
-                      placeholder="Розкажіть про ваш бізнес та питання..."
-                    />
-                  </div>
-                  
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full py-4 bg-[var(--accent)] text-[#0D0D0D] font-semibold rounded-xl hover:bg-[var(--accent-hover)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-[#0D0D0D]/30 border-t-[#0D0D0D] rounded-full animate-spin" />
-                        Надсилаємо...
-                      </>
-                    ) : (
-                      <>
-                        Надіслати заявку
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                        </svg>
-                      </>
-                    )}
-                  </button>
-                  
-                  <p className="text-[var(--text-primary)]/var(--text-subtle) text-xs text-center">
-                    Натискаючи кнопку, ви погоджуєтесь з{' '}
-                    <Link href="/privacy" className="text-[var(--accent)] hover:underline">
-                      політикою конфіденційності
-                    </Link>
-                  </p>
-                </form>
-              )}
+                    
+                    <div className="grid sm:grid-cols-2 gap-5">
+                      <div>
+                        <label className="block text-[#A89880] text-[10px] font-mono uppercase tracking-widest mb-2">Телефон *</label>
+                        <input
+                          type="tel"
+                          required
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          className="w-full px-4 py-3 bg-black border border-white/10 rounded-lg text-white font-mono text-sm placeholder:text-white/20 focus:border-[#C4956A] focus:ring-1 focus:ring-[#C4956A] transition-all"
+                          placeholder="+380"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[#A89880] text-[10px] font-mono uppercase tracking-widest mb-2">Email</label>
+                        <input
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          className="w-full px-4 py-3 bg-black border border-white/10 rounded-lg text-white font-mono text-sm placeholder:text-white/20 focus:border-[#C4956A] focus:ring-1 focus:ring-[#C4956A] transition-all"
+                          placeholder="EMAIL@NODE.COM"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-[#A89880] text-[10px] font-mono uppercase tracking-widest mb-2">Коментар</label>
+                      <textarea
+                        rows={3}
+                        value={formData.message}
+                        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                        className="w-full px-4 py-3 bg-black border border-white/10 rounded-lg text-white font-mono text-sm placeholder:text-white/20 focus:border-[#C4956A] focus:ring-1 focus:ring-[#C4956A] transition-all resize-none"
+                        placeholder="ДЕТАЛІ ЗАПИТУ..."
+                      />
+                    </div>
+                    
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full py-4 mt-2 border border-[#C4956A]/50 bg-[#C4956A]/10 text-[#C4956A] uppercase font-black tracking-[0.2em] text-xs rounded-lg hover:bg-[#C4956A] hover:text-black transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-[0_0_15px_rgba(196,149,106,0.1)]"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          ОБРОБКА...
+                        </>
+                      ) : (
+                        <>
+                          ВІДПРАВИТИ ЗАПИТ
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7-7m7-7H3" />
+                          </svg>
+                        </>
+                      )}
+                    </button>
+                    
+                    <p className="text-[#A89880]/50 text-[10px] text-center font-mono uppercase tracking-widest pt-2">
+                      Надсилаючи, ви погоджуєтесь з{' '}
+                      <Link href="/privacy" className="text-[#C4956A] hover:text-white transition-colors">
+                        політикою безпеки
+                      </Link>
+                    </p>
+                  </form>
+                )}
+              </div>
             </div>
           </ScrollReveal>
         </div>
@@ -1000,3 +1049,4 @@ const ContactForm = () => {
 };
 
 export default Adaptation;
+
