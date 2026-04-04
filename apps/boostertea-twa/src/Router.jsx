@@ -6,6 +6,7 @@ import SyndicateDashboard from './pages/Syndicate';
 import ValeraGPT from './pages/ValeraGPT';
 import AdminDashboard from './pages/AdminDashboard';
 import Onboarding from './components/Onboarding';
+import NeuralNomadTour from './components/NeuralNomadTour';
 import './index.css';
 import './academy.css';
 import './crm.css';
@@ -20,9 +21,15 @@ const Shield = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
 export default function MainRouter() {
   const [currentPage, setCurrentPage] = useState('mission');
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showNeuralTour, setShowNeuralTour] = useState(false);
 
   useEffect(() => {
-    if (!localStorage.getItem('wsm_onboarded_v2')) {
+    const userId = WebApp.initDataUnsafe?.user?.id?.toString() || '';
+    const andryuhaId = import.meta.env.VITE_ANDRYUHA_ID?.toString() || '';
+    
+    if (userId && andryuhaId && userId === andryuhaId && !localStorage.getItem('andryuha_tour_seen')) {
+      setShowNeuralTour(true);
+    } else if (!localStorage.getItem('wsm_onboarded_v2')) {
       setShowOnboarding(true);
     }
   }, []);
@@ -32,7 +39,8 @@ export default function MainRouter() {
 
   return (
     <div style={containerStyle}>
-      {showOnboarding && <Onboarding onComplete={() => setShowOnboarding(false)} />}
+      {showNeuralTour && <NeuralNomadTour onComplete={() => setShowNeuralTour(false)} />}
+      {!showNeuralTour && showOnboarding && <Onboarding onComplete={() => setShowOnboarding(false)} />}
       {currentPage === 'valera' ? (
         <ValeraGPT />
       ) : (

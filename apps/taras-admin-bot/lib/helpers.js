@@ -1,10 +1,14 @@
 // lib/helpers.js — Shared helpers для бота та API
 
-const ROLES = { taras: 'Тарас', mykyta: 'Микита', nazar: 'Назар', maks: 'Макс (Dev)' };
+const ROLES = { taras: 'Тарас', mykyta: 'Микита', nazar: 'Назар', maks: 'Макс (Dev)', andryuha: 'Андрій (Neural Nomad)' };
 const ROLE_KEYS = Object.keys(ROLES);
-const TEAM_ROLES = ['taras', 'mykyta', 'nazar']; // Без maks для 3+2
+const TEAM_ROLES = ['taras', 'mykyta', 'nazar']; // Без maks та andryuha для 3+2
 
 async function getRoleByUserId(prisma, userId) {
+  if (!userId) return null;
+  if (process.env.ANDRYUHA_ID && userId.toString() === process.env.ANDRYUHA_ID.toString()) {
+    return 'andryuha'; 
+  }
   const user = await prisma.user.findUnique({ where: { telegramId: userId.toString() } });
   return user ? user.role : null;
 }

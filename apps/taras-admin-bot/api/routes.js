@@ -347,7 +347,7 @@ function setupAPI(app, prisma, bot, TASKS, ADMIN_ID, askGemini) {
     try {
       const { userId } = req.query;
       const role = await getRoleByUserId(prisma, userId);
-      const isAdmin = (role === 'taras' || role === 'maks' || userId === ADMIN_ID);
+      const isAdmin = (role === 'taras' || role === 'maks' || role === 'andryuha' || userId === ADMIN_ID);
 
       const users = await prisma.user.findMany({ orderBy: { xpTotal: 'desc' } });
       const day = await getCurrentDay(prisma);
@@ -380,7 +380,7 @@ function setupAPI(app, prisma, bot, TASKS, ADMIN_ID, askGemini) {
     try {
       const { userId } = req.body;
       const role = await getRoleByUserId(prisma, userId);
-      if (role !== 'taras' && role !== 'maks' && userId !== ADMIN_ID) return res.status(403).json({error: 'Forbidden'});
+      if (role !== 'taras' && role !== 'maks' && role !== 'andryuha' && userId !== ADMIN_ID) return res.status(403).json({error: 'Forbidden'});
 
       const penaltyId = req.params.id;
       const penalty = await prisma.penalty.findUnique({ where: { id: penaltyId } });
@@ -401,7 +401,7 @@ function setupAPI(app, prisma, bot, TASKS, ADMIN_ID, askGemini) {
     try {
       const { userId, targetId, amount, reason } = req.body;
       const role = await getRoleByUserId(prisma, userId);
-      if (role !== 'taras' && role !== 'maks' && userId !== ADMIN_ID) return res.status(403).json({error: 'Forbidden'});
+      if (role !== 'taras' && role !== 'maks' && role !== 'andryuha' && userId !== ADMIN_ID) return res.status(403).json({error: 'Forbidden'});
 
       await addXP(prisma, targetId, Number(amount), 'manual_grant');
       try { await bot.telegram.sendMessage(targetId, `⚡ *ДРОП ВІД ШЕФА!*\nТобі нараховано +${amount} XP.\nПричина: _${reason || 'за відмінну службу'}_ 🎯`, { parse_mode: 'Markdown' }); } catch(e){}
