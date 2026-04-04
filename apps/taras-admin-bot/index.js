@@ -435,6 +435,25 @@ cron.schedule('30 10 * * *', async () => {
   }
 }, { timezone: 'Europe/Kiev' });
 
+// 11:00 — Academy & Learning Check
+cron.schedule('0 11 * * *', async () => {
+  const users = await prisma.user.findMany({ where: { role: { in: TEAM_ROLES } } });
+  for (const user of users) {
+    const pendingResources = await prisma.userResource.count({
+      where: { userId: user.telegramId, status: { not: 'done' } }
+    });
+    // Check if they need to test skills
+    const unassessed = await prisma.userSkill.count({
+      where: { userId: user.telegramId, currentLevel: { lt: 5 } }
+    });
+
+    if (pendingResources > 0 || unassessed > 0) {
+      const msg = `🧠 *ACADEMY REMINDER*\n\n${ROLES[user.role]}, у тебе є непрочитані матеріали: ${pendingResources} шт. або непідтверджені скіли.\nВитрать 15 хвилин на навчання прямо зараз. Відкрий вкладку Command -> Academy.`;
+      try { await bot.telegram.sendMessage(user.telegramId, msg, { parse_mode: 'Markdown' }); } catch(e) {}
+    }
+  }
+}, { timezone: 'Europe/Kiev' });
+
 // 13:00 — Midday check (Positive evaluation)
 cron.schedule('0 13 * * *', async () => {
   const day = await getCurrentDay(prisma); if (!day) return;
@@ -528,6 +547,16 @@ for (const hour of [18, 19, 20]) {
     }
   }, { timezone: 'Europe/Kiev' });
 }
+
+// 19:30 — Obligations & Syndicate Matrix
+cron.schedule('30 19 * * *', async () => {
+  const users = await prisma.user.findMany({ where: { role: { in: TEAM_ROLES } } });
+  for (const user of users) {
+    try { 
+      await bot.telegram.sendMessage(user.telegramId, `⚖️ *ЗОБОВ'ЯЗАННЯ & СИНДИКАТ*\n\nВечірній чек-ін. Проаналізуй свій соціальний капітал.\nЧи є в тебе на прикметі інвестори або B2B ліди?\nПройди 'Опитувальник/Бар'єри' у вкладці Syndicate, якщо відчуваєш страх продавати.`, { parse_mode: 'Markdown' }); 
+    } catch(e) {}
+  }
+}, { timezone: 'Europe/Kiev' });
 
 // 21:00 — End of day + alarm to admin
 cron.schedule('0 21 * * *', async () => {

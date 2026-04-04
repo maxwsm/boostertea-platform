@@ -1,6 +1,7 @@
 // api/routes.js — Express API endpoints для TWA
 const { ROLES, getRoleByUserId, getCurrentDay, getDayProgress, getDayPercent } = require('../lib/helpers');
 const { addXP, addSkillXP, XP_REWARDS, checkAchievements } = require('../lib/xp');
+const { getQuestionsForSkill } = require('../lib/quiz_db');
 
 function setupAPI(app, prisma, bot, TASKS, ADMIN_ID, askGemini) {
 
@@ -67,7 +68,24 @@ function setupAPI(app, prisma, bot, TASKS, ADMIN_ID, askGemini) {
       }
 
       const xpAmount = existing?.type === 'assigned' ? XP_REWARDS.ASSIGNED_TASK : XP_REWARDS.PRIMARY_TASK;
-      const result = await addXP(prisma, userId, xpAmount, 'task_done');
+      let result = await addXP(prisma, userId, xpAmount, 'task_done');
+      
+      // Easter Egg: +5 extra tasks done
+      if (existing?.type === 'assigned') {
+        const doneAssignedCount = await prisma.task.count({
+          where: { ownerId: userId, day, type: 'assigned', done: true }
+        });
+        if (doneAssignedCount === 5) {
+          result = await addXP(prisma, userId, 1000, 'easter_egg_premium');
+          try {
+            await bot.telegram.sendMessage(userId, `🥚 *ПАСХАЛКА ВІДКРИТА!*\nТи виконав 5 додаткових задач за день! Це режим машини.\nНагорода: +1000 XP та бонусні преміальні поінти на розгляд CEO. 🚀`, { parse_mode: 'Markdown' });
+            if (ADMIN_ID) {
+              await bot.telegram.sendMessage(ADMIN_ID, `🥚 *ПАСХАЛКА ЗНАЙДЕНА!*\nКористувач: ${ROLES[role] || role}\nВиконав 5 додаткових (assigned) задач за день. Він лутає +1000 XP!`, { parse_mode: 'Markdown' });
+            }
+          } catch(e) {}
+        }
+      }
+
       await checkAchievements(prisma, bot, userId, ADMIN_ID);
 
       res.json({ success: true, xp: result.xpTotal, level: result.level, leveledUp: result.leveledUp });
@@ -143,6 +161,26 @@ function setupAPI(app, prisma, bot, TASKS, ADMIN_ID, askGemini) {
   });
 
   // ─── ASSESSMENT ─────────────────────────────────────
+  app.get('/api/twa/assessment/questions', async (req, res, next) => {
+    try {
+      const { skillIds } = req.query; // comma separated
+      if (!skillIds) return res.json({ questions: [] });
+      
+      const ids = skillIds.split(',');
+      const skills = await prisma.skill.findMany({ where: { id: { in: ids } } });
+      
+      let allQuestions = [];
+      skills.forEach(s => {
+        let qs = getQuestionsForSkill(s.slug);
+        qs = qs.map(q => ({ ...q, skillId: s.id, skillName: s.name })); // attach context
+        allQuestions = allQuestions.concat(qs);
+      });
+      
+      // Shuffle or format (remove correct answer id so client doesn't cheat if we wanted to be strict, but for MVP it's OK)
+      res.json(allQuestions);
+    } catch(e) { next(e); }
+  });
+
   app.post('/api/twa/assessment/submit', async (req, res, next) => {
     try {
       const { userId, results } = req.body; // results: [{ skillId, level }]
@@ -252,6 +290,58 @@ function setupAPI(app, prisma, bot, TASKS, ADMIN_ID, askGemini) {
     } catch(e) { next(e); }
   });
 
+  // ─── SYNDICATE / CAPITAL ────────────────────────────
+  app.get('/api/twa/syndicate/overview', async (req, res, next) => {
+    try {
+      const { userId } = req.query;
+      const user = await prisma.user.findUnique({ where: { telegramId: userId } });
+      if (!user) return res.status(404).json({ error: 'User not found' });
+      res.json({ 
+        totalEarned: user.totalEarned, 
+        royaltyCut: user.royaltyCut, 
+        level: user.level,
+        role: user.role
+      });
+    } catch(e) { next(e); }
+  });
+
+  app.post('/api/twa/syndicate/proposal', async (req, res, next) => {
+    try {
+      const { userId, type, payload } = req.body;
+      const user = await prisma.user.findUnique({ where: { telegramId: userId } });
+      const name = user ? (ROLES[user.role] || user.name || userId) : userId;
+
+      let msg = '';
+      if (type === 'loan') {
+        msg = `💸 <b>НОВА ІНВЕСТИЦІЙНА ПРОПОЗИЦІЯ</b>\nВід: ${name}\nСума: $${payload.loan}\nСтавка: ${payload.rate}%\nВиплата в Місяць: $${payload.monthlyPayout}\nВиплата в Рік: $${payload.yearlyPayout}`;
+      } else if (type === 'service') {
+        msg = `🏢 <b>ПРОДАЖ B2B ПОСЛУГИ</b>\nВід: ${name}\nПакет: ${payload.packageName}\nОчікуваний %: $${payload.cutAmount}`;
+      } else {
+        msg = `❓ <b>СИНДИКАТ - ЗАПИТ</b>\nВід: ${name}\nДані: ${JSON.stringify(payload)}`;
+      }
+
+      if (ADMIN_ID) {
+        try { await bot.telegram.sendMessage(ADMIN_ID, msg, { parse_mode: 'HTML' }); } catch(err) { console.error('TG Send Error:', err); }
+      }
+      res.json({ success: true });
+    } catch(e) { next(e); }
+  });
+
+  app.post('/api/twa/syndicate/withdraw', async (req, res, next) => {
+    try {
+      const { userId, amount } = req.body;
+      const user = await prisma.user.findUnique({ where: { telegramId: userId } });
+      const name = user ? (ROLES[user.role] || user.name || userId) : userId;
+
+      const msg = `💰 <b>ЗАПИТ НА ВИВЕДЕННЯ КЕШУ</b>\nВід: ${name}\nБажана Сума: $${amount}\nПоточний Баланс: $${user?.totalEarned || 0}`;
+      
+      if (ADMIN_ID) {
+        try { await bot.telegram.sendMessage(ADMIN_ID, msg, { parse_mode: 'HTML' }); } catch(err) {}
+      }
+      res.json({ success: true });
+    } catch(e) { next(e); }
+  });
+
   // ─── ADMIN & LEADERBOARD ────────────────────────────
   app.get('/api/twa/admin/overview', async (req, res, next) => {
     try {
@@ -318,6 +408,30 @@ function setupAPI(app, prisma, bot, TASKS, ADMIN_ID, askGemini) {
       
       res.json({ success: true });
     } catch(e) { next(e); }
+  });
+
+  // Shop: Dopamine Cashout
+  app.post('/api/twa/dopamine/cashout', async (req, res, next) => {
+    try {
+      const { userId, item, cost } = req.body;
+      const user = await prisma.user.findUnique({ where: { telegramId: userId } });
+      if (!user || user.xpTotal < cost) {
+        return res.status(400).json({ error: 'Недостатньо XP' });
+      }
+
+      await addXP(prisma, userId, -Math.abs(cost), 'cashout');
+      
+      // Notify Admin
+      if (ADMIN_ID) {
+        try { 
+          await bot.telegram.sendMessage(ADMIN_ID, `🛒 *CASH OUT INITIATED!*\nКористувач: ${ROLES[user.role] || user.role}\nВитратив: -${cost} XP\nНагорода: ${item}\n\nЗалишок: ${user.xpTotal - cost} XP`, { parse_mode: 'Markdown' }); 
+        } catch(e) {}
+      }
+
+      res.json({ success: true, newXP: user.xpTotal - cost });
+    } catch(e) { 
+      next(e); 
+    }
   });
 
   // ─── HEALTH ─────────────────────────────────────────

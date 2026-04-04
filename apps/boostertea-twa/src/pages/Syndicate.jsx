@@ -15,12 +15,14 @@ export default function SyndicateDashboard() {
         <button className={`cyber-button ${activeTab === 'vision' ? '' : 'disabled'}`} onClick={() => setActiveTab('vision')} style={{fontSize: '0.8rem', padding: '8px', opacity: activeTab === 'vision'?1:0.5}}>👁 VISION</button>
         <button className={`cyber-button ${activeTab === 'legal' ? '' : 'disabled'}`} onClick={() => setActiveTab('legal')} style={{fontSize: '0.8rem', padding: '8px', opacity: activeTab === 'legal'?1:0.5}}>⚖️ РЕГЛАМЕНТ</button>
         <button className={`cyber-button ${activeTab === 'services' ? '' : 'disabled'}`} onClick={() => setActiveTab('services')} style={{fontSize: '0.8rem', padding: '8px', opacity: activeTab === 'services'?1:0.5}}>🏛 СИНДИКАТ</button>
+        <button className={`cyber-button ${activeTab === 'barriers' ? '' : 'disabled'}`} onClick={() => setActiveTab('barriers')} style={{fontSize: '0.8rem', padding: '8px', opacity: activeTab === 'barriers'?1:0.5}}>🚧 БАР'ЄРИ</button>
         <button className={`cyber-button ${activeTab === 'calc' ? '' : 'disabled'}`} onClick={() => setActiveTab('calc')} style={{fontSize: '0.8rem', padding: '8px', opacity: activeTab === 'calc'?1:0.5}}>📈 КАЛЬКУЛЯТОР</button>
       </div>
 
       {activeTab === 'vision' && <VisionBlock />}
       {activeTab === 'legal' && <LegalBlock />}
       {activeTab === 'services' && <ServicesBlock />}
+      {activeTab === 'barriers' && <BarriersBlock />}
       {activeTab === 'calc' && <CalculatorBlock />}
     </div>
   );
@@ -173,6 +175,86 @@ function CalculatorBlock() {
           Ця сума генерує нам можливість зробити $40,000 чистого прибутку щомісяця. 
           {rate === 3 ? " 3% - це дуже дорогі короткі гроші. Тільки для швидких х2 операцій." : " Довгі гроші під низький відсоток — наш ключ."}
         </p>
+      </div>
+    </div>
+  );
+}
+
+function BarriersBlock() {
+  const [selectedBarrier, setSelectedBarrier] = useState(null);
+
+  const BARRIERS = [
+    {
+      id: 1,
+      title: "Що, якщо компанія прогорить і я втрачу гроші інвестора?",
+      breakdown: "МИ НЕ СТАРТАП В ІДЕЇ. Ми вже генеруємо кеш і маємо обладнання, яке можна продати. Крім того, СЕО надає особисту гарантію у вигляді додаткових 10% частки ТОВ 'Тай Дрінк'. Підкріплюємо це юридично нотаріальним договором.",
+      color: "var(--neon-red)"
+    },
+    {
+      id: 2,
+      title: "Що, якщо B2B клієнт (на Колізей) не буде платити рекурент?",
+      breakdown: "Ми здаємо інфраструктуру В ОРЕНДУ. Всі сервери, Telegram-боти, та бази даних належать нам. Якщо клієнт не платить 1-го числа, код вимикається 2-го числа автоматично кнопкою в нашій адмінці. Клієнту вигідно платити.",
+      color: "var(--neon-orange)"
+    },
+    {
+      id: 3,
+      title: "Я відчуваю синдром самозванця: чи маємо ми експертизу на $5,000+?",
+      breakdown: "Так. Ти продаєш не просто розробку, ти продаєш СИСТЕМУ і ЕКОСИСТЕМУ, яку СЕО тестував на Aqua 360, отримуючи $900/місяць. Їм потрібен результат, а наш Terminal/Bot підхід — це те, чого немає у 95% конкурентів. Їх відділи продажів — це динозаври.",
+      color: "var(--neon-blue)"
+    },
+    {
+      id: 4,
+      title: "Що, якщо інвестор запитає про документацію та звітність?",
+      breakdown: "У нас є фінансова модель в Excel + щомісячні звіти P&L (Profit and Loss). Усі транзакції від $10k проходять виключно у білу через перекази на ФОП/ТОВ за юридично затвердженими договорами з урахуванням податків. Повна прозорість.",
+      color: "var(--neon-green)"
+    }
+  ];
+
+  return (
+    <div className="fade-in">
+      <h2 style={{ color: '#fff', marginBottom: '15px', fontSize: '1.2rem' }}>РОЗБІР 'ЩО ЯКЩО...'</h2>
+      <p style={{ fontSize: '0.85rem', color: '#a0aec0', marginBottom: '20px' }}>
+        Які страхи заважають тобі системно качати капітал для команди через свій нетворк? Натисни на свій бар'єр, і я дам відповідь.
+      </p>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {BARRIERS.map(b => (
+          <div key={b.id} style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            <button 
+              className="cyber-button" 
+              style={{ 
+                textAlign: 'left', 
+                padding: '15px', 
+                fontSize: '0.9rem', 
+                whiteSpace: 'normal', 
+                height: 'auto',
+                borderLeft: `3px solid ${b.color}`,
+                background: selectedBarrier === b.id ? 'rgba(255,255,255,0.05)' : '#050505'
+              }}
+              onClick={() => setSelectedBarrier(selectedBarrier === b.id ? null : b.id)}
+            >
+              {b.title}
+            </button>
+            {selectedBarrier === b.id && (
+              <div 
+                className="fade-in" 
+                style={{ 
+                  background: 'rgba(0,0,0,0.8)', 
+                  border: `1px solid ${b.color}`, 
+                  color: '#fff', 
+                  padding: '15px', 
+                  borderRadius: '4px',
+                  fontSize: '0.85rem',
+                  lineHeight: '1.5',
+                  boxShadow: `0 0 10px ${b.color}33 inset`
+                }}
+              >
+                <strong>{'>'} SOLUTION FOUND:</strong><br/><br/>
+                {b.breakdown}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

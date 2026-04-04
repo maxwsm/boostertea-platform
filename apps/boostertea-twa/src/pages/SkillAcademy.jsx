@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import WebApp from '@twa-dev/sdk';
 
+import QuizFlow from './academy/QuizFlow';
+
 const Lock = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>;
 
 export default function SkillAcademy() {
   const [skillsData, setSkillsData] = useState([]);
   const [mySkills, setMySkills] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState('map'); // 'map' | 'assessment'
+  const [view, setView] = useState('map'); // 'map' | 'quiz'
+  const [quizSkillId, setQuizSkillId] = useState(null);
 
   const userId = WebApp.initDataUnsafe?.user?.id || '8009046558';
   const BACKEND_URL = import.meta.env.VITE_API_URL || '';
@@ -25,9 +28,6 @@ export default function SkillAcademy() {
       const [cats, my] = await Promise.all([p1, p2]);
       setSkillsData(cats);
       setMySkills(my);
-      
-      // If no skills selected, force assessment
-      if (my.filter(s => s.selected).length === 0) setView('assessment');
     } catch (e) {
       console.error(e);
     } finally {
@@ -35,62 +35,78 @@ export default function SkillAcademy() {
     }
   };
 
-  const handleAssessmentSubmit = async (selectedSkillIds) => {
-    try {
-      WebApp.HapticFeedback.impactOccurred('medium');
-      await fetch(`${BACKEND_URL}/api/twa/skills/select`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, skillIds: selectedSkillIds })
-      });
-      await fetchData();
-      setView('map');
-      WebApp.showAlert("Скіли обрано! +25 XP за ініціативність.");
-    } catch(e) {}
+  const handleStartQuiz = (skillId) => {
+    try { WebApp.HapticFeedback.impactOccurred('medium'); } catch(e){}
+    setQuizSkillId(skillId);
+    setView('quiz');
   };
 
   if (loading) return <div style={{textAlign:'center', marginTop:'50px'}}>...SYSTEM SCAN...</div>;
 
-  if (view === 'assessment') {
-    return <AssessmentFlow skillsData={skillsData} onSubmit={handleAssessmentSubmit} />;
+  if (view === 'quiz' && quizSkillId) {
+    return (
+      <QuizFlow 
+        selectedSkillIds={[quizSkillId]} 
+        onComplete={async () => {
+          await fetchData();
+          setView('map');
+          setQuizSkillId(null);
+          try { WebApp.showAlert("Рівень визначено!"); } catch(e){}
+        }} 
+      />
+    );
   }
-
-  const selectedSkills = mySkills.filter(s => s.selected);
 
   return (
     <div className="academy-container" style={{paddingBottom: '20px'}}>
-      <div className="section-title" style={{marginBottom: '15px'}}><span className="dot blue"></span> МОЇ УЛЬТРА СКІЛИ</div>
       
-      {selectedSkills.length === 0 && (
-        <button className="action-btn" onClick={() => setView('assessment')}>ПРОЙТИ АСЕСМЕНТ</button>
-      )}
+      <div className="section-title" style={{marginBottom: '15px'}}><span className="dot blue"></span> GLOBAL SKILL TREE</div>
+      <p style={{color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '20px', lineHeight: '1.4'}}>
+        У кожного з нас є всі скіли. Сірі скіли — не підтверджені (пройди тест). Мета — досягти хоча б <span style={{color: 'var(--neon-orange)'}}>LVL 80</span> в ключових сферах.
+      </p>
 
-      {selectedSkills.map(us => (
-        <div key={us.id} className="skill-card">
-          <div className="skill-header">
-            <span>{us.skill.name}</span>
-            <span className="skill-level">LVL {us.currentLevel}/100</span>
-          </div>
-          <div className="progress-bar-bg" style={{marginBottom: '5px'}}>
-            <div className="progress-bar-fill" style={{width: `${us.currentLevel}%`, background: 'var(--neon-blue)'}}></div>
-          </div>
-          <div style={{fontSize: '0.8rem', color: 'var(--text-muted)'}}>
-            {us.skill.description.substring(0, 60)}...
-          </div>
-        </div>
-      ))}
-
-      <div className="section-title" style={{marginTop: '30px', marginBottom: '15px'}}><span className="dot orange"></span> ВСІ КАТЕГОРІЇ (ДЕРЕВО)</div>
       <div className="skill-categories">
         {skillsData.map(cat => (
-          <div key={cat.id} className="category-block">
-            <h4>{cat.icon} {cat.name}</h4>
-            <div className="category-skills">
+          <div key={cat.id} className="category-block" style={{marginBottom: '25px'}}>
+            <h4 style={{borderBottom: '1px solid #333', paddingBottom: '5px', marginBottom: '15px', color: '#fff'}}>{cat.icon} {cat.name}</h4>
+            <div className="category-skills-grid" style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
               {cat.skills.map(skill => {
-                const isMine = selectedSkills.find(s => s.skillId === skill.id);
+                const myState = mySkills.find(s => s.skillId === skill.id) || { currentLevel: 0 };
+                const isTested = myState.currentLevel > 0;
+                
                 return (
-                  <div key={skill.id} className={`tree-skill ${isMine ? 'active' : 'locked'}`}>
-                    {skill.name} {!isMine && <Lock />}
+                  <div 
+                    key={skill.id} 
+                    className={`skill-card ${isTested ? 'active' : 'locked-skill'}`}
+                    onClick={() => !isTested && handleStartQuiz(skill.id)}
+                    style={{
+                      cursor: isTested ? 'default' : 'pointer',
+                      border: `1px solid ${isTested ? 'var(--neon-blue)' : '#444'}`,
+                      background: isTested ? 'rgba(0,0,0,0.8)' : '#050505',
+                      padding: '12px',
+                      borderRadius: '6px'
+                    }}
+                  >
+                    <div className="skill-header" style={{display: 'flex', justifyContent: 'space-between', marginBottom: '5px'}}>
+                      <span style={{fontWeight: 'bold', color: isTested ? '#fff' : '#888'}}>{skill.name}</span>
+                      {isTested ? (
+                        <span className="skill-level" style={{color: myState.currentLevel >= 80 ? 'var(--neon-green)' : 'var(--neon-blue)'}}>
+                          LVL {myState.currentLevel}/100
+                        </span>
+                      ) : (
+                        <span style={{fontSize: '0.7rem', color: 'var(--neon-orange)', border: '1px solid var(--neon-orange)', padding: '2px 4px', borderRadius: '4px'}}>
+                          ТЕСТ
+                        </span>
+                      )}
+                    </div>
+                    {isTested && (
+                      <div className="progress-bar-bg" style={{height: '6px', background: '#333'}}>
+                        <div className="progress-bar-fill" style={{width: `${myState.currentLevel}%`, background: myState.currentLevel >= 80 ? 'var(--neon-green)' : 'var(--neon-blue)'}}></div>
+                      </div>
+                    )}
+                    <div style={{fontSize: '0.75rem', color: isTested ? '#aaa' : '#555', marginTop: '6px', lineHeight: '1.3'}}>
+                      {skill.description}
+                    </div>
                   </div>
                 );
               })}
@@ -98,58 +114,8 @@ export default function SkillAcademy() {
           </div>
         ))}
       </div>
-
     </div>
   );
 }
 
-// Internal Assessment Component
-function AssessmentFlow({ skillsData, onSubmit }) {
-  const [selected, setSelected] = useState([]);
-
-  const toggleSelect = (id) => {
-    if (selected.includes(id)) setSelected(selected.filter(i => i !== id));
-    else if (selected.length < 3) setSelected([...selected, id]);
-  };
-
-  const allSkills = skillsData.flatMap(c => c.skills);
-
-  return (
-    <div className="assessment-flow">
-      <h3 style={{color: 'var(--neon-green)', marginBottom: '10px'}}>INITIATION SEQUENCE</h3>
-      <p style={{color: 'var(--text-muted)', marginBottom: '20px'}}>
-        Обери 3 ключові навички для розвитку на найближчі 14 днів. Вони впливатимуть на твої daily-задачі та ресурси.
-      </p>
-
-      <div style={{marginBottom: '20px'}}>
-        Обрано: <span style={{color: 'var(--neon-blue)'}}>{selected.length}/3</span>
-      </div>
-
-      <div className="skill-grid" style={{display: 'flex', flexDirection: 'column', gap: '10px', height: '50vh', overflowY: 'auto'}}>
-        {allSkills.map(s => (
-          <div 
-            key={s.id} 
-            className={`select-card ${selected.includes(s.id) ? 'selected' : ''}`}
-            onClick={() => toggleSelect(s.id)}
-            style={{
-              padding: '12px', border: `1px solid ${selected.includes(s.id) ? 'var(--neon-green)' : 'var(--border-dark)'}`,
-              background: selected.includes(s.id) ? 'rgba(57,255,20,0.1)' : 'rgba(0,0,0,0.5)', cursor: 'pointer'
-            }}
-          >
-            <strong>{s.name}</strong>
-            <div style={{fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px'}}>{s.description}</div>
-          </div>
-        ))}
-      </div>
-
-      <button 
-        className="action-btn" 
-        style={{marginTop: '20px'}}
-        disabled={selected.length < 1}
-        onClick={() => onSubmit(selected)}
-      >
-        ЗАФІКСУВАТИ СКІЛИ
-      </button>
-    </div>
-  );
-}
+// AssessmentFlow removed entirely as tests are now per-skill.

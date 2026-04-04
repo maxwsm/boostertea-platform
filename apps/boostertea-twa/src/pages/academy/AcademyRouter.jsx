@@ -3,6 +3,7 @@ import AcademyDashboard from './AcademyDashboard';
 import SkillAcademy from '../SkillAcademy'; // Existing skill map
 import StoicismModule from './StoicismModule';
 import MeditationRoom from './MeditationRoom';
+import TrainingModules from './TrainingModules';
 
 export default function AcademyRouter() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -16,6 +17,9 @@ export default function AcademyRouter() {
         <button className={`acad-tab ${activeTab === 'map' ? 'active' : ''}`} onClick={() => setActiveTab('map')}>
           SKILL MAP
         </button>
+        <button className={`acad-tab ${activeTab === 'library' ? 'active' : ''}`} onClick={() => setActiveTab('library')}>
+          LIBRARY
+        </button>
         <button className={`acad-tab ${activeTab === 'stoic' ? 'active' : ''}`} onClick={() => setActiveTab('stoic')}>
           STOICISM
         </button>
@@ -27,6 +31,7 @@ export default function AcademyRouter() {
       <div className="academy-content-area fade-in">
         {activeTab === 'dashboard' && <AcademyDashboard nav={setActiveTab} />}
         {activeTab === 'map' && <SkillAcademy />}
+        {activeTab === 'library' && <TrainingModules />}
         {activeTab === 'stoic' && <StoicismModule />}
         {activeTab === 'meditate' && <MeditationRoom />}
       </div>
