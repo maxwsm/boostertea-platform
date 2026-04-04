@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/twa/:path*",
+      "destination": "http://5.189.141.134:3005/api/twa/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

@@ -209,8 +209,40 @@ app.post('/orders', async (c) => {
       }
       resolvedUserId = tgUser.id;
     }
+
+    // Guest User Creation if no userId and no telegramId
+    if (!resolvedUserId) {
+      // Basic formatting to ensure phone is correct
+      const phone = body.customerPhone?.replace(/[^\d+]/g, '');
+      if (phone) {
+        let guestUser = await prisma.user.findUnique({ where: { phone } });
+        if (!guestUser && body.customerEmail) {
+           guestUser = await prisma.user.findUnique({ where: { email: body.customerEmail } });
+        }
+        if (!guestUser) {
+          guestUser = await prisma.user.create({
+            data: {
+              name: body.customerName || 'Guest User',
+              phone,
+              email: body.customerEmail ? body.customerEmail : null,
+              languageCode: 'uk'
+            }
+          });
+        }
+        resolvedUserId = guestUser.id;
+      } else {
+        // Absolute fallback if no phone (should not happen with basic validation)
+        const guestUser = await prisma.user.create({
+          data: {
+            name: body.customerName || 'Anonymous Guest',
+            languageCode: 'uk'
+          }
+        });
+        resolvedUserId = guestUser.id;
+      }
+    }
     
-    const safeUserIdStr = resolvedUserId || 'guest-user-id';
+    const safeUserIdStr = resolvedUserId;
     
     // 1. Determine active brand for this sub-order
     // 1. Multi-Brand Cart Check removed for seamless cross-brand checkout
@@ -259,26 +291,82 @@ app.post('/orders', async (c) => {
       finalTotal = Math.floor(total * 0.90); // 10% off for valid ambassador
     }
 
-    // 2. Write straight to CSV (Bypass Database)
-    const fs = require('fs');
-    const path = require('path');
-    const csvPath = path.resolve(process.cwd(), 'leads.csv');
-    
-    // Header creation if doesn't exist
-    if (!fs.existsSync(csvPath)) {
-      fs.writeFileSync(csvPath, 'Date,ClientName,Phone,Email,City,Warehouse,TotalAmount,Items\n');
+    // Ensure all products exist in DB to satisfy Foreign Key constraints
+    for (const item of body.items) {
+      let existingProduct = await prisma.product.findUnique({
+        where: { id: item.productId }
+      });
+
+      if (!existingProduct) {
+        // Upsert product from config to fix FK constraint
+        const confProd = products.find(p => p.id === item.productId) || accessoryProducts.find(a => a.id === item.productId);
+        if (confProd) {
+          const isAccessory = !!(confProd as any).subcategory;
+          await prisma.product.create({
+            data: {
+              id: confProd.id,
+              brandId: brand.id,
+              slug: confProd.slug || confProd.id,
+              nameUk: confProd.nameUk,
+              descriptionUk: confProd.descriptionUk || '',
+              price: isAccessory ? (confProd as any).price : ((confProd as any).price1L || 0),
+              image: confProd.image || '',
+              category: isAccessory ? (confProd as any).subcategory : (confProd as any).category,
+              metadata: JSON.stringify(confProd)
+            }
+          });
+        }
+      }
     }
-    
-    const itemsListStr = body.items.map((i: any) => `${i.productId}(x${i.quantity})`).join('|');
-    const csvLine = `"${new Date().toISOString()}","${body.customerName || ''}","${body.customerPhone || ''}","${body.customerEmail || ''}","${body.deliveryCity || ''}","${body.deliveryWarehouse || ''}","${finalTotal}","${itemsListStr}"\n`;
-    
-    fs.appendFileSync(csvPath, csvLine);
-    
-    const mockTransactionId = 'tx_' + Date.now();
-    const mockOrderId = 'ord_' + Date.now();
-    
-    const transaction = { id: mockTransactionId, totalAmount: finalTotal, ipAddress };
-    const order = { id: mockOrderId };
+
+    const deliveryData = JSON.stringify({
+      method: body.deliveryMethod,
+      city: body.deliveryCity,
+      cityRef: body.deliveryCityRef,
+      warehouse: body.deliveryWarehouse,
+      warehouseRef: body.deliveryWarehouseRef,
+      address: body.deliveryAddress,
+      customerName: body.customerName,
+      customerEmail: body.customerEmail,
+      customerPhone: body.customerPhone,
+    });
+
+    const transaction = await prisma.transaction.create({
+      data: {
+        userId: safeUserIdStr,
+        brandId: brand.id,
+        totalAmount: finalTotal,
+        ipAddress,
+        deviceId,
+        referredById,
+        status: 'PENDING'
+      }
+    });
+
+    const order = await prisma.order.create({
+      data: {
+        userId: safeUserIdStr,
+        brandId: brand.id,
+        transactionId: transaction.id,
+        status: 'PENDING',
+        totalAmount: finalTotal,
+        discountAmount: total - finalTotal,
+        deliveryData,
+        items: {
+          create: body.items.map((i: any) => {
+            const confProd = products.find(p => p.id === i.productId) || accessoryProducts.find(a => a.id === i.productId);
+            const isAccessory = !!(confProd as any)?.subcategory;
+            const itemPrice = isAccessory ? (confProd as any)?.price : (i.volume === '1L' ? (confProd as any)?.price1L : (confProd as any)?.price025L);
+            return {
+              productId: i.productId,
+              quantity: i.quantity,
+              priceAtBuy: itemPrice || 0,
+              variant: i.volume || 'unit'
+            };
+          })
+        }
+      }
+    });
 
     // Update telemetry for known user (Moved out of transaction to avoid blocking main path)
     if (resolvedUserId) {

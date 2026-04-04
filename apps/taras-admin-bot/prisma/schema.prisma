@@ -1,0 +1,301 @@
+// BoosterTea Command System v2.0 — Prisma Schema
+// 18 моделей. Фундамент всієї екосистеми.
+// Deploy target: start.boostertea.com.ua
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./client"
+}
+
+// DEV: SQLite (локальна розробка)
+// PROD: Переключити на PostgreSQL ↓
+// datasource db {
+//   provider = "postgresql"
+//   url      = env("DATABASE_URL")
+// }
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// ═══════════════════════════════════════════
+// БЛОК 1: ЛЮДИ
+// ═══════════════════════════════════════════
+
+model User {
+  telegramId    String    @id
+  role          String                          // "taras"|"mykyta"|"nazar"|"maks"
+  name          String    @default("")
+  royaltyCut    Float     @default(0.05)
+  totalEarned   Float     @default(0.0)
+  xpTotal       Int       @default(0)
+  level         Int       @default(1)
+  streakDays    Int       @default(0)
+  lastActiveAt  DateTime?
+  createdAt     DateTime  @default(now())
+
+  // Relations
+  ownedTasks      Task[]            @relation("TaskOwner")
+  assignedTasks   Task[]            @relation("TaskAssigner")
+  userSkills      UserSkill[]
+  skillTasksOwned SkillTask[]       @relation("SkillTaskOwner")
+  chatMessages    ChatMessage[]
+  createdContacts Contact[]         @relation("ContactCreator")
+  penalties       Penalty[]
+  achievements    UserAchievement[]
+  dailyReports    DailyReport[]
+  resourceChecks  UserResource[]
+}
+
+// ═══════════════════════════════════════════
+// БЛОК 2: ЗАДАЧІ (3+2 СИСТЕМА)
+// ═══════════════════════════════════════════
+
+model Task {
+  id            String    @id @default(uuid())
+  day           Int
+  text          String
+  done          Boolean   @default(false)
+  completedAt   DateTime?
+  proofFileId   String?
+  proofType     String?                         // "photo"|"document"|"video"
+
+  // Хто виконує
+  ownerId       String
+  owner         User      @relation("TaskOwner", fields: [ownerId], references: [telegramId], onDelete: Cascade)
+
+  // Перехресна система 3+2
+  type          String    @default("primary")   // "primary"|"assigned"
+  assignedById  String?
+  assignedBy    User?     @relation("TaskAssigner", fields: [assignedById], references: [telegramId])
+  assignedAt    DateTime?
+
+  // Оцінка (той хто призначив оцінює)
+  rating        Int?
+  ratingComment String?
+
+  // Skill tags (M2M через junction)
+  skillTags     TaskSkillTag[]
+
+  createdAt     DateTime  @default(now())
+}
+
+model TaskSkillTag {
+  id        String  @id @default(uuid())
+  taskId    String
+  task      Task    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  skillId   String
+  skill     Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, skillId])
+}
+
+// ═══════════════════════════════════════════
+// БЛОК 3: СКІЛИ ТА РОЗВИТОК
+// ═══════════════════════════════════════════
+
+model SkillCategory {
+  id          String    @id @default(uuid())
+  slug        String    @unique
+  name        String
+  icon        String
+  sortOrder   Int       @default(0)
+  skills      Skill[]
+}
+
+model Skill {
+  id            String          @id @default(uuid())
+  slug          String          @unique
+  name          String
+  description   String          @default("")
+  tier          String                            // "base"|"mid"|"pro"
+  categoryId    String
+  category      SkillCategory   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  userSkills    UserSkill[]
+  skillTasks    SkillTask[]
+  taskTags      TaskSkillTag[]
+  resources     Resource[]
+}
+
+model UserSkill {
+  id            String    @id @default(uuid())
+  userId        String
+  skillId       String
+  user          User      @relation(fields: [userId], references: [telegramId], onDelete: Cascade)
+  skill         Skill     @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  selected      Boolean   @default(false)
+  initialLevel  Int       @default(0)             // 0-100 від assessment
+  currentLevel  Int       @default(0)             // 0-100 поточний
+  xp            Int       @default(0)
+  startedAt     DateTime  @default(now())
+  lastPracticedAt DateTime?
+
+  @@unique([userId, skillId])
+}
+
+model SkillTask {
+  id            String    @id @default(uuid())
+  day           Int
+  text          String
+  description   String    @default("")
+  aiHint        String?
+  targetRole    String                            // "taras"|"mykyta"|"nazar"
+  skillId       String
+  skill         Skill     @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  xpReward      Int       @default(25)
+  done          Boolean   @default(false)
+  completedAt   DateTime?
+  ownerId       String?
+  owner         User?     @relation("SkillTaskOwner", fields: [ownerId], references: [telegramId])
+}
+
+// ═══════════════════════════════════════════
+// БЛОК 4: РЕСУРСИ ТА НАДИВЛЕНІСТЬ
+// ═══════════════════════════════════════════
+
+model Resource {
+  id            String    @id @default(uuid())
+  type          String                            // "youtube"|"app"|"account"|"book"|"article"
+  name          String
+  url           String?
+  description   String    @default("")
+  thumbnailUrl  String?
+  targetRole    String                            // "taras"|"mykyta"|"nazar"|"all"
+  skillId       String?
+  skill         Skill?    @relation(fields: [skillId], references: [id])
+  priority      Int       @default(0)
+  userResources UserResource[]
+}
+
+model UserResource {
+  id            String    @id @default(uuid())
+  userId        String
+  resourceId    String
+  user          User      @relation(fields: [userId], references: [telegramId], onDelete: Cascade)
+  resource      Resource  @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  status        String    @default("pending")     // "pending"|"done"|"skipped"
+  completedAt   DateTime?
+  notes         String?
+
+  @@unique([userId, resourceId])
+}
+
+// ═══════════════════════════════════════════
+// БЛОК 5: КОНТАКТИ (СПІЛЬНА CRM)
+// ═══════════════════════════════════════════
+
+model Contact {
+  id            String    @id @default(uuid())
+  name          String
+  phone         String?
+  email         String?
+  company       String?
+  contactRole   String?                           // "supplier"|"partner"|"client"|"investor"|"legal"
+  category      String                            // "packaging"|"ingredients"|"logistics"|"legal"|"printing"|"production"
+  description   String    @default("")
+  notes         String    @default("")
+  tags          String    @default("[]")          // JSON array
+  lastContactAt DateTime?
+  createdById   String
+  createdBy     User      @relation("ContactCreator", fields: [createdById], references: [telegramId])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// ═══════════════════════════════════════════
+// БЛОК 6: AI ЧАТИ (ІСТОРІЯ РОЗМОВ)
+// ═══════════════════════════════════════════
+
+model ChatMessage {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [telegramId], onDelete: Cascade)
+  msgRole       String                            // "user"|"assistant"
+  content       String
+  context       String?
+  tokensUsed    Int?
+  sessionId     String
+  createdAt     DateTime  @default(now())
+}
+
+// ═══════════════════════════════════════════
+// БЛОК 7: МОТИВАЦІЯ / ШТРАФИ / ДОСЯГНЕННЯ
+// ═══════════════════════════════════════════
+
+model Penalty {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [telegramId], onDelete: Cascade)
+  type          String                            // "missed_deadline"|"no_proof"|"no_assign"|"late"
+  description   String
+  xpPenalty     Int       @default(0)
+  day           Int
+  acknowledged  Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+}
+
+model Achievement {
+  id            String    @id @default(uuid())
+  slug          String    @unique
+  name          String
+  description   String
+  icon          String
+  xpReward      Int       @default(50)
+  condition     String                            // JSON опис умов
+  users         UserAchievement[]
+}
+
+model UserAchievement {
+  id            String    @id @default(uuid())
+  userId        String
+  achievementId String
+  user          User      @relation(fields: [userId], references: [telegramId], onDelete: Cascade)
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  earnedAt      DateTime  @default(now())
+
+  @@unique([userId, achievementId])
+}
+
+model Milestone {
+  id            String    @id @default(uuid())
+  title         String
+  description   String
+  targetDay     Int
+  milestoneType String    @default("team")        // "team"|"personal"
+  targetRole    String?
+  achieved      Boolean   @default(false)
+  achievedAt    DateTime?
+  metrics       String?                           // JSON KPI
+}
+
+// ═══════════════════════════════════════════
+// БЛОК 8: ЩОДЕННІ ЗВІТИ
+// ═══════════════════════════════════════════
+
+model DailyReport {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [telegramId], onDelete: Cascade)
+  day           Int
+  primaryDone   Int       @default(0)
+  assignedDone  Int       @default(0)
+  skillDone     Int       @default(0)
+  xpEarned      Int       @default(0)
+  xpLost        Int       @default(0)
+  mood          String?
+  blockers      String?
+  wins          String?
+  createdAt     DateTime  @default(now())
+
+  @@unique([userId, day])
+}
+
+// ═══════════════════════════════════════════
+// БЛОК 9: СИСТЕМНІ НАЛАШТУВАННЯ
+// ═══════════════════════════════════════════
+
+model Settings {
+  key           String    @id
+  value         String
+  updatedAt     DateTime  @default(now()) @updatedAt
+}

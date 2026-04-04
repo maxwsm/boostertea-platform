@@ -1,608 +1,564 @@
+// BoosterTea Command System v2.0 — Main Orchestrator
+// Deploy: start.boostertea.com.ua
 require('dotenv').config();
 const { Telegraf, Markup } = require('telegraf');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const cron = require('node-cron');
 const express = require('express');
 const cors = require('cors');
-const fs = require('fs');
-const path = require('path');
-const { TASKS } = require('./tasks14days');
-const { BOOSTERTEA_CONTEXT } = require('./boostertea_context');
+const crypto = require('crypto');
+const uuidv4 = () => crypto.randomUUID();
 
-// ─── ENV ─────────────────────────────────────────────────────────────────────
-const BOT_TOKEN   = process.env.BOT_TOKEN;
-const GEMINI_KEY  = process.env.GEMINI_API_KEY;
-const ADMIN_ID    = process.env.ADMIN_ID;
-const PORT        = process.env.PORT || 3005;
+const { TASKS: RAW_TASKS } = require('./tasks14days');
+let TASKS = JSON.parse(JSON.stringify(RAW_TASKS));
+const { getRagContext } = require('./boostertea_context');
+const { MANIFEST_TEXT } = require('./lib/manifest');
+const { ROLES, TEAM_ROLES, getRoleByUserId, getUserByRole, getCurrentDay, getDayProgress, getDayPercent, broadcastToTeam, getOtherTeamRoles } = require('./lib/helpers');
+const { random, GREETINGS, DONE_PHRASES, PUSH_PHRASES, FULL_DONE_PHRASES, ASSIGN_REMINDERS } = require('./lib/phrases');
+const { WAITING_PHRASES } = require('./lib/valera_phrases');
+const { addXP, XP_REWARDS, XP_PENALTIES, checkAchievements } = require('./lib/xp');
+const { setupAPI } = require('./api/routes');
 
+// ─── ENV ────────────────────────────────────────────
+const BOT_TOKEN  = process.env.BOT_TOKEN;
+const GEMINI_KEY = process.env.GEMINI_API_KEY;
+const ADMIN_ID   = process.env.ADMIN_ID;
+const PORT       = process.env.PORT || 3005;
 if (!BOT_TOKEN) { console.error('❌ BOT_TOKEN відсутній!'); process.exit(1); }
 
-// ─── STATE (JSON файл замість БД) ────────────────────────────────────────────
-const STATE_FILE = path.join(__dirname, 'state.json');
+// ─── PRISMA ─────────────────────────────────────────
+const { PrismaClient } = require('./prisma/client');
+const prisma = new PrismaClient();
 
-function loadState() {
-  if (!fs.existsSync(STATE_FILE)) return { members: {}, progress: {}, currentDay: 1, startDate: null };
-  return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-}
-
-function saveState(state) {
-  fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
-}
-
-let state = loadState();
-
-// ─── Gemini ───────────────────────────────────────────────────────────────────
-let gemini = null;
+// ─── GEMINI ─────────────────────────────────────────
 let geminiModel = null;
 if (GEMINI_KEY) {
-  gemini = new GoogleGenerativeAI(GEMINI_KEY);
-  geminiModel = gemini.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const gemini = new GoogleGenerativeAI(GEMINI_KEY);
+  geminiModel = gemini.getGenerativeModel({ model: 'gemini-2.5-flash' });
 }
 
-async function askGemini(userMessage, extraContext = '') {
+async function askGemini(userId, userMessage, extraContext = '') {
   if (!geminiModel) return null;
   try {
-    const prompt = `${BOOSTERTEA_CONTEXT}\n\n${extraContext}\n\nПовідомлення від учасника команди: "${userMessage}"\n\nВідповідай коротко, чітко, українською мовою, у стилі дружнього наставника-мотиватора з гумором.`;
+    // Get last 10 messages for context
+    const history = await prisma.chatMessage.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    });
+    const historyText = history.reverse().map(m => `${m.msgRole === 'user' ? 'User' : 'AI'}: ${m.content}`).join('\n');
+
+    const dynamicContext = getRagContext(userMessage);
+    const prompt = `${dynamicContext}\n\n${extraContext}\n\nІсторія розмови:\n${historyText}\n\nПовідомлення: "${userMessage}"\n\nВідповідай коротко, чітко, українською.`;
     const result = await geminiModel.generateContent(prompt);
-    return result.response.text();
+    const answer = result.response.text();
+
+    // Save both messages
+    const sessionId = history[0]?.sessionId || uuidv4();
+    await prisma.chatMessage.createMany({
+      data: [
+        { userId, msgRole: 'user', content: userMessage, context: extraContext, sessionId },
+        { userId, msgRole: 'assistant', content: answer, sessionId },
+      ],
+    });
+
+    return answer;
   } catch (e) {
     console.error('Gemini error:', e.message);
     return null;
   }
 }
 
-// ─── HELPERS ──────────────────────────────────────────────────────────────────
-const ROLES = { taras: 'Тарас', mykyta: 'Микита', nazar: 'Назар' };
-
-function getRoleByUserId(userId) {
-  const s = loadState();
-  for (const [role, mid] of Object.entries(s.members)) {
-    if (mid && mid.toString() === userId.toString()) return role;
-  }
-  return null;
-}
-
-function getCurrentDay() {
-  const s = loadState();
-  if (!s.startDate) return null;
-  const diffMs = Date.now() - new Date(s.startDate).getTime();
-  const day = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
-  return Math.min(day, 14);
-}
-
-function getDayProgress(day) {
-  const s = loadState();
-  const key = `day${day}`;
-  return s.progress[key] || {};
-}
-
-function markTaskDone(day, taskId, proof) {
-  const s = loadState();
-  const key = `day${day}`;
-  if (!s.progress[key]) s.progress[key] = {};
-  s.progress[key][taskId] = { done: true, proof, ts: new Date().toISOString() };
-  saveState(s);
-}
-
-function getDayPercent(day) {
-  const dayTasks = TASKS[day]?.tasks || [];
-  const progress = getDayProgress(day);
-  const done = dayTasks.filter(t => progress[t.id]?.done).length;
-  return { done, total: dayTasks.length, pct: Math.round((done / dayTasks.length) * 100) };
-}
-
-function getRandomPhrase(phrases) {
-  return phrases[Math.floor(Math.random() * phrases.length)];
-}
-
-const GREETINGS = [
-  "О, привіт, хуйлуша 😂 Чим можу допомогти?",
-  "Йоу! Що хочеш, красавчику? 🫡",
-  "Опа, живий! Давай, що там у тебе?",
-  "Привіт, бро! BoosterTea не спить 😤",
-  "Хей! Готовий до роботи? Тому що я — завжди 🔥",
-];
-
-const DONE_PHRASES = [
-  "КРАСАВА! 🔥 Задача зарахована, летиш як ракета!",
-  "Оце так! Залік, бро. Один-нуль на твою користь 💪",
-  "Так держати! Ще 4 такі й ти легенда дня 😎",
-  "Молодець! Дивись, не зупиняйся, бо розмах є 🚀",
-];
-
-const PUSH_PHRASES = [
-  "Слухай, ну шо ти гальмуєш?! До 16:00 лишилось МАЛО, а задачі не зроблені! Давай, не їбе нікаких відмазок! 😤",
-  "Ей, ти там живий? Задачі самі себе не зроблять, чуєш?! Вставай і рухайся 🔥",
-  "Шо за хєрня, бро?! 60% не виконано і ти мовчиш?! Ану піднімай дупу і їбаш! ⚡️",
-  "Стоп! Нагадую — єдиний виняток від задач: СМЕРТЬ. Ти живий? Живий. То йди і роби! 💀➡️🔥",
-];
-
-const FULL_DONE_PHRASES = [
-  "ЛЕГЕНДА! 🏆 Всі 5 задач виконані до 16:00! Сьогодні ти — КРАЩИЙ!",
-  "ОТО ЙО! 🎉 5 з 5! Команда, дивіться на цього звіра 🦁",
-  "ТОПЧИК! Всі задачі в дзвіночку! Завтра ще крутіше! 🚀",
-];
-
-// ─── BOT ──────────────────────────────────────────────────────────────────────
-const bot = new Telegraf(BOT_TOKEN);
-
-// /start — отримати свій ID + вибрати роль
-bot.start(async (ctx) => {
-  const userId = ctx.from.id.toString();
-  const name = ctx.from.first_name;
-  ctx.reply(
-    `${getRandomPhrase(GREETINGS)}\n\n` +
-    `Привіт, *${name}*! Ласкаво просимо в BoosterTea Control Bot 🍵\n\n` +
-    `Твій Telegram ID: \`${userId}\`\n\n` +
-    `Скинь цей ID Тарасу, щоб він прив'язав тебе до ролі.\n\n` +
-    `Якщо ти вже прив'язаний — напиши /tasks щоб побачити свої задачі на сьогодні.`,
-    { parse_mode: 'Markdown' }
-  );
-});
-
-// /setmember — для адміна: прив'язати ID до ролі
-bot.command('setmember', async (ctx) => {
-  const userId = ctx.from.id.toString();
-  if (userId !== ADMIN_ID) return ctx.reply("❌ Тільки адмін може це робити.");
-  
-  const parts = ctx.message.text.split(' ');
-  if (parts.length < 3) return ctx.reply("Формат: /setmember <роль> <ID>\nРолі: taras | mykyta | nazar\nПриклад: /setmember nazar 123456789");
-  
-  const role = parts[1].toLowerCase();
-  const memberId = parts[2];
-  
-  if (!['taras', 'mykyta', 'nazar'].includes(role)) return ctx.reply("❌ Невідома роль. Доступні: taras | mykyta | nazar");
-  
-  state = loadState();
-  if (!state.members) state.members = {};
-  state.members[role] = memberId;
-  saveState(state);
-  
-  ctx.reply(`✅ Роль *${ROLES[role]}* прив'язана до ID ${memberId}!`, { parse_mode: 'Markdown' });
-  
-  try {
-    await bot.telegram.sendMessage(memberId, 
-      `Привіт! 🍵 Тарас додав тебе до команди BoosterTea Control Bot як *${ROLES[role]}*!\n\nПиши /tasks щоб бачити свої задачі.`,
-      { parse_mode: 'Markdown' }
-    );
-  } catch(e) {}
-});
-
-// /startplan — для адміна: запустити 14-денний план
-bot.command('startplan', async (ctx) => {
-  const userId = ctx.from.id.toString();
-  if (userId !== ADMIN_ID) return ctx.reply("❌ Тільки адмін може це робити.");
-  
-  state = loadState();
-  state.startDate = new Date().toISOString();
-  state.progress = {};
-  saveState(state);
-  
-  await broadcastToTeam(
-    `🚀 *14-ДЕННИЙ ПЛАН СТАРТУВАВ!*\n\n` +
-    `Сьогодні — *День 1*.\n` +
-    `${TASKS[1].theme}\n\n` +
-    `Пишіть /tasks щоб побачити свої задачі. Виконання підтверджується фото або документом прямо в боті.\n\n` +
-    `Дедлайн щодня: *16:00*. Виняток — смерть. В усіх інших випадках: 5 задач або смерть 😤🔥`
-  );
-  
-  ctx.reply("✅ 14-денний план запущено! Команда отримала сповіщення.");
-});
-
-// /tasks — задачі на поточний день для конкретного учасника
-bot.command('tasks', async (ctx) => {
-  const userId = ctx.from.id.toString();
-  const role = getRoleByUserId(userId);
-  const day = getCurrentDay();
-  
-  if (!day) return ctx.reply("⏳ 14-денний план ще не запущено. Чекай на команду від Тараса.");
-  if (!role) return ctx.reply("❌ Тебе ще не прив'язано до ролі. Скинь свій ID Тарасу (/start щоб отримати ID).");
-  
-  const dayData = TASKS[day];
-  if (!dayData) return ctx.reply("🏆 14-денний план завершено! Ти — легенда.");
-  
-  const myTasks = dayData.tasks.filter(t => t.owner === role);
-  const progress = getDayProgress(day);
-  
-  let msg = `📋 *${dayData.theme}*\n\n`;
-  msg += `Привіт, *${ROLES[role]}*! Твої задачі на сьогодні:\n\n`;
-  
-  myTasks.forEach((t, i) => {
-    const done = progress[t.id]?.done;
-    msg += `${done ? '✅' : '🔲'} *Задача ${i + 1}:*\n${t.text}\n\n`;
-  });
-  
-  const { done, total } = getDayPercent(day);
-  msg += `━━━━━━━━━━━━━━━\n📊 Прогрес команди: ${done}/${total} задач виконано`;
-  
-  await ctx.reply(msg, { parse_mode: 'Markdown' });
-  await ctx.reply("Щоб підтвердити задачу — надішли фото або документ і вкажи номер задачі командою:\n/done <номер задачі>\n\nПісля цього прикріпи фото/документ.");
-});
-
-// Стан очікування підтвердження задачі
-const pendingConfirm = {};
-
-// /done — позначити задачу як виконану (потім чекаємо фото)
-bot.command('done', async (ctx) => {
-  const userId = ctx.from.id.toString();
-  const role = getRoleByUserId(userId);
-  const day = getCurrentDay();
-  
-  if (!day || !role) return ctx.reply("❌ Роль не визначена або план не запущено.");
-  
-  const parts = ctx.message.text.split(' ');
-  if (parts.length < 2) return ctx.reply("Формат: /done <номер задачі>\nПриклад: /done 3");
-  
-  const taskNum = parseInt(parts[1]) - 1;
-  const myTasks = TASKS[day].tasks.filter(t => t.owner === role);
-  
-  if (taskNum < 0 || taskNum >= myTasks.length) {
-    return ctx.reply(`❌ Невірний номер. У тебе ${myTasks.length} задачі на сьогодні.`);
-  }
-  
-  const task = myTasks[taskNum];
-  const progress = getDayProgress(day);
-  
-  if (progress[task.id]?.done) {
-    return ctx.reply("✅ Ця задача вже зарахована! Красавчик.");
-  }
-  
-  // Зберігаємо очікування фото
-  pendingConfirm[userId] = { day, taskId: task.id, taskText: task.text };
-  
-  await ctx.reply(
-    `⏳ Задача "${task.text.substring(0, 60)}..."\n\nТепер надішли фото або документ як підтвердження виконання. Без пруфу — не зарахую 😤`,
-    { parse_mode: 'Markdown' }
-  );
-});
-
-// Обробка фото — підтвердження задачі
-bot.on('photo', async (ctx) => {
-  const userId = ctx.from.id.toString();
-  const role = getRoleByUserId(userId);
-  
-  if (!pendingConfirm[userId]) {
-    // Якщо немає очікуваної задачі — просто відповідаємо
-    return ctx.reply("Красиве фото 📸 Але якщо хочеш підтвердити задачу — спочатку напиши /done <номер>");
-  }
-  
-  const { day, taskId, taskText } = pendingConfirm[userId];
-  const fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
-  
-  markTaskDone(day, taskId, { type: 'photo', fileId });
-  delete pendingConfirm[userId];
-  
-  const { done, total, pct } = getDayPercent(day);
-  
-  await ctx.reply(`${getRandomPhrase(DONE_PHRASES)}\n\n📊 Прогрес дня: ${done}/${total} (${pct}%)`);
-  
-  // Якщо всі виконані
-  if (done === total) {
-    await broadcastToTeam(`🏆 *ВСІХ ЗАДАЧ ДНЯ ${day} ВИКОНАНО!*\n\n${getRandomPhrase(FULL_DONE_PHRASES)}\n\nЗавтра — день ${day + 1}. Відпочиньте трохи і готуйтесь 🔥`);
-    return;
-  }
-  
-  // Оповістити адміна
-  if (ADMIN_ID && userId !== ADMIN_ID) {
+// ─── TASK OVERRIDES ─────────────────────────────────
+async function reloadTaskOverrides() {
+  const s = await prisma.settings.findUnique({ where: { key: 'task_overrides' } });
+  TASKS = JSON.parse(JSON.stringify(RAW_TASKS));
+  if (s) {
     try {
-      await bot.telegram.sendMessage(ADMIN_ID, 
-        `✅ *${ROLES[role]}* підтвердив задачу дня ${day}:\n"${taskText.substring(0, 80)}..."\n\nПрогрес: ${done}/${total}`,
-        { parse_mode: 'Markdown' }
-      );
+      const overrides = JSON.parse(s.value);
+      for (const day in TASKS) {
+        TASKS[day].tasks.forEach(t => { if (overrides[t.id]) t.owner = overrides[t.id]; });
+      }
     } catch(e) {}
   }
-});
+}
+reloadTaskOverrides().catch(console.error);
 
-// Обробка документів — підтвердження задачі
-bot.on('document', async (ctx) => {
-  const userId = ctx.from.id.toString();
-  const role = getRoleByUserId(userId);
-  
-  if (!pendingConfirm[userId]) {
-    return ctx.reply("Документ прийнято 📄 Якщо хочеш підтвердити задачу — спочатку /done <номер>");
+// ─── KEYBOARD ───────────────────────────────────────
+function getMainKeyboard(isAdmin) {
+  const buttons = [
+    [Markup.button.webApp("⚡ ВБІГТИ В MISSION CONTROL", "https://boostertea-twa.vercel.app")],
+    [Markup.button.callback('📜 Кодекс', 'menu_manifest'), Markup.button.callback('🧠 ШІ-Ментор', 'menu_ai')],
+    [Markup.button.callback('📋 Задачі', 'menu_tasks'), Markup.button.callback('📊 Прогрес', 'menu_progress')],
+  ];
+  if (isAdmin) {
+    buttons.push([Markup.button.callback('📈 Звіт', 'menu_report'), Markup.button.callback('👥 Екіпаж', 'menu_team')]);
+    buttons.push([Markup.button.callback('🚀 Старт Програми', 'menu_startplan')]);
   }
-  
-  const { day, taskId, taskText } = pendingConfirm[userId];
-  const fileId = ctx.message.document.file_id;
-  
-  markTaskDone(day, taskId, { type: 'document', fileId });
-  delete pendingConfirm[userId];
-  
-  const { done, total, pct } = getDayPercent(day);
-  
-  await ctx.reply(`${getRandomPhrase(DONE_PHRASES)}\n\n📊 Прогрес дня: ${done}/${total} (${pct}%)`);
-  
-  if (done === total) {
-    await broadcastToTeam(`🏆 *ВСІХ ЗАДАЧ ДНЯ ${day} ВИКОНАНО!*\n\n${getRandomPhrase(FULL_DONE_PHRASES)}`);
-  }
-});
-
-// /progress — загальний прогрес дня для всіх
-bot.command('progress', async (ctx) => {
-  const day = getCurrentDay();
-  if (!day) return ctx.reply("⏳ План ще не запущено.");
-  
-  const s = loadState();
-  const progress = getDayProgress(day);
-  const dayData = TASKS[day];
-  
-  let msg = `📊 *Прогрес — День ${day}: ${dayData.theme}*\n\n`;
-  
-  for (const role of ['taras', 'mykyta', 'nazar']) {
-    const myTasks = dayData.tasks.filter(t => t.owner === role);
-    const doneTasks = myTasks.filter(t => progress[t.id]?.done);
-    msg += `*${ROLES[role]}:* ${doneTasks.length}/${myTasks.length} задач `;
-    msg += doneTasks.length === myTasks.length ? '✅' : '🔲';
-    msg += '\n';
-  }
-  
-  const { done, total, pct } = getDayPercent(day);
-  msg += `\n━━━━━━━━━━━━━━━\n🔥 Загалом: ${done}/${total} (${pct}%)`;
-  
-  await ctx.reply(msg, { parse_mode: 'Markdown' });
-});
-
-// /ask — запитати Gemini (AI-наставник)
-bot.command('ask', async (ctx) => {
-  const userId = ctx.from.id.toString();
-  const role = getRoleByUserId(userId);
-  const day = getCurrentDay();
-  
-  const question = ctx.message.text.replace('/ask', '').trim();
-  if (!question) return ctx.reply("Напиши питання після команди: /ask <твоє питання>\nНаприклад: /ask як краще написати ТЗ на дизайн упаковки?");
-  
-  await ctx.reply("🤔 Думаю...");
-  
-  const extraContext = role && day ? 
-    `Учасник: ${ROLES[role]}. Поточний день плану: ${day}. Тема дня: ${TASKS[day]?.theme}` : '';
-  
-  const answer = await askGemini(question, extraContext);
-  
-  if (answer) {
-    await ctx.reply(`🧠 *BoosterTea AI:*\n\n${answer}`, { parse_mode: 'Markdown' });
-  } else {
-    await ctx.reply("❌ Gemini зараз недоступний. Перевір GEMINI_API_KEY у .env");
-  }
-});
-
-// /report — звіт про конкретний день (адмін)
-bot.command('report', async (ctx) => {
-  const userId = ctx.from.id.toString();
-  if (userId !== ADMIN_ID) return ctx.reply("❌ Тільки для адміна.");
-  
-  const day = getCurrentDay();
-  if (!day) return ctx.reply("⏳ План не запущено.");
-  
-  const progress = getDayProgress(day);
-  const dayData = TASKS[day];
-  
-  let msg = `📋 *Детальний звіт — День ${day}*\n\n`;
-  
-  for (const task of dayData.tasks) {
-    const done = progress[task.id]?.done;
-    const owner = ROLES[task.owner];
-    msg += `${done ? '✅' : '❌'} [${owner}] ${task.text.substring(0, 70)}...\n\n`;
-  }
-  
-  await ctx.reply(msg, { parse_mode: 'Markdown' });
-});
-
-// /team — список команди
-bot.command('team', async (ctx) => {
-  const userId = ctx.from.id.toString();
-  if (userId !== ADMIN_ID) return ctx.reply("❌ Тільки для адміна.");
-  
-  const s = loadState();
-  const members = s.members || {};
-  let msg = `👥 *Команда BoosterTea:*\n\n`;
-  msg += `*Тарас:* ${members.taras || '❌ не прив'язано'}\n`;
-  msg += `*Микита:* ${members.mykyta || '❌ не прив'язано'}\n`;
-  msg += `*Назар:* ${members.nazar || '❌ не прив'язано'}\n`;
-  msg += `\n*Адмін ID:* ${ADMIN_ID}`;
-  
-  await ctx.reply(msg, { parse_mode: 'Markdown' });
-});
-
-// Загальна обробка текстових повідомлень → Gemini
-bot.on('text', async (ctx) => {
-  const text = ctx.message.text;
-  if (text.startsWith('/')) return; // пропускаємо команди
-  
-  // Якщо питання у вільній формі — відповідає Gemini
-  const userId = ctx.from.id.toString();
-  const role = getRoleByUserId(userId);
-  const day = getCurrentDay();
-  
-  const extraContext = role && day ? 
-    `Учасник: ${ROLES[role]}. День плану: ${day}. Тема: ${TASKS[day]?.theme}` : '';
-  
-  const answer = await askGemini(text, extraContext);
-  if (answer) {
-    await ctx.reply(`🧠 ${answer}`, { parse_mode: 'Markdown' });
-  }
-});
-
-// ─── BROADCAST HELPER ─────────────────────────────────────────────────────────
-async function broadcastToTeam(message) {
-  const s = loadState();
-  const members = s.members || {};
-  const ids = new Set([...Object.values(members), ADMIN_ID].filter(Boolean));
-  
-  for (const id of ids) {
-    try {
-      await bot.telegram.sendMessage(id, message, { parse_mode: 'Markdown' });
-    } catch(e) {
-      console.error(`Broadcast error to ${id}:`, e.message);
-    }
-  }
+  return Markup.inlineKeyboard(buttons);
 }
 
-// ─── CRON JOBS — нагадування ─────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════
+// BOT HANDLERS
+// ═══════════════════════════════════════════════════
+const bot = new Telegraf(BOT_TOKEN);
 
-// 08:00 — ранкове збудження + задачі дня
-cron.schedule('0 8 * * *', async () => {
-  const day = getCurrentDay();
-  if (!day) return;
+// /start
+bot.start(async (ctx) => {
+  const userId = ctx.from.id.toString();
+  
+  // Приховати стару клавіатуру:
+  try {
+    const tmp = await ctx.reply("...", Markup.removeKeyboard());
+    await ctx.deleteMessage(tmp.message_id);
+  } catch(e) {}
+
+  const captionText = `*[ SYSTEM INITIALIZED: BOOSTERTEA v2.0 ]*\n\nВітаю в мережі 13WSMƐI, *${ctx.from.first_name}*.\n\nТи підключений до закритої магістралі управління. Тут немає лояльності до слабкостей, тільки чистий першопринцип. Я контролюю логіку та KPI. Ти контролюєш реальність.\n\nТвій ID: \`${userId}\`\nВибери модуль і почни зміну:`;
+  try {
+    await ctx.replyWithPhoto(
+      { source: '/Users/ANTI 001/wsm-ecosystem/apps/boostertea-twa/public/bg-dark.png' },
+      { parse_mode: 'Markdown', caption: captionText, ...getMainKeyboard(userId === ADMIN_ID) }
+    );
+  } catch(e) {
+    console.error("Photo send failed, fallback to text", e);
+    await ctx.reply(captionText, { parse_mode: 'Markdown', ...getMainKeyboard(userId === ADMIN_ID) });
+  }
+});
+
+// 📜 Маніфест
+bot.action('menu_manifest', async (ctx) => {
+  await ctx.answerCbQuery();
+  ctx.reply(MANIFEST_TEXT, { parse_mode: 'Markdown' });
+});
+
+// /setmember
+bot.command('setmember', async (ctx) => {
+  if (ctx.from.id.toString() !== ADMIN_ID) return ctx.reply("❌ Тільки адмін.");
+  const parts = ctx.message.text.split(' ');
+  if (parts.length < 3) return ctx.reply("Формат: /setmember <роль> <ID>\nРолі: taras | mykyta | nazar | maks");
+  const [, role, memberId] = parts;
+  if (!ROLES[role]) return ctx.reply("❌ Невідома роль.");
+  await prisma.user.upsert({ where: { telegramId: memberId }, update: { role }, create: { telegramId: memberId, role, name: ROLES[role] } });
+  ctx.reply(`✅ *${ROLES[role]}* → ID ${memberId}`, { parse_mode: 'Markdown' });
+  try { await bot.telegram.sendMessage(memberId, `✅ Тебе додано як *${ROLES[role]}*!`, { parse_mode: 'Markdown' }); } catch(e) {}
+});
+
+// /reassign
+bot.command('reassign', async (ctx) => {
+  if (ctx.from.id.toString() !== ADMIN_ID) return ctx.reply("❌ Тільки адмін.");
+  const parts = ctx.message.text.split(' ');
+  if (parts.length < 3) return ctx.reply("Формат: /reassign <taskId> <нова_роль>");
+  const [, taskId, newRole] = parts;
+  if (!ROLES[newRole]) return ctx.reply("❌ Невідома роль.");
+  const s = await prisma.settings.findUnique({ where: { key: 'task_overrides' } });
+  let overrides = {}; if (s) { try { overrides = JSON.parse(s.value); } catch(e){} }
+  overrides[taskId] = newRole;
+  await prisma.settings.upsert({ where: { key: 'task_overrides' }, update: { value: JSON.stringify(overrides) }, create: { key: 'task_overrides', value: JSON.stringify(overrides) } });
+  await reloadTaskOverrides();
+  ctx.reply(`✅ Задачу ${taskId} → ${ROLES[newRole]}`);
+});
+
+// /startplan
+const startplanHandler = async (ctx) => {
+  if (ctx.from.id.toString() !== ADMIN_ID) return ctx.reply("❌ Тільки адмін.");
+  await prisma.settings.upsert({ where: { key: 'startDate' }, update: { value: new Date().toISOString() }, create: { key: 'startDate', value: new Date().toISOString() } });
+  await broadcastToTeam(bot, prisma, ADMIN_ID, `🚀 *14-ДЕННИЙ ПЛАН СТАРТУВАВ!*\n\nДень 1: ${TASKS[1].theme}\n\nДедлайн щодня: *16:00*. 5 задач. Без виключень 😤🔥`);
+  ctx.reply("✅ План запущено!", { ...getMainKeyboard(true) });
+};
+
+// 📋 Мої задачі (3🔵 + 2🟠)
+const tasksHandler = async (ctx) => {
+  const userId = ctx.from.id.toString();
+  const role = await getRoleByUserId(prisma, userId);
+  const day = await getCurrentDay(prisma);
+  if (!day) return ctx.reply("⏳ План ще не запущено.");
+  if (!role) return ctx.reply("❌ Тебе ще не прив'язано.");
   const dayData = TASKS[day];
-  if (!dayData) return;
-  
-  const s = loadState();
-  const members = s.members || {};
-  
-  for (const [role, userId] of Object.entries(members)) {
-    if (!userId) continue;
-    const myTasks = dayData.tasks.filter(t => t.owner === role);
-    let msg = `☀️ *Доброго ранку, ${ROLES[role]}!*\n\n`;
-    msg += `День ${day}: ${dayData.theme}\n\n`;
-    msg += `*Твої 5 задач на сьогодні:*\n\n`;
-    myTasks.forEach((t, i) => {
-      msg += `${i + 1}. ${t.text}\n\n`;
+  if (!dayData) return ctx.reply("🏆 14-денний план завершено!");
+
+  // Primary tasks
+  const myTasks = dayData.tasks.filter(t => t.owner === role);
+  const progress = await getDayProgress(prisma, day);
+
+  // Assigned tasks (from other team members)
+  const assignedTasks = await prisma.task.findMany({ where: { ownerId: userId, day, type: 'assigned' }, include: { assignedBy: true } });
+
+  let msg = `📋 *${dayData.theme}*\n\n*${ROLES[role]}*, задачі на сьогодні:\n\n`;
+  msg += `🔵 *ОСНОВНІ:*\n`;
+  const taskButtons = [];
+  myTasks.forEach((t, i) => {
+    const done = progress[t.id]?.done;
+    msg += `${done ? '✅' : '🔲'} *${i + 1}.* ${t.text}\n\n`;
+    if (!done) taskButtons.push(Markup.button.callback(`✅ Здати ${i + 1}`, `done_${i}`));
+  });
+
+  if (assignedTasks.length > 0) {
+    msg += `\n🟠 *ПРИЗНАЧЕНІ ТОБІ:*\n`;
+    assignedTasks.forEach((t, i) => {
+      const byName = t.assignedBy ? ROLES[t.assignedBy.role] || '?' : 'Система';
+      msg += `${t.done ? '✅' : '🔲'} *${myTasks.length + i + 1}.* ${t.text}\n📌 _від ${byName}_\n\n`;
+      if (!t.done) taskButtons.push(Markup.button.callback(`✅ Здати ${myTasks.length + i + 1}`, `adone_${t.id}`));
     });
-    msg += `⏰ Дедлайн: *16:00*. Підтверджуй фото через /done <номер>!\n\nДавай, не їбе відмазок 🔥`;
-    
-    try { await bot.telegram.sendMessage(userId, msg, { parse_mode: 'Markdown' }); } catch(e) {}
+  }
+
+  const user = await prisma.user.findUnique({ where: { telegramId: userId } });
+  msg += `━━━━━━━━━━━━━━━\n⚡ XP: ${user?.xpTotal || 0} | Level: ${user?.level || 1} | 🔥 Streak: ${user?.streakDays || 0}`;
+
+  const inlineKb = [];
+  for (let i = 0; i < taskButtons.length; i += 2) inlineKb.push(taskButtons.slice(i, i + 2));
+  await ctx.reply(msg, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(inlineKb) });
+};
+
+// /assign — Cross-assignment
+bot.command('assign', async (ctx) => {
+  const userId = ctx.from.id.toString();
+  const role = await getRoleByUserId(prisma, userId);
+  const day = await getCurrentDay(prisma);
+  if (!role || !day) return ctx.reply("❌ Роль/план не визначені.");
+
+  const text = ctx.message.text.replace(/^\/assign\s+/, '');
+  const parts = text.match(/^(\w+)\s+(.+)$/);
+  if (!parts) return ctx.reply("Формат: /assign <роль> <текст задачі>\nПриклад: /assign mykyta Проаналізуй 3 конкурентів");
+  const [, targetRole, taskText] = parts;
+  if (!ROLES[targetRole] || targetRole === role) return ctx.reply("❌ Невірна роль або сам собі.");
+
+  const target = await getUserByRole(prisma, targetRole);
+  if (!target) return ctx.reply(`❌ ${ROLES[targetRole]} ще не в системі.`);
+
+  await prisma.task.create({
+    data: { day: day + 1, text: taskText, ownerId: target.telegramId, type: 'assigned', assignedById: userId, assignedAt: new Date() },
+  });
+  await addXP(prisma, userId, XP_REWARDS.ASSIGN_TASK, 'assign');
+  ctx.reply(`✅ Задача призначена для *${ROLES[targetRole]}* на завтра:\n"${taskText}"`, { parse_mode: 'Markdown' });
+  try { await bot.telegram.sendMessage(target.telegramId, `📌 *${ROLES[role]}* призначив тобі задачу на завтра:\n"${taskText}"`, { parse_mode: 'Markdown' }); } catch(e) {}
+});
+
+// Pending confirm state
+const pendingConfirm = {};
+
+const handleDoneTask = async (ctx, taskNum, isAssigned = false, assignedTaskId = null) => {
+  const userId = ctx.from.id.toString();
+  const role = await getRoleByUserId(prisma, userId);
+  const day = await getCurrentDay(prisma);
+  if (!day || !role) return ctx.reply("❌ Помилка.");
+
+  let taskId, taskText;
+  if (isAssigned && assignedTaskId) {
+    const t = await prisma.task.findUnique({ where: { id: assignedTaskId } });
+    if (!t || t.done) return ctx.reply("✅ Вже зроблено!");
+    taskId = t.id; taskText = t.text;
+  } else {
+    const myTasks = TASKS[day].tasks.filter(t => t.owner === role);
+    if (taskNum < 0 || taskNum >= myTasks.length) return ctx.reply("❌ Невірний номер.");
+    const task = myTasks[taskNum];
+    const progress = await getDayProgress(prisma, day);
+    if (progress[task.id]?.done) return ctx.reply("✅ Вже зроблено!");
+    taskId = task.id; taskText = task.text;
+  }
+
+  pendingConfirm[userId] = { day, taskId, taskText, isAssigned };
+  await ctx.reply(`⏳ "${taskText.substring(0, 60)}..."\n\n📸 *Надішли фото або документ для пруфу!*`, { parse_mode: 'Markdown' });
+};
+
+// Inline button handlers
+bot.action(/done_(\d+)/, async (ctx) => { await ctx.answerCbQuery(); handleDoneTask(ctx, parseInt(ctx.match[1])); });
+bot.action(/adone_(.+)/, async (ctx) => { await ctx.answerCbQuery(); handleDoneTask(ctx, 0, true, ctx.match[1]); });
+bot.command('done', (ctx) => { const n = parseInt(ctx.message.text.split(' ')[1]); if (isNaN(n)) return ctx.reply("/done <номер>"); handleDoneTask(ctx, n - 1); });
+
+// Photo/document proof handlers
+async function handleProof(ctx, userId) {
+  const role = await getRoleByUserId(prisma, userId);
+  if (!pendingConfirm[userId]) return;
+  const { day, taskId, taskText, isAssigned } = pendingConfirm[userId];
+
+  // Check if task exists in DB or create
+  const existing = await prisma.task.findUnique({ where: { id: taskId } });
+  if (existing) {
+    await prisma.task.update({ where: { id: taskId }, data: { done: true, completedAt: new Date() } });
+  } else {
+    const dayData = TASKS[day]?.tasks.find(x => x.id === taskId);
+    if (dayData) {
+      await prisma.task.create({ data: { id: taskId, day, text: dayData.text, done: true, completedAt: new Date(), ownerId: userId, type: 'primary' } });
+    }
+  }
+  delete pendingConfirm[userId];
+
+  const xpAmount = isAssigned ? XP_REWARDS.ASSIGNED_TASK : XP_REWARDS.PRIMARY_TASK;
+  const result = await addXP(prisma, userId, xpAmount, 'task_done');
+  const { done, total, pct } = await getDayPercent(prisma, TASKS, day);
+
+  let reply = `${random(DONE_PHRASES)}\n\n📊 ${done}/${total} (${pct}%) | ⚡ +${xpAmount} XP`;
+  if (result.leveledUp) reply += `\n\n🎉 *LEVEL UP!* Тепер ти Level ${result.level}!`;
+  await ctx.reply(reply, { parse_mode: 'Markdown' });
+
+  if (done === total) await broadcastToTeam(bot, prisma, ADMIN_ID, `🏆 *ВСІ ЗАДАЧІ ДНЯ ${day} ВИКОНАНО!*\n\n${random(FULL_DONE_PHRASES)}`);
+  await checkAchievements(prisma, bot, userId, ADMIN_ID);
+  if (ADMIN_ID && userId !== ADMIN_ID) { try { await bot.telegram.sendMessage(ADMIN_ID, `✅ *${ROLES[role]}* здав: "${taskText.substring(0, 60)}..." | ${done}/${total}`, { parse_mode: 'Markdown' }); } catch(e) {} }
+}
+
+bot.on('photo', (ctx) => handleProof(ctx, ctx.from.id.toString()));
+bot.on('document', (ctx) => handleProof(ctx, ctx.from.id.toString()));
+
+// 📊 Прогрес команди
+const progressHandler = async (ctx) => {
+  const day = await getCurrentDay(prisma);
+  if (!day) return ctx.reply("⏳ План ще не запущено.");
+  const progress = await getDayProgress(prisma, day);
+  const dayData = TASKS[day];
+  let msg = `📊 *День ${day}: ${dayData.theme}*\n\n`;
+  for (const role of ['taras', 'mykyta', 'nazar', 'maks']) {
+    const myTasks = dayData.tasks.filter(t => t.owner === role);
+    if (myTasks.length === 0) continue;
+    const doneTasks = myTasks.filter(t => progress[t.id]?.done);
+    const user = await getUserByRole(prisma, role);
+    msg += `*${ROLES[role]}:* ${doneTasks.length}/${myTasks.length} ${doneTasks.length === myTasks.length ? '✅' : '🔲'} | XP: ${user?.xpTotal || 0}\n`;
+  }
+  const { done, total, pct } = await getDayPercent(prisma, TASKS, day);
+  msg += `\n━━━━━━━━━━━━━━━\n🔥 Загалом: ${done}/${total} (${pct}%)`;
+  await ctx.reply(msg, { parse_mode: 'Markdown' });
+};
+
+// Admin handlers
+const reportHandler = async (ctx) => {
+  if (ctx.from.id.toString() !== ADMIN_ID) return;
+  const day = await getCurrentDay(prisma); if (!day) return ctx.reply("⏳");
+  const progress = await getDayProgress(prisma, day);
+  let msg = `📋 *Звіт — День ${day}*\n\n`;
+  for (const t of TASKS[day].tasks) { msg += `${progress[t.id]?.done ? '✅' : '❌'} [${ROLES[t.owner]}] ${t.text.substring(0, 60)}...\n\n`; }
+  await ctx.reply(msg, { parse_mode: 'Markdown' });
+};
+
+const teamHandler = async (ctx) => {
+  if (ctx.from.id.toString() !== ADMIN_ID) return;
+  const users = await prisma.user.findMany();
+  let msg = `👥 *Команда BoosterTea v2.0:*\n\n`;
+  for (const u of users) { msg += `*${ROLES[u.role] || u.role}:* ID ${u.telegramId} | XP: ${u.xpTotal} | Lv ${u.level} | 🔥${u.streakDays}\n`; }
+  await ctx.reply(msg, { parse_mode: 'Markdown' });
+};
+
+// ─── REGISTER HANDLERS ─────────────────────────────
+bot.command('tasks', tasksHandler);
+bot.action('menu_tasks', async (ctx) => { await ctx.answerCbQuery(); tasksHandler(ctx); });
+bot.command('progress', progressHandler);
+bot.action('menu_progress', async (ctx) => { await ctx.answerCbQuery(); progressHandler(ctx); });
+bot.command('startplan', startplanHandler);
+bot.action('menu_startplan', async (ctx) => { await ctx.answerCbQuery(); startplanHandler(ctx); });
+bot.command('report', reportHandler);
+bot.action('menu_report', async (ctx) => { await ctx.answerCbQuery(); reportHandler(ctx); });
+bot.command('team', teamHandler);
+bot.action('menu_team', async (ctx) => { await ctx.answerCbQuery(); teamHandler(ctx); });
+
+bot.action('menu_ai', async (ctx) => {
+  await ctx.answerCbQuery();
+  ctx.reply("🧠 Валєра на зв'язку! Пиши прямо сюди, я слухаю.");
+});
+
+// Free text → Gemini (з збереженням історії)
+bot.on('text', async (ctx) => {
+  const text = ctx.message.text;
+  if (text.startsWith('/') || text.startsWith('📜') || text.startsWith('📋') || text.startsWith('📊') || text.startsWith('🤖') || text.startsWith('📈') || text.startsWith('👥') || text.startsWith('🚀') || text.startsWith('🎯')) return;
+  const userId = ctx.from.id.toString();
+  const role = await getRoleByUserId(prisma, userId);
+  const day = await getCurrentDay(prisma);
+  const extra = role && day ? `Учасник: ${ROLES[role]}. День: ${day}. Тема: ${TASKS[day]?.theme}` : '';
+
+  // Intermediary Loader logic (every 3rd user message)
+  const msgCount = await prisma.chatMessage.count({ where: { userId, msgRole: 'user' } });
+  let waitMsgId = null;
+  if ((msgCount + 1) % 3 === 0) {
+    const sent = await ctx.reply(`🕒 _${random(WAITING_PHRASES)}_`, { parse_mode: 'Markdown' });
+    waitMsgId = sent.message_id;
+  }
+
+  const answer = await askGemini(userId, text, extra);
+
+  if (waitMsgId) {
+    try { await ctx.telegram.deleteMessage(ctx.chat.id, waitMsgId); } catch(e) {}
+  }
+
+  if (answer) await ctx.reply(`🧠 ${answer}`, { parse_mode: 'Markdown' });
+});
+
+// File & Audio Interceptors (Block 8.1 Optimization)
+bot.on(['voice', 'audio'], async (ctx) => {
+  await ctx.reply("🎙 Я не обробляю аудіо щоб економити ресурси ШІ. Використай Telegram Premium транскрипцію (кнопка 'A') і відправ мені сформований текст.");
+});
+
+bot.on('document', async (ctx) => {
+  await ctx.reply("📂 Файли (PDF, Docx, Excel) не приймаються для збереження пам'яті. Зроби скріншот/фото і надішли картинкою.");
+});
+
+// ═══════════════════════════════════════════════════
+// CRON JOBS
+// ═══════════════════════════════════════════════════
+
+// 08:00 — Morning brief (3🔵 + 2🟠)
+cron.schedule('0 8 * * *', async () => {
+  const day = await getCurrentDay(prisma); if (!day) return;
+  const dayData = TASKS[day]; if (!dayData) return;
+  const users = await prisma.user.findMany();
+  for (const user of users) {
+    const myTasks = dayData.tasks.filter(t => t.owner === user.role);
+    const assigned = await prisma.task.findMany({ where: { ownerId: user.telegramId, day, type: 'assigned' }, include: { assignedBy: true } });
+    let msg = `☀️ *Доброго ранку, ${ROLES[user.role]}!*\nДень ${day}: ${dayData.theme}\n\n🔵 *ОСНОВНІ (Твої цілі 13WSM13):*\n`;
+    myTasks.forEach((t, i) => { msg += `${i + 1}. ${t.text}\n\n`; });
+    if (assigned.length > 0) {
+      msg += `🟠 *КРОС-ЗАДАЧІ:*\n`;
+      assigned.forEach(t => { const by = t.assignedBy ? ROLES[t.assignedBy.role] : '?'; msg += `📌 від ${by}: ${t.text}\n\n`; });
+    }
+    msg += `🎯 План на сьогодні. Ніякої мультизадачності. Відкрий TWA -> Обери 1 -> Box Breathing -> Фокус. ⚡`;
+    try { await bot.telegram.sendMessage(user.telegramId, msg, { parse_mode: 'Markdown' }); } catch(e) {}
   }
 }, { timezone: 'Europe/Kiev' });
 
-// 13:00 — перевірка прогресу
+// 10:30 — Flow Positive Check (Microburst)
+cron.schedule('30 10 * * *', async () => {
+  const day = await getCurrentDay(prisma); if (!day) return;
+  const users = await prisma.user.findMany();
+  for (const user of users) {
+    const progress = await getDayProgress(prisma, day);
+    const myTasks = TASKS[day].tasks.filter(t => t.owner === user.role);
+    const myDone = myTasks.filter(t => progress[t.id]?.done).length;
+    
+    if (myDone > 0) {
+      try { await bot.telegram.sendMessage(user.telegramId, `⚡ *${ROLES[user.role]}!* Ти вже знищив ${myDone} задачі! Швидкий старт = більше дофаміну. Так тримати! 🏆`, { parse_mode: 'Markdown' }); } catch(e) {}
+    } else {
+      try { await bot.telegram.sendMessage(user.telegramId, `⏳ *${ROLES[user.role]}*, час запустити 13-хвилинний таймер. Зроби найпростішу задачу прямо зараз, щоб зловити потік. 🌊`, { parse_mode: 'Markdown' }); } catch(e) {}
+    }
+  }
+}, { timezone: 'Europe/Kiev' });
+
+// 13:00 — Midday check (Positive evaluation)
 cron.schedule('0 13 * * *', async () => {
-  const day = getCurrentDay();
-  if (!day) return;
-  
-  const { done, total, pct } = getDayPercent(day);
-  
-  const s = loadState();
-  const members = s.members || {};
-  
-  for (const [role, userId] of Object.entries(members)) {
-    if (!userId) continue;
-    const myTasks = TASKS[day].tasks.filter(t => t.owner === role);
-    const progress = getDayProgress(day);
+  const day = await getCurrentDay(prisma); if (!day) return;
+  const users = await prisma.user.findMany();
+  for (const user of users) {
+    const myTasks = TASKS[day].tasks.filter(t => t.owner === user.role);
+    const progress = await getDayProgress(prisma, day);
     const myDone = myTasks.filter(t => progress[t.id]?.done).length;
-    const myPct = Math.round((myDone / myTasks.length) * 100);
-    
-    let msg;
-    if (myPct === 100) {
-      msg = `🔥 *${ROLES[role]}*, ти вже красавчик! Всі задачі виконані! Допоможи команді або відпочивай 💪`;
-    } else {
-      msg = `⏰ *${ROLES[role]}*, 13:00! Прогрес: ${myDone}/${myTasks.length} (${myPct}%)\n\n`;
-      msg += myPct < 40 
-        ? `Ану ДАВАЙ! Шо за хєрня?! До 16:00 всього 3 години! 😤🔥`
-        : `Добре, але не гальмуй — залишились ще задачі!`;
-    }
-    
-    try { await bot.telegram.sendMessage(userId, msg, { parse_mode: 'Markdown' }); } catch(e) {}
+    const pct = Math.round((myDone / myTasks.length) * 100);
+    const msg = pct === 100 ? `🔥 *${ROLES[user.role]}*, ти машина! 100% закрито. Можеш братися за саморозвиток (Academy) або чілити. 🏆` :
+      pct < 40 ? `💡 *${ROLES[user.role]}*, половина дня позаду. Якщо відчуваєш 'Стіну' (Executive Dysfunction) — зроби дихальну практику в Academy. Давай заберемо хоча б 1 маленьку перемогу! 🚀` :
+      `📈 *${ROLES[user.role]}*, ${myDone}/${myTasks.length} вже в скарбничці! Ти в правильному ритмі, дотискай. ⚡`;
+    try { await bot.telegram.sendMessage(user.telegramId, msg, { parse_mode: 'Markdown' }); } catch(e) {}
   }
 }, { timezone: 'Europe/Kiev' });
 
-// 15:00 — жорсткий push якщо < 60%
+// 15:00 — Hard push (Neuro-friendly focus)
 cron.schedule('0 15 * * *', async () => {
-  const day = getCurrentDay();
-  if (!day) return;
-  
-  const s = loadState();
-  const members = s.members || {};
-  
-  for (const [role, userId] of Object.entries(members)) {
-    if (!userId) continue;
-    const myTasks = TASKS[day].tasks.filter(t => t.owner === role);
-    const progress = getDayProgress(day);
+  const day = await getCurrentDay(prisma); if (!day) return;
+  const users = await prisma.user.findMany();
+  for (const user of users) {
+    const myTasks = TASKS[day].tasks.filter(t => t.owner === user.role);
+    const progress = await getDayProgress(prisma, day);
     const myDone = myTasks.filter(t => progress[t.id]?.done).length;
-    const myPct = Math.round((myDone / myTasks.length) * 100);
-    
-    if (myPct < 60) {
-      const msg = `🚨 *${ROLES[role]}, АЛАРМ!*\n\n${getRandomPhrase(PUSH_PHRASES)}\n\nВиконано ${myDone}/${myTasks.length}. До 16:00 — 1 ГОД. ГО! 💥`;
-      try { await bot.telegram.sendMessage(userId, msg, { parse_mode: 'Markdown' }); } catch(e) {}
+    if (Math.round((myDone / myTasks.length) * 100) < 100) {
+      try { await bot.telegram.sendMessage(user.telegramId, `🎯 *${ROLES[user.role]}* — ОСТАННІЙ РИВОК!\nЗгадай Стоїків. 'Ти маєш контроль тільки над своїми діями прямо зараз'.\nВмикай 13WSM13, вимикай телефон. Час забирати свій Дофамін! 💥`, { parse_mode: 'Markdown' }); } catch(e) {}
     }
   }
 }, { timezone: 'Europe/Kiev' });
 
-// 16:00 — фінальна перевірка
+// 16:00 — Deadline + Penalty
 cron.schedule('0 16 * * *', async () => {
-  const day = getCurrentDay();
-  if (!day) return;
-  
-  const { done, total, pct } = getDayPercent(day);
-  
-  const s = loadState();
-  const members = s.members || {};
-  
-  for (const [role, userId] of Object.entries(members)) {
-    if (!userId) continue;
-    const myTasks = TASKS[day].tasks.filter(t => t.owner === role);
-    const progress = getDayProgress(day);
-    const myDone = myTasks.filter(t => progress[t.id]?.done).length;
+  const day = await getCurrentDay(prisma); if (!day) return;
+  const users = await prisma.user.findMany();
+  for (const user of users) {
+    const myTasks = TASKS[day].tasks.filter(t => t.owner === user.role);
+    const progress = await getDayProgress(prisma, day);
     const undone = myTasks.filter(t => !progress[t.id]?.done);
-    
-    if (myDone === myTasks.length) {
-      const msg = `✅ *${ROLES[role]}* — ІДЕАЛ! Всі задачі закриті до 16:00. ЛЕГЕНДА! 🏆`;
-      try { await bot.telegram.sendMessage(userId, msg, { parse_mode: 'Markdown' }); } catch(e) {}
+    if (undone.length === 0) {
+      await prisma.user.update({ where: { telegramId: user.telegramId }, data: { streakDays: { increment: 1 } } });
+      try { await bot.telegram.sendMessage(user.telegramId, `✅ *${ROLES[user.role]}* — ІДЕАЛ! Streak: 🔥${user.streakDays + 1} 🏆`, { parse_mode: 'Markdown' }); } catch(e) {}
     } else {
-      let msg = `🕓 16:00 — ДЕДЛАЙН!\n\n*${ROLES[role]}*, невиконані задачі:\n\n`;
-      undone.forEach(t => { msg += `❌ ${t.text.substring(0, 80)}...\n\n`; });
-      msg += `Закрий їх ЗАРАЗ і надішли пруфи. Це не обговорюється 😤`;
-      try { await bot.telegram.sendMessage(userId, msg, { parse_mode: 'Markdown' }); } catch(e) {}
+      await prisma.penalty.create({ data: { userId: user.telegramId, type: 'missed_deadline', description: `${undone.length} задач не виконано`, xpPenalty: Math.abs(XP_PENALTIES.MISSED_DEADLINE), day } });
+      await addXP(prisma, user.telegramId, XP_PENALTIES.MISSED_DEADLINE, 'penalty');
+      await prisma.user.update({ where: { telegramId: user.telegramId }, data: { streakDays: 0 } });
+      let msg = `🕓 16:00 — ДЕДЛАЙН!\n\n*${ROLES[user.role]}*, невиконані:\n\n`;
+      undone.forEach(t => { msg += `❌ ${t.text.substring(0, 70)}...\n\n`; });
+      msg += `⚠️ Штраф: ${XP_PENALTIES.MISSED_DEADLINE} XP. Streak скинуто.`;
+      try { await bot.telegram.sendMessage(user.telegramId, msg, { parse_mode: 'Markdown' }); } catch(e) {}
+    }
+    // DailyReport
+    const donePrimary = myTasks.filter(t => progress[t.id]?.done).length;
+    const assignedTasks = await prisma.task.findMany({ where: { ownerId: user.telegramId, day, type: 'assigned' } });
+    const doneAssigned = assignedTasks.filter(t => t.done).length;
+    await prisma.dailyReport.upsert({
+      where: { userId_day: { userId: user.telegramId, day } },
+      update: { primaryDone: donePrimary, assignedDone: doneAssigned },
+      create: { userId: user.telegramId, day, primaryDone: donePrimary, assignedDone: doneAssigned },
+    });
+  }
+}, { timezone: 'Europe/Kiev' });
+
+// 17:00 — Assign time
+cron.schedule('0 17 * * *', async () => {
+  const day = await getCurrentDay(prisma); if (!day) return;
+  const users = await prisma.user.findMany({ where: { role: { in: TEAM_ROLES } } });
+  for (const user of users) {
+    const others = getOtherTeamRoles(user.role);
+    const assigned = await prisma.task.findMany({ where: { assignedById: user.telegramId, day: day + 1, type: 'assigned' } });
+    const pendingNames = [];
+    for (const other of others) {
+      const target = await getUserByRole(prisma, other);
+      if (target && !assigned.find(a => a.ownerId === target.telegramId)) pendingNames.push(ROLES[other]);
+    }
+    if (pendingNames.length > 0) {
+      try { await bot.telegram.sendMessage(user.telegramId, `🎯 *Час призначити задачі на завтра!*\n\nТи ще не призначив для: *${pendingNames.join(', ')}*\n\nНапиши: /assign <роль> <задача>`, { parse_mode: 'Markdown' }); } catch(e) {}
     }
   }
 }, { timezone: 'Europe/Kiev' });
 
-// 21:00 — перехід на наступний день (якщо потрібно)
+// 18:00, 19:00, 20:00 — Reminders
+for (const hour of [18, 19, 20]) {
+  cron.schedule(`0 ${hour} * * *`, async () => {
+    const day = await getCurrentDay(prisma); if (!day) return;
+    const users = await prisma.user.findMany({ where: { role: { in: TEAM_ROLES } } });
+    for (const user of users) {
+      const assigned = await prisma.task.count({ where: { assignedById: user.telegramId, day: day + 1, type: 'assigned' } });
+      if (assigned < 2) {
+        try { await bot.telegram.sendMessage(user.telegramId, ASSIGN_REMINDERS[hour - 17] || ASSIGN_REMINDERS[0], { parse_mode: 'Markdown' }); } catch(e) {}
+      }
+    }
+  }, { timezone: 'Europe/Kiev' });
+}
+
+// 21:00 — End of day + alarm to admin
 cron.schedule('0 21 * * *', async () => {
-  const day = getCurrentDay();
-  if (!day || day >= 14) return;
-  const nextDay = day + 1;
-  const nextData = TASKS[nextDay];
-  if (!nextData) return;
-  
-  await broadcastToTeam(
-    `🌙 *На сьогодні все! Готуйтесь до завтра.*\n\n` +
-    `*Завтра — День ${nextDay}:* ${nextData.theme}\n\n` +
-    `Завтра о 8:00 отримаєте детальні задачі. Відпочивайте, але подумайте як будете їх робити 🍵`
-  );
+  const day = await getCurrentDay(prisma); if (!day) return;
+  const users = await prisma.user.findMany({ where: { role: { in: TEAM_ROLES } } });
+  const lazyOnes = [];
+  for (const user of users) {
+    const assigned = await prisma.task.count({ where: { assignedById: user.telegramId, day: day + 1, type: 'assigned' } });
+    if (assigned < 2) {
+      lazyOnes.push(ROLES[user.role]);
+      await prisma.penalty.create({ data: { userId: user.telegramId, type: 'no_assign', description: 'Не призначив задачі', xpPenalty: Math.abs(XP_PENALTIES.NO_ASSIGN), day } });
+      await addXP(prisma, user.telegramId, XP_PENALTIES.NO_ASSIGN, 'no_assign');
+    }
+  }
+  if (lazyOnes.length > 0 && ADMIN_ID) {
+    try { await bot.telegram.sendMessage(ADMIN_ID, `🚨 *ALARM!* Не призначили задачі: ${lazyOnes.join(', ')}`, { parse_mode: 'Markdown' }); } catch(e) {}
+  }
+  await broadcastToTeam(bot, prisma, ADMIN_ID, `🌙 *На сьогодні все!*\nЗавтра — День ${Math.min(day + 1, 14)}. Відпочиньте 🍵`);
 }, { timezone: 'Europe/Kiev' });
 
-// ─── EXPRESS (прийом лідів з сайту) ──────────────────────────────────────────
+// ═══════════════════════════════════════════════════
+// EXPRESS + LAUNCH
+// ═══════════════════════════════════════════════════
 const app = express();
 app.use(cors());
 app.use(express.json());
+setupAPI(app, prisma, bot, TASKS, ADMIN_ID, askGemini);
+app.listen(PORT, () => console.log(`🚀 Express v2.0 на порту ${PORT}`));
 
-app.post('/api/leads', async (req, res) => {
-  try {
-    const { name, phone, product, total, url } = req.body;
-    
-    const message =
-      `🚨 <b>НОВИЙ ЛІД!</b>\n\n` +
-      `👤 <b>Ім'я:</b> ${name || 'Не вказано'}\n` +
-      `📞 <b>Телефон:</b> ${phone || 'Не вказано'}\n` +
-      `📦 <b>Товар:</b> ${product || 'Не вказано'}\n` +
-      `💰 <b>Сума:</b> ${total ? total + ' грн' : 'Не вказано'}\n` +
-      `🔗 <b>Джерело:</b> ${url || 'Сайт'}`;
-    
-    const s = loadState();
-    const members = s.members || {};
-    const ids = new Set([...Object.values(members), ADMIN_ID].filter(Boolean));
-    
-    for (const id of ids) {
-      try { await bot.telegram.sendMessage(id, message, { parse_mode: 'HTML' }); } catch(e) {}
-    }
-    
-    res.json({ success: true });
-  } catch (e) {
-    res.status(500).json({ success: false, error: e.message });
-  }
+bot.catch(async (err, ctx) => {
+  console.error(`Telegraf error:`, err);
+  if (ADMIN_ID) { try { await bot.telegram.sendMessage(ADMIN_ID, `🚨 *BOT CRASH*\n${err.message}`, { parse_mode: 'Markdown' }); } catch(e){} }
 });
 
-app.get('/health', (_, res) => res.json({ status: 'ok', day: getCurrentDay() }));
-
-app.listen(PORT, () => console.log(`🚀 Express на порту ${PORT}`));
-
-// ─── LAUNCH ───────────────────────────────────────────────────────────────────
 bot.launch().then(() => {
-  console.log('🤖 BoosterTea Admin Bot запущений!');
-  console.log('Gemini:', GEMINI_KEY ? '✅ підключений' : '❌ GEMINI_API_KEY відсутній');
-}).catch(e => {
-  console.error('❌ Помилка запуску:', e);
-});
+  console.log('🤖 BoosterTea Command System v2.0 запущений!');
+  console.log(`Gemini: ${GEMINI_KEY ? '✅' : '❌'} | Port: ${PORT}`);
+}).catch(e => console.error('❌', e));
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
