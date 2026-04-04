@@ -695,3 +695,72 @@ textarea:focus { outline: none; border-color: var(--neon-orange); box-shadow: 0 
   color: var(--neon-orange);
   font-weight: bold;
 }
+
+/* ONBOARDING OVERLAY CLASSES */
+.onboarding-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(10, 10, 12, 0.85); /* Semi-transparent ultra-dark */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.onboarding-card {
+  background: #111318;
+  border: 1px solid var(--neon-blue);
+  box-shadow: 0 0 20px rgba(0, 243, 255, 0.1), inset 0 0 10px rgba(0, 243, 255, 0.05);
+  border-radius: 12px;
+  padding: 30px 20px;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  position: relative;
+}
+
+.onboarding-step-counter {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  color: #5d6d87;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+}
+
+.onboarding-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 25px;
+}
+
+.onboarding-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2a2d36;
+  transition: all 0.3s ease;
+}
+
+.onboarding-dot.active {
+  background: var(--neon-blue);
+  box-shadow: 0 0 8px var(--neon-blue);
+  transform: scale(1.3);
+}
+
+.fade-in {
+  animation: fadeInOut 0.4s ease-out;
+}
+
+@keyframes fadeInOut {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}

@@ -37,8 +37,10 @@ if (GEMINI_KEY) {
   geminiModel = gemini.getGenerativeModel({ model: 'gemini-2.5-flash' });
 }
 
+const { handleOfflineMode } = require('./lib/offline_valera');
+
 async function askGemini(userId, userMessage, extraContext = '') {
-  if (!geminiModel) return null;
+  if (!geminiModel) return handleOfflineMode(userMessage);
   try {
     // Get last 10 messages for context
     const history = await prisma.chatMessage.findMany({
@@ -65,7 +67,12 @@ async function askGemini(userId, userMessage, extraContext = '') {
     return answer;
   } catch (e) {
     console.error('Gemini error:', e.message);
-    return null;
+    
+    // Якщо API лежить через ліміти або баги - включаємо автономний режим
+    if (e.message.includes('429') || e.message.includes('quota') || e.message.includes('fetch')) {
+      return handleOfflineMode(userMessage);
+    }
+    return handleOfflineMode(userMessage); // Default fallback
   }
 }
 

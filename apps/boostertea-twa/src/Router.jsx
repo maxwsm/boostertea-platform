@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import App from './App';
 import AcademyRouter from './pages/academy/AcademyRouter';
 import ContactsCRM from './pages/ContactsCRM';
 import ValeraGPT from './pages/ValeraGPT';
 import AdminDashboard from './pages/AdminDashboard';
+import Onboarding from './components/Onboarding';
 import './index.css';
 import './academy.css';
 import './crm.css';
@@ -17,12 +18,20 @@ const Shield = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
 
 export default function MainRouter() {
   const [currentPage, setCurrentPage] = useState('mission');
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    if (!localStorage.getItem('wsm_onboarded_v2')) {
+      setShowOnboarding(true);
+    }
+  }, []);
 
   // For styling the TWA container differently if in ValeraGPT
   const containerStyle = currentPage === 'valera' ? { height: '100vh', display: 'flex', flexDirection: 'column' } : { paddingBottom: '70px' };
 
   return (
     <div style={containerStyle}>
+      {showOnboarding && <Onboarding onComplete={() => setShowOnboarding(false)} />}
       {currentPage === 'valera' ? (
         <ValeraGPT />
       ) : (

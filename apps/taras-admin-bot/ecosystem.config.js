@@ -3,7 +3,7 @@ module.exports = {
     {
       name: "boostertea-core",
       script: "index.js",
-      cwd: "/Users/ANTI 001/wsm-ecosystem/apps/taras-admin-bot",
+      cwd: __dirname,
       env: {
         NODE_ENV: "production",
       },
