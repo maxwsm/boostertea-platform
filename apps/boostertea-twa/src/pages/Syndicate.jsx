@@ -92,9 +92,11 @@ function ServicesBlock() {
       <p style={{ fontSize: '0.9rem', color: '#a0aec0', marginBottom: '15px' }}>Кожен з команди може продавати ці пакети по B2B нетворку і лутати відсотки.</p>
 
       <div className="contact-card" style={{ marginBottom: '15px' }}>
-        <h3 style={{ color: 'var(--neon-blue)', marginBottom: '5px' }}>ПАКЕТ "КОЛІЗЕЙ"</h3>
+        <h3 style={{ color: 'var(--neon-blue)', marginBottom: '5px' }}>ПАКЕТ "КОЛІЗЕЙ" (Екосистема)</h3>
         <div style={{ fontSize: '0.85rem', color: '#a0aec0' }}>
-          <strong>Що це:</strong> Повна маркетингово-технічна запаковка бренду.<br/>
+          <strong>Що це:</strong> Повна маркетингово-технічна запаковка бренду. Ми будуємо цілу інфраструктуру, яка замінює штат людей і автоматизує все. Ця екосистема змінює ринок.<br/>
+          <strong>Фінансова подушка:</strong> Вона підв'язується під дорогі "Premium" підписки. Це генерує нам постійний рекурентний капітал.<br/>
+          <strong>КЕЙС (Aqua 360):</strong> Я вже тестую цю екосистему на B2B проекті біохімії для ставків. Клієнт готовий платити <strong>$900 щомісяця</strong>. Ви завжди підстраховані моїм бекграундом.<br/>
           <strong>Ціна:</strong> Від $5,000<br/>
           <strong>Твій %:</strong> 10% ($500)
         </div>
