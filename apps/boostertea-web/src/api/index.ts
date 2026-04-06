@@ -147,6 +147,31 @@ app.get('/auth/me', async (c) => {
 
 app.get('/health', (c) => c.json({ status: 'wsm-global-auth-active' }));
 
+app.get('/test/products', async (c) => {
+  try {
+    const brand = await prisma.brand.findUnique({ where: { slug: 'boostertea' } });
+    if (!brand) return c.json({ error: "Brand 'boostertea' not found!" }, 404);
+
+    const testProducts = [
+      { slug: 'test-1-uah', nameUk: 'Тестовий товар 1 грн', descriptionUk: 'Товар для перевірки платежів на 1 грн', price: 1, category: 'test', stockStatus: true, stockQuantity: 999, brandId: brand.id },
+      { slug: 'test-2-uah', nameUk: 'Тестовий товар 2 грн', descriptionUk: 'Товар для перевірки платежів на 2 грн', price: 2, category: 'test', stockStatus: true, stockQuantity: 999, brandId: brand.id },
+      { slug: 'test-3-uah', nameUk: 'Тестовий товар 3 грн', descriptionUk: 'Товар для перевірки платежів на 3 грн', price: 3, category: 'test', stockStatus: true, stockQuantity: 999, brandId: brand.id },
+      { slug: 'test-4-uah', nameUk: 'Тестовий товар 4 грн', descriptionUk: 'Товар для перевірки платежів на 4 грн', price: 4, category: 'test', stockStatus: true, stockQuantity: 999, brandId: brand.id }
+    ];
+
+    for (const p of testProducts) {
+      await prisma.product.upsert({
+        where: { brandId_slug: { brandId: brand.id, slug: p.slug } },
+        update: { price: p.price, stockStatus: true, stockQuantity: 999 },
+        create: p
+      });
+    }
+    return c.json({ success: true });
+  } catch (e: any) {
+    return c.json({ error: e.message }, 500);
+  }
+});
+
 // Nova Poshta Proxy
 app.post('/novaposhta', async (c) => {
   try {
