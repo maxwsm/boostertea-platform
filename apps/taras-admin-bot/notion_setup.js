@@ -3,7 +3,7 @@
 
 const https = require('https');
 
-const NOTION_TOKEN = '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';
+const NOTION_TOKEN = process.env.NOTION_TOKEN;
 
 function notionRequest(method, path, body) {
   return new Promise((resolve, reject) => {
