@@ -2,6 +2,7 @@
 const { ROLES, getRoleByUserId, getCurrentDay, getDayProgress, getDayPercent } = require('../lib/helpers');
 const { addXP, addSkillXP, XP_REWARDS, checkAchievements } = require('../lib/xp');
 const { getQuestionsForSkill } = require('../lib/quiz_db');
+const { fetchNotionData, logBotAction, createNotionContact } = require('../lib/notion_llm');
 
 function setupAPI(app, prisma, bot, TASKS, ADMIN_ID, askGemini) {
 
@@ -243,9 +244,16 @@ function setupAPI(app, prisma, bot, TASKS, ADMIN_ID, askGemini) {
         data: { name, phone, email, company, contactRole, category: category || 'other', description: description || '', tags: JSON.stringify(tags || []), createdById: userId },
       });
       await addXP(prisma, userId, XP_REWARDS.CONTACT_ADDED, 'contact');
+
+      // 🔄 Fire-and-forget: sync to Notion B2B or Influencer board
+      createNotionContact({ name, phone, category, contactRole, description }).catch(e =>
+        console.error('[Notion Contact Sync]', e.message)
+      );
+
       res.json(contact);
     } catch(e) { next(e); }
   });
+
 
   // ─── AI CHAT ────────────────────────────────────────
   app.get('/api/twa/chat/sessions', async (req, res, next) => {
@@ -440,6 +448,45 @@ function setupAPI(app, prisma, bot, TASKS, ADMIN_ID, askGemini) {
     const skillCount = await prisma.skill.count();
     res.json({ status: 'ok', version: '2.0', day, skills: skillCount });
   });
+
+  // ─── AI VISION CENTER (NOTION RAG) ──────────────────
+  app.get('/api/twa/ai/vision-dash', async (req, res, next) => {
+    try {
+      const { userId, type } = req.query;
+      const role = await getRoleByUserId(prisma, userId);
+      
+      let data = [];
+      let analysis = "Дані згенеровано.";
+      
+      if (type === 'sprints') {
+        data = await fetchNotionData('TASKS');
+        data = data.filter(t => t.Status !== 'Done').slice(0, 20);
+        analysis = `🚀 ${data.length} активних задач у Спринт Борді.`;
+      } else if (type === 'ops') {
+        data = await fetchNotionData('OPS');
+        analysis = `📦 ${data.length} операційних контрактів і постачальників.`;
+      } else if (type === 'content') {
+        data = await fetchNotionData('CONTENT');
+        analysis = `🎬 ${data.length} карток у Content Factory.`;
+      } else if (type === 'legal') {
+        data = await fetchNotionData('LEGAL');
+        analysis = `⚖️ ${data.length} юридичних документів і справ.`;
+      } else if (type === 'b2b') {
+        data = await fetchNotionData('B2B');
+        analysis = `💼 ${data.length} B2B партнерів і лідів.`;
+      } else if (type === 'influencers') {
+        data = await fetchNotionData('INFLUENCER');
+        analysis = `📱 ${data.length} блогерів в базі.`;
+      }
+
+      // Log access to Notion
+      logBotAction('AI Vision Dash Viewed', `${ROLES[role] || role} переглянув модуль: ${type}`, ROLES[role] || 'System')
+        .catch(() => {});
+
+      res.json({ success: true, analysis, data });
+    } catch(e) { next(e); }
+  });
+
 
   // ─── ERROR HANDLER ──────────────────────────────────
   app.use(async (err, req, res, next) => {

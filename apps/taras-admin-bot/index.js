@@ -31,15 +31,17 @@ const { PrismaClient } = require('./prisma/client');
 const prisma = new PrismaClient();
 
 // ─── GEMINI ─────────────────────────────────────────
+const { AI_TOOLS, handleFunctionCall } = require('./lib/ai_tools');
+
 let geminiModel = null;
 if (GEMINI_KEY) {
   const gemini = new GoogleGenerativeAI(GEMINI_KEY);
-  geminiModel = gemini.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  geminiModel = gemini.getGenerativeModel({ model: 'gemini-2.5-flash', tools: AI_TOOLS });
 }
 
 const { handleOfflineMode } = require('./lib/offline_valera');
 
-async function askGemini(userId, userMessage, extraContext = '') {
+async function askGemini(userId, userMessage, extraContext = '', sessionIdProvided = null) {
   if (!geminiModel) return handleOfflineMode(userMessage);
   try {
     // Get last 10 messages for context
@@ -48,15 +50,36 @@ async function askGemini(userId, userMessage, extraContext = '') {
       orderBy: { createdAt: 'desc' },
       take: 10,
     });
-    const historyText = history.reverse().map(m => `${m.msgRole === 'user' ? 'User' : 'AI'}: ${m.content}`).join('\n');
+    
+    const contents = history.reverse().map(m => ({
+      role: m.msgRole === 'user' ? 'user' : 'model',
+      parts: [{ text: m.content }]
+    }));
 
     const dynamicContext = getRagContext(userMessage);
-    const prompt = `${dynamicContext}\n\n${extraContext}\n\nІсторія розмови:\n${historyText}\n\nПовідомлення: "${userMessage}"\n\nВідповідай коротко, чітко, українською.`;
-    const result = await geminiModel.generateContent(prompt);
-    const answer = result.response.text();
+    const prompt = `[SYSTEM CONTEXT]\n${dynamicContext}\n\n[STATE]\n${extraContext}\n\n[USER MSG]\n"${userMessage}"\n\nВідповідай коротко, чітко, українською. Використовуй tools якщо юзер просить проаналізувати або оновити задачі.`;
+    
+    contents.push({ role: 'user', parts: [{ text: prompt }] });
+
+    let result = await geminiModel.generateContent({ contents });
+    let answer = '';
+    
+    const calls = result.response.functionCalls && result.response.functionCalls();
+    if (calls && calls.length > 0) {
+      const call = calls[0];
+      const funcResult = await handleFunctionCall(call);
+      
+      contents.push({ role: 'model', parts: [{ functionCall: call }] });
+      contents.push({ role: 'function', parts: [{ functionResponse: { name: call.name, response: funcResult } }] });
+      
+      const followUp = await geminiModel.generateContent({ contents });
+      answer = followUp.response.text();
+    } else {
+      answer = result.response.text();
+    }
 
     // Save both messages
-    const sessionId = history[0]?.sessionId || uuidv4();
+    const sessionId = sessionIdProvided || history[0]?.sessionId || uuidv4();
     await prisma.chatMessage.createMany({
       data: [
         { userId, msgRole: 'user', content: userMessage, context: extraContext, sessionId },
@@ -67,8 +90,6 @@ async function askGemini(userId, userMessage, extraContext = '') {
     return answer;
   } catch (e) {
     console.error('Gemini error:', e.message);
-    
-    // Якщо API лежить через ліміти або баги - включаємо автономний режим
     if (e.message.includes('429') || e.message.includes('quota') || e.message.includes('fetch')) {
       return handleOfflineMode(userMessage);
     }
@@ -354,6 +375,13 @@ bot.command('report', reportHandler);
 bot.action('menu_report', async (ctx) => { await ctx.answerCbQuery(); reportHandler(ctx); });
 bot.command('team', teamHandler);
 bot.action('menu_team', async (ctx) => { await ctx.answerCbQuery(); teamHandler(ctx); });
+
+bot.command('notion_sync', async (ctx) => {
+  const userId = ctx.from.id.toString();
+  await ctx.reply("🔄 Ініціюю Neural Sync з Notion...");
+  const answer = await askGemini(userId, "Проаналізуй всі мої задачі в Notion і онови їх статуси якщо потрібно. Використай tools.");
+  await ctx.reply(`🧠 ${answer}`, { parse_mode: 'Markdown' });
+});
 
 bot.action('menu_ai', async (ctx) => {
   await ctx.answerCbQuery();
