@@ -1,6 +1,6 @@
 // lib/helpers.js — Shared helpers для бота та API
 
-const ROLES = { taras: 'Тарас', mykyta: 'Микита', nazar: 'Назар', maks: 'Макс (Dev)', andryuha: 'Андрій (Neural Nomad)' };
+const ROLES = { taras: 'Тарас (13WSM13)', mykyta: 'Микита (BoosterTea)', nazar: 'Назар (BoosterTea)', maks: 'Макс (Dev)', andryuha: 'Андрій (Neural Nomad)', kristaps: 'Крістапс (Neural Nomad)' };
 const ROLE_KEYS = Object.keys(ROLES);
 const TEAM_ROLES = ['taras', 'mykyta', 'nazar']; // Без maks та andryuha для 3+2
 

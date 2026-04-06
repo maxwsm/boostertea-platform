@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Toast from '../components/Toast';

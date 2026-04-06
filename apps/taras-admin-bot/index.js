@@ -116,14 +116,14 @@ reloadTaskOverrides().catch(console.error);
 function getMainKeyboard(isAdmin) {
   const buttons = [
     [Markup.button.webApp("⚡ ВБІГТИ В MISSION CONTROL", "https://boostertea-twa.vercel.app")],
-    [Markup.button.callback('📜 Кодекс', 'menu_manifest'), Markup.button.callback('🧠 ШІ-Ментор', 'menu_ai')],
-    [Markup.button.callback('📋 Задачі', 'menu_tasks'), Markup.button.callback('📊 Прогрес', 'menu_progress')],
+    ['📜 Кодекс', '🧠 ШІ-Ментор'],
+    ['📋 Задачі', '📊 Прогрес'],
   ];
   if (isAdmin) {
-    buttons.push([Markup.button.callback('📈 Звіт', 'menu_report'), Markup.button.callback('👥 Екіпаж', 'menu_team')]);
-    buttons.push([Markup.button.callback('🚀 Старт Програми', 'menu_startplan')]);
+    buttons.push(['📈 Звіт', '👥 Екіпаж']);
+    buttons.push(['🚀 Старт Програми']);
   }
-  return Markup.inlineKeyboard(buttons);
+  return Markup.keyboard(buttons).resize();
 }
 
 // ═══════════════════════════════════════════════════
@@ -154,8 +154,7 @@ bot.start(async (ctx) => {
 });
 
 // 📜 Маніфест
-bot.action('menu_manifest', async (ctx) => {
-  await ctx.answerCbQuery();
+bot.hears('📜 Кодекс', async (ctx) => {
   ctx.reply(MANIFEST_TEXT, { parse_mode: 'Markdown' });
 });
 
@@ -366,15 +365,15 @@ const teamHandler = async (ctx) => {
 
 // ─── REGISTER HANDLERS ─────────────────────────────
 bot.command('tasks', tasksHandler);
-bot.action('menu_tasks', async (ctx) => { await ctx.answerCbQuery(); tasksHandler(ctx); });
+bot.hears('📋 Задачі', tasksHandler);
 bot.command('progress', progressHandler);
-bot.action('menu_progress', async (ctx) => { await ctx.answerCbQuery(); progressHandler(ctx); });
+bot.hears('📊 Прогрес', progressHandler);
 bot.command('startplan', startplanHandler);
-bot.action('menu_startplan', async (ctx) => { await ctx.answerCbQuery(); startplanHandler(ctx); });
+bot.hears('🚀 Старт Програми', startplanHandler);
 bot.command('report', reportHandler);
-bot.action('menu_report', async (ctx) => { await ctx.answerCbQuery(); reportHandler(ctx); });
+bot.hears('📈 Звіт', reportHandler);
 bot.command('team', teamHandler);
-bot.action('menu_team', async (ctx) => { await ctx.answerCbQuery(); teamHandler(ctx); });
+bot.hears('👥 Екіпаж', teamHandler);
 
 bot.command('notion_sync', async (ctx) => {
   const userId = ctx.from.id.toString();
@@ -383,8 +382,7 @@ bot.command('notion_sync', async (ctx) => {
   await ctx.reply(`🧠 ${answer}`, { parse_mode: 'Markdown' });
 });
 
-bot.action('menu_ai', async (ctx) => {
-  await ctx.answerCbQuery();
+bot.hears('🧠 ШІ-Ментор', async (ctx) => {
   ctx.reply("🧠 Валєра на зв'язку! Пиши прямо сюди, я слухаю.");
 });
 

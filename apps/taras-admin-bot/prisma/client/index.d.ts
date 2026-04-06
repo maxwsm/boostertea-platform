@@ -11940,8 +11940,18 @@ export namespace Prisma {
 
   export type AggregateContact = {
     _count: ContactCountAggregateOutputType | null
+    _avg: ContactAvgAggregateOutputType | null
+    _sum: ContactSumAggregateOutputType | null
     _min: ContactMinAggregateOutputType | null
     _max: ContactMaxAggregateOutputType | null
+  }
+
+  export type ContactAvgAggregateOutputType = {
+    progressPct: number | null
+  }
+
+  export type ContactSumAggregateOutputType = {
+    progressPct: number | null
   }
 
   export type ContactMinAggregateOutputType = {
@@ -11955,6 +11965,10 @@ export namespace Prisma {
     description: string | null
     notes: string | null
     tags: string | null
+    status: string | null
+    progressPct: number | null
+    notionId: string | null
+    nextActionDate: Date | null
     lastContactAt: Date | null
     createdById: string | null
     createdAt: Date | null
@@ -11972,6 +11986,10 @@ export namespace Prisma {
     description: string | null
     notes: string | null
     tags: string | null
+    status: string | null
+    progressPct: number | null
+    notionId: string | null
+    nextActionDate: Date | null
     lastContactAt: Date | null
     createdById: string | null
     createdAt: Date | null
@@ -11989,6 +12007,10 @@ export namespace Prisma {
     description: number
     notes: number
     tags: number
+    status: number
+    progressPct: number
+    notionId: number
+    nextActionDate: number
     lastContactAt: number
     createdById: number
     createdAt: number
@@ -11996,6 +12018,14 @@ export namespace Prisma {
     _all: number
   }
 
+
+  export type ContactAvgAggregateInputType = {
+    progressPct?: true
+  }
+
+  export type ContactSumAggregateInputType = {
+    progressPct?: true
+  }
 
   export type ContactMinAggregateInputType = {
     id?: true
@@ -12008,6 +12038,10 @@ export namespace Prisma {
     description?: true
     notes?: true
     tags?: true
+    status?: true
+    progressPct?: true
+    notionId?: true
+    nextActionDate?: true
     lastContactAt?: true
     createdById?: true
     createdAt?: true
@@ -12025,6 +12059,10 @@ export namespace Prisma {
     description?: true
     notes?: true
     tags?: true
+    status?: true
+    progressPct?: true
+    notionId?: true
+    nextActionDate?: true
     lastContactAt?: true
     createdById?: true
     createdAt?: true
@@ -12042,6 +12080,10 @@ export namespace Prisma {
     description?: true
     notes?: true
     tags?: true
+    status?: true
+    progressPct?: true
+    notionId?: true
+    nextActionDate?: true
     lastContactAt?: true
     createdById?: true
     createdAt?: true
@@ -12087,6 +12129,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: ContactAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ContactSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: ContactMinAggregateInputType
@@ -12117,6 +12171,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: ContactCountAggregateInputType | true
+    _avg?: ContactAvgAggregateInputType
+    _sum?: ContactSumAggregateInputType
     _min?: ContactMinAggregateInputType
     _max?: ContactMaxAggregateInputType
   }
@@ -12132,11 +12188,17 @@ export namespace Prisma {
     description: string
     notes: string
     tags: string
+    status: string
+    progressPct: number
+    notionId: string | null
+    nextActionDate: Date | null
     lastContactAt: Date | null
     createdById: string
     createdAt: Date
     updatedAt: Date
     _count: ContactCountAggregateOutputType | null
+    _avg: ContactAvgAggregateOutputType | null
+    _sum: ContactSumAggregateOutputType | null
     _min: ContactMinAggregateOutputType | null
     _max: ContactMaxAggregateOutputType | null
   }
@@ -12166,6 +12228,10 @@ export namespace Prisma {
     description?: boolean
     notes?: boolean
     tags?: boolean
+    status?: boolean
+    progressPct?: boolean
+    notionId?: boolean
+    nextActionDate?: boolean
     lastContactAt?: boolean
     createdById?: boolean
     createdAt?: boolean
@@ -12184,6 +12250,10 @@ export namespace Prisma {
     description?: boolean
     notes?: boolean
     tags?: boolean
+    status?: boolean
+    progressPct?: boolean
+    notionId?: boolean
+    nextActionDate?: boolean
     lastContactAt?: boolean
     createdById?: boolean
     createdAt?: boolean
@@ -12202,6 +12272,10 @@ export namespace Prisma {
     description?: boolean
     notes?: boolean
     tags?: boolean
+    status?: boolean
+    progressPct?: boolean
+    notionId?: boolean
+    nextActionDate?: boolean
     lastContactAt?: boolean
     createdById?: boolean
     createdAt?: boolean
@@ -12231,6 +12305,10 @@ export namespace Prisma {
       description: string
       notes: string
       tags: string
+      status: string
+      progressPct: number
+      notionId: string | null
+      nextActionDate: Date | null
       lastContactAt: Date | null
       createdById: string
       createdAt: Date
@@ -12639,6 +12717,10 @@ export namespace Prisma {
     readonly description: FieldRef<"Contact", 'String'>
     readonly notes: FieldRef<"Contact", 'String'>
     readonly tags: FieldRef<"Contact", 'String'>
+    readonly status: FieldRef<"Contact", 'String'>
+    readonly progressPct: FieldRef<"Contact", 'Int'>
+    readonly notionId: FieldRef<"Contact", 'String'>
+    readonly nextActionDate: FieldRef<"Contact", 'DateTime'>
     readonly lastContactAt: FieldRef<"Contact", 'DateTime'>
     readonly createdById: FieldRef<"Contact", 'String'>
     readonly createdAt: FieldRef<"Contact", 'DateTime'>
@@ -19936,6 +20018,10 @@ export namespace Prisma {
     description: 'description',
     notes: 'notes',
     tags: 'tags',
+    status: 'status',
+    progressPct: 'progressPct',
+    notionId: 'notionId',
+    nextActionDate: 'nextActionDate',
     lastContactAt: 'lastContactAt',
     createdById: 'createdById',
     createdAt: 'createdAt',
@@ -20821,6 +20907,10 @@ export namespace Prisma {
     description?: StringFilter<"Contact"> | string
     notes?: StringFilter<"Contact"> | string
     tags?: StringFilter<"Contact"> | string
+    status?: StringFilter<"Contact"> | string
+    progressPct?: IntFilter<"Contact"> | number
+    notionId?: StringNullableFilter<"Contact"> | string | null
+    nextActionDate?: DateTimeNullableFilter<"Contact"> | Date | string | null
     lastContactAt?: DateTimeNullableFilter<"Contact"> | Date | string | null
     createdById?: StringFilter<"Contact"> | string
     createdAt?: DateTimeFilter<"Contact"> | Date | string
@@ -20839,6 +20929,10 @@ export namespace Prisma {
     description?: SortOrder
     notes?: SortOrder
     tags?: SortOrder
+    status?: SortOrder
+    progressPct?: SortOrder
+    notionId?: SortOrderInput | SortOrder
+    nextActionDate?: SortOrderInput | SortOrder
     lastContactAt?: SortOrderInput | SortOrder
     createdById?: SortOrder
     createdAt?: SortOrder
@@ -20848,6 +20942,7 @@ export namespace Prisma {
 
   export type ContactWhereUniqueInput = Prisma.AtLeast<{
     id?: string
+    notionId?: string
     AND?: ContactWhereInput | ContactWhereInput[]
     OR?: ContactWhereInput[]
     NOT?: ContactWhereInput | ContactWhereInput[]
@@ -20860,12 +20955,15 @@ export namespace Prisma {
     description?: StringFilter<"Contact"> | string
     notes?: StringFilter<"Contact"> | string
     tags?: StringFilter<"Contact"> | string
+    status?: StringFilter<"Contact"> | string
+    progressPct?: IntFilter<"Contact"> | number
+    nextActionDate?: DateTimeNullableFilter<"Contact"> | Date | string | null
     lastContactAt?: DateTimeNullableFilter<"Contact"> | Date | string | null
     createdById?: StringFilter<"Contact"> | string
     createdAt?: DateTimeFilter<"Contact"> | Date | string
     updatedAt?: DateTimeFilter<"Contact"> | Date | string
     createdBy?: XOR<UserRelationFilter, UserWhereInput>
-  }, "id">
+  }, "id" | "notionId">
 
   export type ContactOrderByWithAggregationInput = {
     id?: SortOrder
@@ -20878,13 +20976,19 @@ export namespace Prisma {
     description?: SortOrder
     notes?: SortOrder
     tags?: SortOrder
+    status?: SortOrder
+    progressPct?: SortOrder
+    notionId?: SortOrderInput | SortOrder
+    nextActionDate?: SortOrderInput | SortOrder
     lastContactAt?: SortOrderInput | SortOrder
     createdById?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: ContactCountOrderByAggregateInput
+    _avg?: ContactAvgOrderByAggregateInput
     _max?: ContactMaxOrderByAggregateInput
     _min?: ContactMinOrderByAggregateInput
+    _sum?: ContactSumOrderByAggregateInput
   }
 
   export type ContactScalarWhereWithAggregatesInput = {
@@ -20901,6 +21005,10 @@ export namespace Prisma {
     description?: StringWithAggregatesFilter<"Contact"> | string
     notes?: StringWithAggregatesFilter<"Contact"> | string
     tags?: StringWithAggregatesFilter<"Contact"> | string
+    status?: StringWithAggregatesFilter<"Contact"> | string
+    progressPct?: IntWithAggregatesFilter<"Contact"> | number
+    notionId?: StringNullableWithAggregatesFilter<"Contact"> | string | null
+    nextActionDate?: DateTimeNullableWithAggregatesFilter<"Contact"> | Date | string | null
     lastContactAt?: DateTimeNullableWithAggregatesFilter<"Contact"> | Date | string | null
     createdById?: StringWithAggregatesFilter<"Contact"> | string
     createdAt?: DateTimeWithAggregatesFilter<"Contact"> | Date | string
@@ -22148,6 +22256,10 @@ export namespace Prisma {
     description?: string
     notes?: string
     tags?: string
+    status?: string
+    progressPct?: number
+    notionId?: string | null
+    nextActionDate?: Date | string | null
     lastContactAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -22165,6 +22277,10 @@ export namespace Prisma {
     description?: string
     notes?: string
     tags?: string
+    status?: string
+    progressPct?: number
+    notionId?: string | null
+    nextActionDate?: Date | string | null
     lastContactAt?: Date | string | null
     createdById: string
     createdAt?: Date | string
@@ -22182,6 +22298,10 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     notes?: StringFieldUpdateOperationsInput | string
     tags?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    progressPct?: IntFieldUpdateOperationsInput | number
+    notionId?: NullableStringFieldUpdateOperationsInput | string | null
+    nextActionDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastContactAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22199,6 +22319,10 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     notes?: StringFieldUpdateOperationsInput | string
     tags?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    progressPct?: IntFieldUpdateOperationsInput | number
+    notionId?: NullableStringFieldUpdateOperationsInput | string | null
+    nextActionDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastContactAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdById?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22216,6 +22340,10 @@ export namespace Prisma {
     description?: string
     notes?: string
     tags?: string
+    status?: string
+    progressPct?: number
+    notionId?: string | null
+    nextActionDate?: Date | string | null
     lastContactAt?: Date | string | null
     createdById: string
     createdAt?: Date | string
@@ -22233,6 +22361,10 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     notes?: StringFieldUpdateOperationsInput | string
     tags?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    progressPct?: IntFieldUpdateOperationsInput | number
+    notionId?: NullableStringFieldUpdateOperationsInput | string | null
+    nextActionDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastContactAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -22249,6 +22381,10 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     notes?: StringFieldUpdateOperationsInput | string
     tags?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    progressPct?: IntFieldUpdateOperationsInput | number
+    notionId?: NullableStringFieldUpdateOperationsInput | string | null
+    nextActionDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastContactAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdById?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -23514,10 +23650,18 @@ export namespace Prisma {
     description?: SortOrder
     notes?: SortOrder
     tags?: SortOrder
+    status?: SortOrder
+    progressPct?: SortOrder
+    notionId?: SortOrder
+    nextActionDate?: SortOrder
     lastContactAt?: SortOrder
     createdById?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type ContactAvgOrderByAggregateInput = {
+    progressPct?: SortOrder
   }
 
   export type ContactMaxOrderByAggregateInput = {
@@ -23531,6 +23675,10 @@ export namespace Prisma {
     description?: SortOrder
     notes?: SortOrder
     tags?: SortOrder
+    status?: SortOrder
+    progressPct?: SortOrder
+    notionId?: SortOrder
+    nextActionDate?: SortOrder
     lastContactAt?: SortOrder
     createdById?: SortOrder
     createdAt?: SortOrder
@@ -23548,10 +23696,18 @@ export namespace Prisma {
     description?: SortOrder
     notes?: SortOrder
     tags?: SortOrder
+    status?: SortOrder
+    progressPct?: SortOrder
+    notionId?: SortOrder
+    nextActionDate?: SortOrder
     lastContactAt?: SortOrder
     createdById?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type ContactSumOrderByAggregateInput = {
+    progressPct?: SortOrder
   }
 
   export type ChatMessageCountOrderByAggregateInput = {
@@ -25304,6 +25460,10 @@ export namespace Prisma {
     description?: string
     notes?: string
     tags?: string
+    status?: string
+    progressPct?: number
+    notionId?: string | null
+    nextActionDate?: Date | string | null
     lastContactAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -25320,6 +25480,10 @@ export namespace Prisma {
     description?: string
     notes?: string
     tags?: string
+    status?: string
+    progressPct?: number
+    notionId?: string | null
+    nextActionDate?: Date | string | null
     lastContactAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -25622,6 +25786,10 @@ export namespace Prisma {
     description?: StringFilter<"Contact"> | string
     notes?: StringFilter<"Contact"> | string
     tags?: StringFilter<"Contact"> | string
+    status?: StringFilter<"Contact"> | string
+    progressPct?: IntFilter<"Contact"> | number
+    notionId?: StringNullableFilter<"Contact"> | string | null
+    nextActionDate?: DateTimeNullableFilter<"Contact"> | Date | string | null
     lastContactAt?: DateTimeNullableFilter<"Contact"> | Date | string | null
     createdById?: StringFilter<"Contact"> | string
     createdAt?: DateTimeFilter<"Contact"> | Date | string
@@ -27751,6 +27919,10 @@ export namespace Prisma {
     description?: string
     notes?: string
     tags?: string
+    status?: string
+    progressPct?: number
+    notionId?: string | null
+    nextActionDate?: Date | string | null
     lastContactAt?: Date | string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -28007,6 +28179,10 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     notes?: StringFieldUpdateOperationsInput | string
     tags?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    progressPct?: IntFieldUpdateOperationsInput | number
+    notionId?: NullableStringFieldUpdateOperationsInput | string | null
+    nextActionDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastContactAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -28023,6 +28199,10 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     notes?: StringFieldUpdateOperationsInput | string
     tags?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    progressPct?: IntFieldUpdateOperationsInput | number
+    notionId?: NullableStringFieldUpdateOperationsInput | string | null
+    nextActionDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastContactAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -28039,6 +28219,10 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     notes?: StringFieldUpdateOperationsInput | string
     tags?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    progressPct?: IntFieldUpdateOperationsInput | number
+    notionId?: NullableStringFieldUpdateOperationsInput | string | null
+    nextActionDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastContactAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

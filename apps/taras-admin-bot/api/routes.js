@@ -245,12 +245,42 @@ function setupAPI(app, prisma, bot, TASKS, ADMIN_ID, askGemini) {
       });
       await addXP(prisma, userId, XP_REWARDS.CONTACT_ADDED, 'contact');
 
-      // 🔄 Fire-and-forget: sync to Notion B2B or Influencer board
-      createNotionContact({ name, phone, category, contactRole, description }).catch(e =>
-        console.error('[Notion Contact Sync]', e.message)
-      );
+      // 🔄 Create in Notion and save the Notion ID back to Prisma
+      createNotionContact({ name, phone, category, contactRole, description })
+        .then(async (notionId) => {
+          if (notionId) {
+            await prisma.contact.update({
+              where: { id: contact.id },
+              data: { notionId }
+            });
+          }
+        })
+        .catch(e => console.error('[Notion Contact Sync]', e.message));
 
       res.json(contact);
+    } catch(e) { next(e); }
+  });
+
+  // ─── TWA MANUAL SYNC ────────────────────────────────
+  app.post('/api/twa/contacts/sync', async (req, res, next) => {
+    try {
+      const { syncContactsWithNotion } = require('../lib/sync_contacts');
+      const result = await syncContactsWithNotion(prisma);
+      
+      // Award XP for newly completed pipeline deals
+      if (result.success && result.newXPUsers && result.newXPUsers.length > 0) {
+        for (const win of result.newXPUsers) {
+          const award = win.type === 'b2b_closed' ? 250 : 100;
+          await addXP(prisma, win.userId, award, 'deal_closed');
+          try {
+            await bot.telegram.sendMessage(win.userId, `🎉 *ВЕЛИКА ПЕРЕМОГА!*\nТвоя воронка "${win.name}" успішно закрита на 100%.\nБонус: +${award} XP 🚀`, { parse_mode: 'Markdown' });
+            if (ADMIN_ID) {
+              await bot.telegram.sendMessage(ADMIN_ID, `🔥 *УГОДА ЗАКРИТА!*\nКонтакт "${win.name}" дійшов до 100%. Видано бонус!`, { parse_mode: 'Markdown' });
+            }
+          } catch(e) {}
+        }
+      }
+      res.json(result);
     } catch(e) { next(e); }
   });
 

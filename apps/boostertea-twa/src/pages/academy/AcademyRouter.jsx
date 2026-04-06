@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import AcademyDashboard from './AcademyDashboard';
-import SkillAcademy from '../SkillAcademy'; // Existing skill map
+import SkillAcademy from '../SkillAcademy';
 import StoicismModule from './StoicismModule';
 import MeditationRoom from './MeditationRoom';
 import TrainingModules from './TrainingModules';
@@ -12,19 +12,19 @@ export default function AcademyRouter() {
     <>
       <div className="academy-header-nav">
         <button className={`acad-tab ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
-          概観 (OVERVIEW)
+          ОГЛЯД
         </button>
         <button className={`acad-tab ${activeTab === 'map' ? 'active' : ''}`} onClick={() => setActiveTab('map')}>
-          SKILL MAP
+          НАВИЧКИ
         </button>
         <button className={`acad-tab ${activeTab === 'library' ? 'active' : ''}`} onClick={() => setActiveTab('library')}>
-          LIBRARY
+          МОДУЛІ
         </button>
         <button className={`acad-tab ${activeTab === 'stoic' ? 'active' : ''}`} onClick={() => setActiveTab('stoic')}>
-          STOICISM
+          СТОЇЦИЗМ
         </button>
         <button className={`acad-tab ${activeTab === 'meditate' ? 'active' : ''}`} onClick={() => setActiveTab('meditate')}>
-          FLOW
+          ФОКУС
         </button>
       </div>
 

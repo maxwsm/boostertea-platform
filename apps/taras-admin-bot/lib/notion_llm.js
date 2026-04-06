@@ -88,7 +88,7 @@ async function createNotionContact(contact) {
   if (!databaseId) return; // silently skip if DB not configured
 
   try {
-    await notion.pages.create({
+    const response = await notion.pages.create({
       parent: { database_id: databaseId },
       properties: {
         'Name':        { title: [{ text: { content: contact.name } }] },
@@ -99,8 +99,10 @@ async function createNotionContact(contact) {
       }
     });
     console.log(`✅ [Notion Sync] Contact "${contact.name}" pushed to ${dbKey} board.`);
+    return response.id;
   } catch (error) {
     console.error(`Notion createNotionContact Error (${dbKey}):`, error.message);
+    return null;
   }
 }
 

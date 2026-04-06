@@ -185,21 +185,25 @@ model UserResource {
 // ═══════════════════════════════════════════
 
 model Contact {
-  id            String    @id @default(uuid())
-  name          String
-  phone         String?
-  email         String?
-  company       String?
-  contactRole   String? // "supplier"|"partner"|"client"|"investor"|"legal"
-  category      String // "packaging"|"ingredients"|"logistics"|"legal"|"printing"|"production"
-  description   String    @default("")
-  notes         String    @default("")
-  tags          String    @default("[]") // JSON array
-  lastContactAt DateTime?
-  createdById   String
-  createdBy     User      @relation("ContactCreator", fields: [createdById], references: [telegramId])
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id             String    @id @default(uuid())
+  name           String
+  phone          String?
+  email          String?
+  company        String?
+  contactRole    String? // "supplier"|"partner"|"client"|"investor"|"legal"
+  category       String // "packaging"|"ingredients"|"logistics"|"legal"|"printing"|"production"
+  description    String    @default("")
+  notes          String    @default("")
+  tags           String    @default("[]") // JSON array
+  status         String    @default("Новий")
+  progressPct    Int       @default(0)
+  notionId       String?   @unique
+  nextActionDate DateTime?
+  lastContactAt  DateTime?
+  createdById    String
+  createdBy      User      @relation("ContactCreator", fields: [createdById], references: [telegramId])
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
 
 // ═══════════════════════════════════════════

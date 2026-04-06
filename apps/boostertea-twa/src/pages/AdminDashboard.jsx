@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import WebApp from '@twa-dev/sdk';
+import AiVisionCenter from '../components/AiVisionCenter';
 
 export default function AdminDashboard() {
   const [data, setData] = useState(null);
@@ -118,6 +119,10 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* ─── AI VISION CENTER ─── */}
+      <AiVisionCenter />
+      
     </div>
   );
 }

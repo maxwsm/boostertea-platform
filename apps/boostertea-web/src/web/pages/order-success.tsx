@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { Link } from 'wouter';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import TelegramButton from '../components/TelegramButton';
@@ -39,9 +38,8 @@ const OrderSuccess = () => {
       if (orderNum && w.BT_Track) w.BT_Track.purchase(orderNum, 0, []);
     } catch(e) {}
   }, []);
-  const searchParams = useSearchParams();
-  const search = searchParams ? searchParams.toString() : '';
-  const params = new URLSearchParams(search);
+  
+  const params = new URLSearchParams(window.location.search);
   const orderNumber = params.get('order');
   const isDemo = params.get('demo') === 'true';
   

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import WebApp from '@twa-dev/sdk';
 import App from './App';
 import AcademyRouter from './pages/academy/AcademyRouter';
 import ContactsCRM from './pages/ContactsCRM';

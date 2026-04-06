@@ -10,6 +10,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src/web"),
+      "@myth": path.resolve(__dirname, "./src/web/mythbusters"),
+      "next/link": path.resolve(__dirname, "./src/web/shims/next-link.tsx"),
+      "next/navigation": path.resolve(__dirname, "./src/web/shims/next-navigation.ts"),
+      "next/head": path.resolve(__dirname, "./src/web/shims/next-head.tsx"),
     },
   },
   server: {

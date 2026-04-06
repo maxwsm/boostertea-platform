@@ -11,15 +11,16 @@ export default function ValeraGPT() {
   const rawUserId = WebApp.initDataUnsafe?.user?.id;
   const userId = rawUserId ? rawUserId.toString() : '8374356466';
 
-  // Categorized Topics & Fear prompt
+  // Categorized Topics & Fear prompt — Notion-powered
   const suggestions = [
     { text: "А ЩО ЯКЩО: Що буде за рік, якщо я зроблю всі задачі? (Страхи і Висоти)", type: "highlight" },
+    { text: "Валєра, покажи мої активні задачі зі Спринт Борда", type: "notion" },
+    { text: "Перевір статус юридичних документів (ТМ, ХАСП)", type: "notion" },
+    { text: "Хто з блогерів ще не відписав?", type: "notion" },
     { text: "Маркетинг (GTM, UGC, Воронки)", type: "normal" },
-    { text: "Інженерія (Vite, Prisma, Боти)", type: "normal" },
-    { text: "Міксологія (Сатурація, Шолуха)", type: "normal" },
-    { text: "Юридичний відділ (ХАСП, ТМ)", type: "normal" },
-    { text: "Стратегія (6 місячний план)", type: "normal" }
+    { text: "Стратегія (6 місячний план)", type: "normal" },
   ];
+
 
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -144,10 +145,11 @@ export default function ValeraGPT() {
           {suggestions.map((s, idx) => (
             <button 
               key={idx} 
-              className={`vgpt-suggest-btn ${s.type === 'highlight' ? 'highlighted-fear-btn' : ''}`} 
+              className={`vgpt-suggest-btn ${s.type === 'highlight' ? 'highlighted-fear-btn' : ''}`}
+              style={s.type === 'notion' ? { borderColor: 'var(--neon-purple, #9d00ff)', color: 'var(--neon-purple, #9d00ff)' } : {}}
               onClick={() => sendMessage(s.text)}
             >
-              {s.text}
+              {s.type === 'notion' && '🔮 '}{s.text}
             </button>
           ))}
         </div>

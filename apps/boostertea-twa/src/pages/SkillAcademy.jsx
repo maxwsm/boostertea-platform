@@ -41,7 +41,7 @@ export default function SkillAcademy() {
     setView('quiz');
   };
 
-  if (loading) return <div style={{textAlign:'center', marginTop:'50px'}}>...SYSTEM SCAN...</div>;
+  if (loading) return <div style={{textAlign:'center', marginTop:'50px'}}>Завантаження навичок...</div>;
 
   if (view === 'quiz' && quizSkillId) {
     return (
@@ -60,9 +60,9 @@ export default function SkillAcademy() {
   return (
     <div className="academy-container" style={{paddingBottom: '20px'}}>
       
-      <div className="section-title" style={{marginBottom: '15px'}}><span className="dot blue"></span> GLOBAL SKILL TREE</div>
+      <div className="section-title" style={{marginBottom: '15px'}}><span className="dot blue"></span> ДЕРЕВО НАВИЧОК</div>
       <p style={{color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '20px', lineHeight: '1.4'}}>
-        У кожного з нас є всі скіли. Сірі скіли — не підтверджені (пройди тест). Мета — досягти хоча б <span style={{color: 'var(--neon-orange)'}}>LVL 80</span> в ключових сферах.
+        Сірі — ще не перевірені (пройди тест). Мета — досягти рівня <span style={{color: 'var(--neon-orange)'}}>80+</span> в ключових сферах.
       </p>
 
       <div className="skill-categories">
@@ -91,11 +91,11 @@ export default function SkillAcademy() {
                       <span style={{fontWeight: 'bold', color: isTested ? '#fff' : '#888'}}>{skill.name}</span>
                       {isTested ? (
                         <span className="skill-level" style={{color: myState.currentLevel >= 80 ? 'var(--neon-green)' : 'var(--neon-blue)'}}>
-                          LVL {myState.currentLevel}/100
+                          {myState.currentLevel}/100
                         </span>
                       ) : (
                         <span style={{fontSize: '0.7rem', color: 'var(--neon-orange)', border: '1px solid var(--neon-orange)', padding: '2px 4px', borderRadius: '4px'}}>
-                          ТЕСТ
+                          ПРОЙТИ
                         </span>
                       )}
                     </div>

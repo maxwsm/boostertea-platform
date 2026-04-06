@@ -547,7 +547,7 @@ app.post('/payment/create-invoice', async (c) => {
         destination: `Оплата замовлення ${transactionId.slice(0, 8).toUpperCase()}`,
       },
       redirectUrl,
-      webhooks: `https://boostertea.com.ua/api/webhooks/monobank`
+      webHookUrl: `https://boostertea.com.ua/api/webhooks/monobank`
     };
 
     const monoRes = await fetch('https://api.monobank.ua/api/merchant/invoice/create', {
@@ -566,11 +566,62 @@ app.post('/payment/create-invoice', async (c) => {
     }
 
     const monoData = await monoRes.json();
+
+    // Зберегти Mono invoiceId у paymentRef для webhook lookup
+    await prisma.transaction.update({
+      where: { id: transactionId },
+      data: { 
+        paymentRef: monoData.invoiceId,
+        paymentGateway: 'monobank'
+      }
+    });
+    console.log(`[MonoBank] Invoice created: ${monoData.invoiceId} for transaction ${transactionId}`);
+
     return c.json({ success: true, transactionId, pageUrl: monoData.pageUrl });
 
   } catch (e: any) {
     console.error('[MonoBank] Create Invoice Error:', e.message);
     return c.json({ success: false, error: e.message }, 500);
+  }
+});
+
+// GET /api/orders/:id — for order-success page
+app.get('/orders/:id', async (c) => {
+  try {
+    const id = c.req.param('id');
+    const order = await prisma.order.findUnique({
+      where: { id },
+      include: { 
+        items: { include: { product: true } }, 
+        transaction: true 
+      }
+    });
+    if (!order) return c.json({ error: 'Not found' }, 404);
+    
+    const deliveryData = order.deliveryData ? JSON.parse(order.deliveryData as string) : {};
+    
+    return c.json({
+      order: {
+        orderNumber: order.id.slice(0, 8).toUpperCase(),
+        status: order.status.toLowerCase(),
+        total: Number(order.totalAmount),
+        paymentStatus: order.transaction?.status?.toLowerCase() || 'pending',
+        customerName: deliveryData.customerName || '',
+        customerEmail: deliveryData.customerEmail || '',
+        deliveryMethod: deliveryData.method || 'nova_poshta',
+        deliveryCity: deliveryData.city || '',
+        deliveryWarehouse: deliveryData.warehouse || '',
+        createdAt: order.createdAt?.toISOString() || new Date().toISOString()
+      },
+      items: order.items.map((i: any) => ({
+        productName: i.product?.nameUk || i.productId,
+        volume: i.variant || 'unit',
+        quantity: i.quantity,
+        totalPrice: Number(i.priceAtBuy) * i.quantity
+      }))
+    });
+  } catch (e: any) {
+    return c.json({ error: e.message }, 500);
   }
 });
 
@@ -655,78 +706,114 @@ app.post('/webhooks/monobank', async (c) => {
   try {
     const signature = c.req.header('x-sign');
     if (!signature && process.env.NODE_ENV === 'production') {
-      // TODO: Full ECDSA verification via Monobank PubKey
-      console.warn('[MonoBank] Missing X-Sign. [BYPASS ACTIVE for Day 1 Sales] Proceeding...');
+      console.warn('[MonoBank] Missing X-Sign. Proceeding (ECDSA verification TBD)...');
     }
     
     const body = await c.req.json();
     console.log(`[MonoBank] Webhook received for invoice ${body.invoiceId || 'UNKNOWN'}, status: ${body.status}`);
 
-    const invoiceId = body.invoiceId;
+    const monoInvoiceId = body.invoiceId;
     const mbStatus = body.status;
 
-    if (invoiceId && mbStatus === 'success') {
+    if (!monoInvoiceId) {
+      console.error('[MonoBank] Webhook missing invoiceId');
+      return c.json({ status: 'ok' });
+    }
+
+    // Lookup transaction by paymentRef (where we stored monobank invoiceId)
+    const transaction = await prisma.transaction.findFirst({
+      where: { paymentRef: monoInvoiceId }
+    });
+
+    if (!transaction) {
+      console.error(`[MonoBank] Transaction not found for invoiceId: ${monoInvoiceId}`);
+      return c.json({ status: 'ok' }); // Still 200 to Mono to prevent retries
+    }
+
+    if (mbStatus === 'success') {
       // 1. Mark Transaction as COMPLETED
-      const transaction = await prisma.transaction.update({
-        where: { id: invoiceId },
+      await prisma.transaction.update({
+        where: { id: transaction.id },
         data: { status: 'COMPLETED' }
       });
 
       // 2. Mark related Order as PAID
-      if (transaction) {
-         await prisma.order.updateMany({
-           where: { transactionId: invoiceId },
-           data: { status: 'PAID' }
-         });
-         console.log(`✅ [Ecosystem ERP] Order paid successfully. Transaction ${invoiceId} is COMPLETED.`);
-         
-         // 3. META CAPI & GA4 Server-Side Purchase Event
-         try {
-           const metaPixelId = process.env.META_PIXEL_ID || 'dummy_pixel';
-           const metaToken = process.env.META_CAPI_TOKEN || 'dummy_token';
-           
-           if (metaToken !== 'dummy_token') {
-             // Визначаємо time-context (Nanobanana DCO tracking)
-             const hour = new Date().getHours();
-             let timeContext = 'ACTIVE';
-             if (hour >= 22 || hour <= 4) timeContext = 'NIGHT_CODING';
-             else if (hour > 4 && hour <= 10) timeContext = 'SYSTEM_START';
+      await prisma.order.updateMany({
+        where: { transactionId: transaction.id },
+        data: { status: 'PAID' }
+      });
+      console.log(`✅ [Ecosystem ERP] Order paid successfully. Transaction ${transaction.id} is COMPLETED.`);
 
-             const capiPayload = {
-               data: [
-                 {
-                   event_name: 'Purchase',
-                   event_time: Math.floor(Date.now() / 1000),
-                   action_source: 'website',
-                   user_data: { client_ip_address: transaction.ipAddress || '0.0.0.0' },
-                   custom_data: { 
-                     currency: 'UAH', 
-                     value: Number(transaction.totalAmount), 
-                     order_id: transaction.id,
-                     creative_time_context: timeContext // Nanobanana Analytics 
-                   }
-                 }
-               ]
-             };
-             
-             fetch(`https://graph.facebook.com/v19.0/${metaPixelId}/events?access_token=${metaToken}`, {
-               method: 'POST',
-               headers: { 'Content-Type': 'application/json' },
-               body: JSON.stringify(capiPayload)
-             }).catch(e => console.error('[Meta CAPI] Network drift error:', e));
-             
-             console.log(`🎯 [Meta CAPI] Purchase event dispatched to server!`);
-           }
-         } catch (capiErr) {
-           console.error(`[Meta CAPI] Failed to trigger server purchase:`, capiErr);
-         }
+      // 3. Telegram notification about successful payment
+      try {
+        const { bot } = require('./bot');
+        const chatId = process.env.TELEGRAM_ADMIN_CHAT_ID;
+        if (chatId && bot) {
+          const order = await prisma.order.findFirst({ where: { transactionId: transaction.id } });
+          const deliveryData = order?.deliveryData ? JSON.parse(order.deliveryData as string) : {};
+          await bot.telegram.sendMessage(chatId,
+            `✅ *Оплата отримана!* 💳\n\n` +
+            `💰 Сума: *${transaction.totalAmount} ₴*\n` +
+            `👤 Клієнт: ${deliveryData.customerName || 'N/A'}\n` +
+            `📞 Тел: ${deliveryData.customerPhone || 'N/A'}\n` +
+            `🔗 ID: \`${transaction.id.slice(0,8)}\`\n` +
+            `🏦 Mono Invoice: \`${monoInvoiceId}\``,
+            { parse_mode: 'Markdown' });
+        }
+      } catch(tgErr) {
+        console.error('[MonoBank] Telegram notification error:', tgErr);
       }
-    } else if (invoiceId && mbStatus === 'failure') {
+         
+      // 4. META CAPI & GA4 Server-Side Purchase Event
+      try {
+        const metaPixelId = process.env.META_PIXEL_ID || 'dummy_pixel';
+        const metaToken = process.env.META_CAPI_TOKEN || 'dummy_token';
+        
+        if (metaToken !== 'dummy_token') {
+          const hour = new Date().getHours();
+          let timeContext = 'ACTIVE';
+          if (hour >= 22 || hour <= 4) timeContext = 'NIGHT_CODING';
+          else if (hour > 4 && hour <= 10) timeContext = 'SYSTEM_START';
+
+          const capiPayload = {
+            data: [
+              {
+                event_name: 'Purchase',
+                event_time: Math.floor(Date.now() / 1000),
+                action_source: 'website',
+                user_data: { client_ip_address: transaction.ipAddress || '0.0.0.0' },
+                custom_data: { 
+                  currency: 'UAH', 
+                  value: Number(transaction.totalAmount), 
+                  order_id: transaction.id,
+                  creative_time_context: timeContext
+                }
+              }
+            ]
+          };
+          
+          fetch(`https://graph.facebook.com/v19.0/${metaPixelId}/events?access_token=${metaToken}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(capiPayload)
+          }).catch(e => console.error('[Meta CAPI] Network drift error:', e));
+          
+          console.log(`🎯 [Meta CAPI] Purchase event dispatched to server!`);
+        }
+      } catch (capiErr) {
+        console.error(`[Meta CAPI] Failed to trigger server purchase:`, capiErr);
+      }
+
+    } else if (mbStatus === 'failure' || mbStatus === 'expired' || mbStatus === 'reversed') {
       await prisma.transaction.update({
-        where: { id: invoiceId },
+        where: { id: transaction.id },
         data: { status: 'CANCELLED' }
       });
-      console.warn(`[Ecosystem ERP] Transaction ${invoiceId} CANCELLED by Monobank.`);
+      await prisma.order.updateMany({
+        where: { transactionId: transaction.id },
+        data: { status: 'CANCELLED' }
+      });
+      console.warn(`[Ecosystem ERP] Transaction ${transaction.id} CANCELLED by Monobank (status: ${mbStatus}).`);
     }
     
     return c.json({ status: 'ok' }); // Mono expects 200 OK

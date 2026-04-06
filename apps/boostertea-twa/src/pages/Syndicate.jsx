@@ -42,10 +42,10 @@ function VisionBlock() {
       <div className="contact-card" style={{ borderLeft: '4px solid var(--neon-blue)', marginBottom: '15px' }}>
         <h3 className="neon-text" style={{ marginBottom: '10px' }}>GLOBAL ROADMAP 🌍</h3>
         <ul style={{ color: '#a0aec0', fontSize: '0.9rem', paddingLeft: '15px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <li><strong style={{color:'#fff'}}>ЕТАП 1 ($60k інвестицій):</strong> Релокація в промислове приміщення, закупівля автоматизованої лінії та станка етикетування.</li>
-          <li><strong style={{color:'#fff'}}>ЕТАП 2 (Масштабування):</strong> Вихід на об'єм у <strong>5 ТОНН/місяць</strong> (5,000 одиниць BoosterTea). Розрахунковий чистий прибуток компанії: <strong>$40,000/місяць</strong>.</li>
-          <li><strong style={{color:'#fff'}}>ЕТАП 3 (Легалізація):</strong> Імплементація міжнародних стандартів ISO та HACCP (допуск у великі мережі).</li>
-          <li><strong style={{color:'#fff'}}>ЕТАП 4 (Експансія):</strong> Експорт у європейські хаби. Відкриття нових ринків.</li>
+          <li><strong style={{color:'#fff'}}>ЕТАП 1 ($60k Seed Round):</strong> Релокація в медіа-студію, автоматизована лінія сатурації, інтеграція Aqua 360/Dinosludge.</li>
+          <li><strong style={{color:'#fff'}}>ЕТАП 2 (Traction):</strong> Вихід на об'єм <strong>5 ТОНН/міс</strong> (BoosterTea). Projected MRR Growth: <strong>$40,000/міс</strong> чистого прибутку.</li>
+          <li><strong style={{color:'#fff'}}>ЕТАП 3 (Compliance):</strong> Імплементація міжнародних стандартів ISO/HACCP. Інтеграція 20 Тір-1 Інфлюенсерів у наш TWA-hub.</li>
+          <li><strong style={{color:'#fff'}}>ЕТАП 4 (Expansion):</strong> Експорт у європейські хаби (Series A+).</li>
         </ul>
       </div>
 
@@ -96,20 +96,20 @@ function ServicesBlock() {
       <div className="contact-card" style={{ marginBottom: '15px' }}>
         <h3 style={{ color: 'var(--neon-blue)', marginBottom: '5px' }}>ПАКЕТ "КОЛІЗЕЙ" (Екосистема)</h3>
         <div style={{ fontSize: '0.85rem', color: '#a0aec0' }}>
-          <strong>Суть продукту:</strong> Повна маркетингово-технічна запаковка бренду під ключ. Ми створюємо інфраструктуру (сервери, боти, дашборди), яка замінює 2-3 співробітників у клієнта.<br/>
-          <strong>Модель монетизації:</strong> Клієнт сідає на "Premium" підписку (SaaS-подібний рекурент). Інфраструктура залишається в нашій власності, клієнт бере її в оренду.<br/>
-          <strong>Підтверджений Кейс:</strong> B2B маркетплейс Aqua 360. Клієнт отримує результат і стабільно платить <strong>$900/місяць</strong>.<br/>
-          <strong>Ціна входу:</strong> Від $5,000<br/>
-          <strong>Бонус за ліда (Твій %):</strong> 10% ($500)
+          <strong>Суть продукту:</strong> Налаштування повноцінної SaaS-інфраструктури (сервери, TWA-боти, дашборди) для бізнесу. Ми замінюємо 2-3 співробітників кодом, оптимізуємо P&L замовника та зменшуємо його CAC (Customer Acquisition Cost) у 2 рази.<br/>
+          <strong>Модель монетизації:</strong> B2B Рекурент (MRR). Інфраструктура належить нам, клієнт бере її в оренду. Monthly Recurring Revenue дає капіталізацію X10.<br/>
+          <strong>Підтверджений Кейс:</strong> B2B маркетплейс Aqua 360. Нульовий Churn Rate (відтік), клієнт стабільно приносить <strong>$900 MRR</strong>.<br/>
+          <strong>Ціна входу:</strong> Від $5,000 + % Support<br/>
+          <strong>Твій Бонус:</strong> 10% ($500)
         </div>
       </div>
 
       <div className="contact-card" style={{ marginBottom: '15px' }}>
         <h3 style={{ color: 'var(--neon-blue)', marginBottom: '5px' }}>ГЛИБИННИЙ АУДИТ МАРКЕТИНГУ</h3>
         <div style={{ fontSize: '0.85rem', color: '#a0aec0' }}>
-          <strong>Суть продукту:</strong> Жорсткий математичний аналіз рекламних кабінетів, Meta Pixel (CPA, ROMI) та виявлення прихованих "дірок" у бюджеті замовника.<br/>
-          <strong>Ціна:</strong> Від $500<br/>
-          <strong>Бонус за ліда:</strong> 20% ($100)
+          <strong>Суть продукту:</strong> Аналітика рівня Єдинорогів. Прорахунок LTV / CAC Ratio, інтеграція Server-Side Predictive Analytics для знищення неефективних кабінетів Meta Ads.<br/>
+          <strong>Ціна:</strong> Від $500 (Base Audit) до $2000 (Deep P&L Audit)<br/>
+          <strong>Твій Бонус:</strong> 20%
         </div>
       </div>
 
