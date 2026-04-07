@@ -206,14 +206,20 @@ app.post('/orders', async (c) => {
   try {
     const body = await c.req.json();
     
+    // Guard: items must be a non-empty array
+    if (!body.items || !Array.isArray(body.items) || body.items.length === 0) {
+      return c.json({ error: 'Кошик порожній або відсутній' }, 400);
+    }
+
     // Calculate total securely using backend config
     const total = body.items.reduce((acc: number, item: any) => {
       let price = 0;
-      if (item.productId.startsWith('acc-')) {
-         const accItem = accessoryProducts.find(a => a.id === item.productId);
+      const productIdStr = String(item.productId || '');
+      if (productIdStr.startsWith('acc-')) {
+         const accItem = accessoryProducts.find(a => a.id === productIdStr);
          if (accItem) price = accItem.price;
       } else {
-         const prodItem = products.find(p => p.id === String(item.productId));
+         const prodItem = products.find(p => p.id === productIdStr);
          if (prodItem) {
            price = item.volume === '1L' ? prodItem.price1L : prodItem.price025L;
          }
@@ -577,8 +583,8 @@ app.post('/payment/create-invoice', async (c) => {
       amount: Math.round(Number(parsedTransactionTotal) * 100), // in kopecks
       ccy: 980,
       merchantPaymInfo: {
-        reference: transactionId,
-        destination: `Оплата замовлення ${transactionId.slice(0, 8).toUpperCase()}`,
+        reference: transactionId || 'unknown',
+        destination: `Оплата замовлення ${(transactionId || 'UNKNOWN').slice(0, 8).toUpperCase()}`,
       },
       redirectUrl,
       webHookUrl: `https://boostertea.com.ua/api/webhooks/monobank`
