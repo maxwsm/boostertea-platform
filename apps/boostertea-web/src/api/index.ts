@@ -149,8 +149,17 @@ app.get('/health', (c) => c.json({ status: 'wsm-global-auth-active' }));
 
 app.get('/test/products', async (c) => {
   try {
-    const brand = await prisma.brand.findUnique({ where: { slug: 'boostertea' } });
-    if (!brand) return c.json({ error: "Brand 'boostertea' not found!" }, 404);
+    let brand = await prisma.brand.findUnique({ where: { slug: 'boostertea' } });
+    if (!brand) {
+      brand = await prisma.brand.create({
+        data: {
+          slug: 'boostertea',
+          name: 'BoosterTea',
+          domain: 'boostertea.com.ua',
+          isActive: true
+        }
+      });
+    }
 
     const testProducts = [
       { slug: 'test-1-uah', nameUk: 'Тестовий товар 1 грн', descriptionUk: 'Товар для перевірки платежів на 1 грн', price: 1, category: 'test', stockStatus: true, stockQuantity: 999, brandId: brand.id },
