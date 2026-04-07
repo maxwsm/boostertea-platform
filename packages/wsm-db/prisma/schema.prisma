@@ -1,5 +1,5 @@
 generator client {
-  provider      = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -10,6 +10,13 @@ datasource db {
 // ----------------------------------------------------
 // 1. GLOBAL USERS & WALLETS (WSM CORE)
 // ----------------------------------------------------
+
+enum ClientFunnelStage {
+  NEW_LEAD
+  MEDIUM_WARM
+  VIP_BUYER
+  B2B_PARTNER
+}
 
 model User {
   id           String  @id @default(uuid())
@@ -27,6 +34,11 @@ model User {
   gclid        String? // Google Click ID
   discountUsed Boolean @default(false)
   horecaPoints Int     @default(0)
+
+  // CRM & Retargeting
+  funnelStage      ClientFunnelStage @default(NEW_LEAD)
+  totalOrdersCount Int               @default(0)
+  lifetimeValue    Decimal           @default(0.0)
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -692,7 +704,7 @@ model TechCard {
   knowledgeDocumentId String?
   knowledgeDocument   KnowledgeDocument? @relation(fields: [knowledgeDocumentId], references: [id])
 
-  items TechCardItem[]
+  items               TechCardItem[]
   manufacturingOrders ManufacturingOrder[]
 
   createdAt DateTime @default(now())
@@ -722,17 +734,17 @@ model TechCardItem {
 // ==========================================
 
 model KnowledgeDocument {
-  id        String   @id @default(uuid())
-  title     String
-  type      String   @default("NOTION_PAGE") // NOTION_PAGE, MIRO_BOARD
-  content   String?  // Stringified JSON containing Tiptap Blocks or React Flow Elements
-  status    String   @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
-  
-  brandId   String?
-  brand     Brand?   @relation(fields: [brandId], references: [id], onDelete: SetNull)
-  
-  authorId  String?
-  author    User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  id      String  @id @default(uuid())
+  title   String
+  type    String  @default("NOTION_PAGE") // NOTION_PAGE, MIRO_BOARD
+  content String? // Stringified JSON containing Tiptap Blocks or React Flow Elements
+  status  String  @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
+
+  brandId String?
+  brand   Brand?  @relation(fields: [brandId], references: [id], onDelete: SetNull)
+
+  authorId String?
+  author   User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
 
   techCards TechCard[] // RAG documents attached to TechCards (SOPs)
 
@@ -745,10 +757,10 @@ model KnowledgeDocument {
 // ==========================================
 
 model LotReceipt {
-  id           String   @id @default(uuid())
-  lotNumber    String   @unique
-  productId    String
-  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id        String  @id @default(uuid())
+  lotNumber String  @unique
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   initialQty   Decimal
   remainingQty Decimal
@@ -757,8 +769,8 @@ model LotReceipt {
   manufacturingDate DateTime @default(now())
   expirationDate    DateTime // Required for FEFO logic
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model ManufacturingOrder {
@@ -766,9 +778,9 @@ model ManufacturingOrder {
   orderRef   String   @unique // e.g. "MO-001"
   techCardId String
   techCard   TechCard @relation(fields: [techCardId], references: [id], onDelete: Restrict)
-  
-  targetQty  Decimal  @default(1.0)
-  status     String   @default("DRAFT") // DRAFT, MIXING, FERMENTATION, PACKING, DONE, CANCELLED
+
+  targetQty Decimal @default(1.0)
+  status    String  @default("DRAFT") // DRAFT, MIXING, FERMENTATION, PACKING, DONE, CANCELLED
 
   startedAt   DateTime?
   completedAt DateTime?
