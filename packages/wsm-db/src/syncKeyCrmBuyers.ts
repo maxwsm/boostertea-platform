@@ -6,7 +6,7 @@ const KEYCRM_TOKEN = process.env.KEYCRM_TOKEN;
 const KEYCRM_API_URL = 'https://openapi.keycrm.app/v1';
 
 async function fetchKeyCrmOrders(page = 1) {
-  const url = `${KEYCRM_API_URL}/orders?limit=50&page=${page}&include=buyer,products`;
+  const url = `${KEYCRM_API_URL}/order?limit=50&page=${page}&include=buyer,products`;
   const response = await fetch(url, {
     headers: {
       'Authorization': `Bearer ${KEYCRM_TOKEN}`,
