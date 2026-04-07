@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import Toast from '../components/Toast';
 import TelegramButton from '../components/TelegramButton';
-import NovaPoshtaSelector from '../components/NovaPoshtaSelector';
+
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { useStore } from '../lib/store';
 import { useAuth } from '../lib/auth';
@@ -605,34 +605,34 @@ const Checkout = () => {
                     </div>
                   </div>
                   
-                  {/* Nova Poshta Selector */}
+                  {/* Simple text inputs for Delivery */}
                   {deliveryInfo.method === 'nova_poshta' && (
-                    <div className="space-y-4">
-                      <NovaPoshtaSelector 
-                        onSelect={(data) => {
-                          setDeliveryInfo({
-                            ...deliveryInfo,
-                            city: data.cityName,
-                            cityRef: data.cityRef,
-                            warehouse: data.warehouseNumber,
-                            warehouseRef: data.warehouseRef,
-                            warehouseAddress: data.warehouseAddress,
-                            fullAddress: data.fullAddress
-                          });
-                        }}
-                        initialCity={deliveryInfo.city}
-                        initialWarehouse={deliveryInfo.warehouse}
-                      />
+                    <div className="space-y-5">
+                      <div>
+                        <label className="block text-[var(--text-primary)]/70 text-sm mb-2">
+                          {language === 'uk' ? 'Місто або Населений пункт' : 'City / Town'} *
+                        </label>
+                        <input
+                          type="text"
+                          value={deliveryInfo.city}
+                          onChange={(e) => setDeliveryInfo({ ...deliveryInfo, city: e.target.value, fullAddress: `${e.target.value}, ${deliveryInfo.warehouse}` })}
+                          placeholder={language === 'uk' ? 'Наприклад: Київ' : 'E.g. Kyiv'}
+                          className="w-full px-4 py-3.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30 focus:border-[#6B8E4E] focus:outline-none transition-colors text-lg"
+                        />
+                      </div>
                       
-                      {/* Selected delivery info */}
-                      {deliveryInfo.fullAddress && (
-                        <div className="p-4 bg-[var(--accent)]/10 rounded-xl border border-[#6B8E4E]/30">
-                          <p className="text-[var(--accent)] font-medium text-sm mb-1">
-                            {language === 'uk' ? 'Адреса доставки:' : 'Delivery address:'}
-                          </p>
-                          <p className="text-[var(--text-primary)]">{deliveryInfo.fullAddress}</p>
-                        </div>
-                      )}
+                      <div>
+                        <label className="block text-[var(--text-primary)]/70 text-sm mb-2">
+                          {language === 'uk' ? 'Відділення або Поштомат Нової Пошти' : 'Nova Poshta Branch / Postomat'} *
+                        </label>
+                        <input
+                          type="text"
+                          value={deliveryInfo.warehouse}
+                          onChange={(e) => setDeliveryInfo({ ...deliveryInfo, warehouse: e.target.value, fullAddress: `${deliveryInfo.city}, ${e.target.value}` })}
+                          placeholder={language === 'uk' ? 'Наприклад: Відділення №1' : 'E.g. Branch #1'}
+                          className="w-full px-4 py-3.5 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl text-[var(--text-primary)] placeholder-[#F5F0E8]/30 focus:border-[#6B8E4E] focus:outline-none transition-colors text-lg"
+                        />
+                      </div>
                     </div>
                   )}
                   
