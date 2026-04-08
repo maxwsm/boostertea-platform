@@ -312,6 +312,17 @@ exports.Prisma.SettingsScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.FinanceRecordScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  type: 'type',
+  amount: 'amount',
+  royaltyCut: 'royaltyCut',
+  description: 'description',
+  proofFileId: 'proofFileId',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -340,7 +351,8 @@ exports.Prisma.ModelName = {
   UserAchievement: 'UserAchievement',
   Milestone: 'Milestone',
   DailyReport: 'DailyReport',
-  Settings: 'Settings'
+  Settings: 'Settings',
+  FinanceRecord: 'FinanceRecord'
 };
 
 /**

@@ -36,7 +36,7 @@ export default function MainRouter() {
   }, []);
 
   // For styling the TWA container differently if in ValeraGPT
-  const containerStyle = currentPage === 'valera' ? { height: '100vh', display: 'flex', flexDirection: 'column' } : { paddingBottom: '70px' };
+  const containerStyle = currentPage === 'valera' ? { height: '100vh', display: 'flex', flexDirection: 'column' } : { paddingBottom: '95px' };
 
   return (
     <div style={containerStyle}>
@@ -45,7 +45,7 @@ export default function MainRouter() {
       {currentPage === 'valera' ? (
         <ValeraGPT />
       ) : (
-        <div style={{ paddingBottom: '70px' }}>
+        <div style={{ paddingBottom: '95px' }}>
           {currentPage === 'mission' && <App />}
           {currentPage === 'academy' && <div className="twa-container"><AcademyRouter /></div>}
           {currentPage === 'syndicate' && <div className="twa-container" style={{padding:'20px 10px'}}><SyndicateDashboard /></div>}

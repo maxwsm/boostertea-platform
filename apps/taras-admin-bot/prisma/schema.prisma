@@ -45,6 +45,7 @@ model User {
   achievements    UserAchievement[]
   dailyReports    DailyReport[]
   resourceChecks  UserResource[]
+  financeRecords  FinanceRecord[]
 }
 
 // ═══════════════════════════════════════════
@@ -302,4 +303,20 @@ model Settings {
   key       String   @id
   value     String
   updatedAt DateTime @default(now()) @updatedAt
+}
+
+// ═══════════════════════════════════════════
+// БЛОК 10: ФІНАНСОВА ІСТОРІЯ (ІНВОЙСИ/ЧЕКИ)
+// ═══════════════════════════════════════════
+
+model FinanceRecord {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [telegramId], onDelete: Cascade)
+  type        String   // "income"|"expense"
+  amount      Float
+  royaltyCut  Float
+  description String?
+  proofFileId String?
+  createdAt   DateTime @default(now())
 }

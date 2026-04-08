@@ -40,6 +40,8 @@ if (GEMINI_KEY) {
 }
 
 const { handleOfflineMode } = require('./lib/offline_valera');
+const { extractFinanceData } = require('./lib/vision');
+const { isPartnershipAgreement, triggerPartnershipTasks } = require('./lib/partnership');
 
 async function askGemini(userId, userMessage, extraContext = '', sessionIdProvided = null) {
   if (!geminiModel) return handleOfflineMode(userMessage);
@@ -323,7 +325,81 @@ async function handleProof(ctx, userId) {
   if (ADMIN_ID && userId !== ADMIN_ID) { try { await bot.telegram.sendMessage(ADMIN_ID, `✅ *${ROLES[role]}* здав: "${taskText.substring(0, 60)}..." | ${done}/${total}`, { parse_mode: 'Markdown' }); } catch(e) {} }
 }
 
-bot.on('photo', (ctx) => handleProof(ctx, ctx.from.id.toString()));
+bot.on('photo', async (ctx) => {
+  const userId = ctx.from.id.toString();
+  
+  // ─── PARTNERSHIP FUNNEL ───
+  const caption = ctx.message.caption || '';
+  const agreeCheck = isPartnershipAgreement(caption, true);
+  if (agreeCheck === 'valid') {
+    const role = await getRoleByUserId(prisma, userId);
+    const result = await triggerPartnershipTasks(userId, bot, prisma, role || 'unknown');
+    if (result === 'already_accepted') {
+      return ctx.reply("❌ Ваша згода вже зафіксована раніше.");
+    }
+    return; // Stop further execution, tasks added.
+  }
+  
+  if (pendingConfirm[userId]) {
+    return handleProof(ctx, userId);
+  }
+
+  // ─── FINANCE MODULE ───
+  const role = await getRoleByUserId(prisma, userId);
+  if (!role) return ctx.reply("❌ Невідомий користувач. Фінанси недоступні.");
+
+  const msg = await ctx.reply("👁 Сканую інвойс...");
+  try {
+    const fileId = ctx.message.photo.pop().file_id;
+    const fileLink = await ctx.telegram.getFileLink(fileId);
+    
+    const response = await fetch(fileLink);
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const parsed = await extractFinanceData(buffer, 'image/jpeg', GEMINI_KEY);
+    
+    if (!parsed || parsed.error) {
+      return ctx.telegram.editMessageText(ctx.chat.id, msg.message_id, undefined, "❌ Валєра не розпізнав фінансові дані на фото.");
+    }
+
+    const { amount, type, description } = parsed;
+    const user = await prisma.user.findUnique({ where: { telegramId: userId } });
+    
+    let royaltyCutValue = 0;
+    if (type === 'income') {
+      royaltyCutValue = amount * (user.royaltyCut || 0.05);
+    }
+
+    await prisma.financeRecord.create({
+      data: {
+        userId,
+        type: type === 'income' ? 'income' : 'expense',
+        amount,
+        royaltyCut: royaltyCutValue,
+        description: description || 'Скан інвойсу',
+        proofFileId: fileId
+      }
+    });
+
+    if (type === 'income') {
+      await prisma.user.update({
+        where: { telegramId: userId },
+        data: { totalEarned: { increment: royaltyCutValue } }
+      });
+    }
+
+    const replyText = `📊 **Зчитано інвойс:** ${amount.toLocaleString('uk-UA')} грн (${description}).\n` + 
+      (type === 'income' ? `Твоя частка (${((user.royaltyCut || 0.05) * 100).toFixed(0)}%): **+${royaltyCutValue.toLocaleString('uk-UA')} грн**.\n` : `Витрата зафіксована.\n`) +
+      `💰 Твій загальний стек: **${((user.totalEarned || 0) + royaltyCutValue).toLocaleString('uk-UA')} грн**.\nПрацюємо далі.`;
+
+    await ctx.telegram.editMessageText(ctx.chat.id, msg.message_id, undefined, replyText, { parse_mode: 'Markdown' });
+
+  } catch(e) {
+    console.error("Finance Error:", e);
+    await ctx.telegram.editMessageText(ctx.chat.id, msg.message_id, undefined, "❌ Помилка сканування: " + e.message);
+  }
+});
 bot.on('document', (ctx) => handleProof(ctx, ctx.from.id.toString()));
 
 // 📊 Прогрес команди
@@ -389,8 +465,20 @@ bot.hears('🧠 ШІ-Ментор', async (ctx) => {
 // Free text → Gemini (з збереженням історії)
 bot.on('text', async (ctx) => {
   const text = ctx.message.text;
-  if (text.startsWith('/') || text.startsWith('📜') || text.startsWith('📋') || text.startsWith('📊') || text.startsWith('🤖') || text.startsWith('📈') || text.startsWith('👥') || text.startsWith('🚀') || text.startsWith('🎯')) return;
   const userId = ctx.from.id.toString();
+
+  // ─── PARTNERSHIP FUNNEL ───
+  const agreeCheck = isPartnershipAgreement(text, false);
+  if (agreeCheck === 'need_photo') {
+    return ctx.reply("❌ Ваша згода НЕ ПРИЙНЯТА системою.\\n\\nВи надіслали лише текстове повідомлення. Для повноцінної юридичної згоди вимагається ПРУФ (Скріншот з фіксацією правил). Додайте фото зі словом 'Погоджуюсь'.");
+  } else if (agreeCheck === 'valid') {
+    // Якщо якимось чином прийшов текст з фото, але це неможливо в обробнику text, проте підстраховка
+    const role = await getRoleByUserId(prisma, userId);
+    await triggerPartnershipTasks(userId, bot, prisma, role || 'unknown');
+    return;
+  }
+
+  if (text.startsWith('/') || text.startsWith('📜') || text.startsWith('📋') || text.startsWith('📊') || text.startsWith('🤖') || text.startsWith('📈') || text.startsWith('👥') || text.startsWith('🚀') || text.startsWith('🎯')) return;
   const role = await getRoleByUserId(prisma, userId);
   const day = await getCurrentDay(prisma);
   const extra = role && day ? `Учасник: ${ROLES[role]}. День: ${day}. Тема: ${TASKS[day]?.theme}` : '';

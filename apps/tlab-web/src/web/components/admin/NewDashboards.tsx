@@ -1,5 +1,6 @@
 // Add these imports at the top of admin.tsx
 // After: import { useAuth } from '../lib/auth';
+import React, { useState, useEffect } from 'react';
 
 // Visitor Stats Component (inline to avoid build complexity)
 const VisitorsDashboard = ({ language }: { language: 'uk' | 'en' }) => {
@@ -414,7 +415,7 @@ const KeyCRMDashboard = ({ language }: { language: 'uk' | 'en' }) => {
 
   const t = (uk: string, en: string) => language === 'uk' ? uk : en;
   const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-  const filteredOrders = orders.filter(order => {
+  const filteredOrders = orders.filter((order: any) => {
     if (statusFilter !== 'all' && order.status_name !== statusFilter) return false;
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -528,7 +529,7 @@ const KeyCRMDashboard = ({ language }: { language: 'uk' | 'en' }) => {
               </tr>
             </thead>
             <tbody>
-              {filteredOrders.map((order) => (
+              {filteredOrders.map((order: any) => (
                 <tr key={order.id} className="border-b border-[var(--border)]/50 hover:bg-[var(--bg-primary)]/50">
                   <td className="p-4"><span className="font-mono text-[var(--accent)]">{order.source_uuid || `#${order.id}`}</span></td>
                   <td className="p-4"><p className="text-[var(--text-primary)] font-medium">{order.buyer_name}</p><p className="text-[var(--text-muted)] text-xs">{order.buyer_phone}</p></td>

@@ -98,6 +98,11 @@ export type DailyReport = $Result.DefaultSelection<Prisma.$DailyReportPayload>
  * 
  */
 export type Settings = $Result.DefaultSelection<Prisma.$SettingsPayload>
+/**
+ * Model FinanceRecord
+ * 
+ */
+export type FinanceRecord = $Result.DefaultSelection<Prisma.$FinanceRecordPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -391,6 +396,16 @@ export class PrismaClient<
     * ```
     */
   get settings(): Prisma.SettingsDelegate<ExtArgs>;
+
+  /**
+   * `prisma.financeRecord`: Exposes CRUD operations for the **FinanceRecord** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more FinanceRecords
+    * const financeRecords = await prisma.financeRecord.findMany()
+    * ```
+    */
+  get financeRecord(): Prisma.FinanceRecordDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -848,7 +863,8 @@ export namespace Prisma {
     UserAchievement: 'UserAchievement',
     Milestone: 'Milestone',
     DailyReport: 'DailyReport',
-    Settings: 'Settings'
+    Settings: 'Settings',
+    FinanceRecord: 'FinanceRecord'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -864,7 +880,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "user" | "task" | "taskSkillTag" | "skillCategory" | "skill" | "userSkill" | "skillTask" | "resource" | "userResource" | "contact" | "chatMessage" | "penalty" | "achievement" | "userAchievement" | "milestone" | "dailyReport" | "settings"
+      modelProps: "user" | "task" | "taskSkillTag" | "skillCategory" | "skill" | "userSkill" | "skillTask" | "resource" | "userResource" | "contact" | "chatMessage" | "penalty" | "achievement" | "userAchievement" | "milestone" | "dailyReport" | "settings" | "financeRecord"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2058,6 +2074,76 @@ export namespace Prisma {
           }
         }
       }
+      FinanceRecord: {
+        payload: Prisma.$FinanceRecordPayload<ExtArgs>
+        fields: Prisma.FinanceRecordFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.FinanceRecordFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FinanceRecordPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.FinanceRecordFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FinanceRecordPayload>
+          }
+          findFirst: {
+            args: Prisma.FinanceRecordFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FinanceRecordPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.FinanceRecordFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FinanceRecordPayload>
+          }
+          findMany: {
+            args: Prisma.FinanceRecordFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FinanceRecordPayload>[]
+          }
+          create: {
+            args: Prisma.FinanceRecordCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FinanceRecordPayload>
+          }
+          createMany: {
+            args: Prisma.FinanceRecordCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.FinanceRecordCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FinanceRecordPayload>[]
+          }
+          delete: {
+            args: Prisma.FinanceRecordDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FinanceRecordPayload>
+          }
+          update: {
+            args: Prisma.FinanceRecordUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FinanceRecordPayload>
+          }
+          deleteMany: {
+            args: Prisma.FinanceRecordDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.FinanceRecordUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.FinanceRecordUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$FinanceRecordPayload>
+          }
+          aggregate: {
+            args: Prisma.FinanceRecordAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateFinanceRecord>
+          }
+          groupBy: {
+            args: Prisma.FinanceRecordGroupByArgs<ExtArgs>
+            result: $Utils.Optional<FinanceRecordGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.FinanceRecordCountArgs<ExtArgs>
+            result: $Utils.Optional<FinanceRecordCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2229,6 +2315,7 @@ export namespace Prisma {
     achievements: number
     dailyReports: number
     resourceChecks: number
+    financeRecords: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2242,6 +2329,7 @@ export namespace Prisma {
     achievements?: boolean | UserCountOutputTypeCountAchievementsArgs
     dailyReports?: boolean | UserCountOutputTypeCountDailyReportsArgs
     resourceChecks?: boolean | UserCountOutputTypeCountResourceChecksArgs
+    financeRecords?: boolean | UserCountOutputTypeCountFinanceRecordsArgs
   }
 
   // Custom InputTypes
@@ -2323,6 +2411,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountResourceChecksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: UserResourceWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountFinanceRecordsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: FinanceRecordWhereInput
   }
 
 
@@ -2776,6 +2871,7 @@ export namespace Prisma {
     achievements?: boolean | User$achievementsArgs<ExtArgs>
     dailyReports?: boolean | User$dailyReportsArgs<ExtArgs>
     resourceChecks?: boolean | User$resourceChecksArgs<ExtArgs>
+    financeRecords?: boolean | User$financeRecordsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -2816,6 +2912,7 @@ export namespace Prisma {
     achievements?: boolean | User$achievementsArgs<ExtArgs>
     dailyReports?: boolean | User$dailyReportsArgs<ExtArgs>
     resourceChecks?: boolean | User$resourceChecksArgs<ExtArgs>
+    financeRecords?: boolean | User$financeRecordsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -2833,6 +2930,7 @@ export namespace Prisma {
       achievements: Prisma.$UserAchievementPayload<ExtArgs>[]
       dailyReports: Prisma.$DailyReportPayload<ExtArgs>[]
       resourceChecks: Prisma.$UserResourcePayload<ExtArgs>[]
+      financeRecords: Prisma.$FinanceRecordPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       telegramId: string
@@ -3219,6 +3317,7 @@ export namespace Prisma {
     achievements<T extends User$achievementsArgs<ExtArgs> = {}>(args?: Subset<T, User$achievementsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserAchievementPayload<ExtArgs>, T, "findMany"> | Null>
     dailyReports<T extends User$dailyReportsArgs<ExtArgs> = {}>(args?: Subset<T, User$dailyReportsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DailyReportPayload<ExtArgs>, T, "findMany"> | Null>
     resourceChecks<T extends User$resourceChecksArgs<ExtArgs> = {}>(args?: Subset<T, User$resourceChecksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserResourcePayload<ExtArgs>, T, "findMany"> | Null>
+    financeRecords<T extends User$financeRecordsArgs<ExtArgs> = {}>(args?: Subset<T, User$financeRecordsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FinanceRecordPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3767,6 +3866,26 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: UserResourceScalarFieldEnum | UserResourceScalarFieldEnum[]
+  }
+
+  /**
+   * User.financeRecords
+   */
+  export type User$financeRecordsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FinanceRecord
+     */
+    select?: FinanceRecordSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FinanceRecordInclude<ExtArgs> | null
+    where?: FinanceRecordWhereInput
+    orderBy?: FinanceRecordOrderByWithRelationInput | FinanceRecordOrderByWithRelationInput[]
+    cursor?: FinanceRecordWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: FinanceRecordScalarFieldEnum | FinanceRecordScalarFieldEnum[]
   }
 
   /**
@@ -19870,6 +19989,1011 @@ export namespace Prisma {
 
 
   /**
+   * Model FinanceRecord
+   */
+
+  export type AggregateFinanceRecord = {
+    _count: FinanceRecordCountAggregateOutputType | null
+    _avg: FinanceRecordAvgAggregateOutputType | null
+    _sum: FinanceRecordSumAggregateOutputType | null
+    _min: FinanceRecordMinAggregateOutputType | null
+    _max: FinanceRecordMaxAggregateOutputType | null
+  }
+
+  export type FinanceRecordAvgAggregateOutputType = {
+    amount: number | null
+    royaltyCut: number | null
+  }
+
+  export type FinanceRecordSumAggregateOutputType = {
+    amount: number | null
+    royaltyCut: number | null
+  }
+
+  export type FinanceRecordMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    type: string | null
+    amount: number | null
+    royaltyCut: number | null
+    description: string | null
+    proofFileId: string | null
+    createdAt: Date | null
+  }
+
+  export type FinanceRecordMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    type: string | null
+    amount: number | null
+    royaltyCut: number | null
+    description: string | null
+    proofFileId: string | null
+    createdAt: Date | null
+  }
+
+  export type FinanceRecordCountAggregateOutputType = {
+    id: number
+    userId: number
+    type: number
+    amount: number
+    royaltyCut: number
+    description: number
+    proofFileId: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type FinanceRecordAvgAggregateInputType = {
+    amount?: true
+    royaltyCut?: true
+  }
+
+  export type FinanceRecordSumAggregateInputType = {
+    amount?: true
+    royaltyCut?: true
+  }
+
+  export type FinanceRecordMinAggregateInputType = {
+    id?: true
+    userId?: true
+    type?: true
+    amount?: true
+    royaltyCut?: true
+    description?: true
+    proofFileId?: true
+    createdAt?: true
+  }
+
+  export type FinanceRecordMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    type?: true
+    amount?: true
+    royaltyCut?: true
+    description?: true
+    proofFileId?: true
+    createdAt?: true
+  }
+
+  export type FinanceRecordCountAggregateInputType = {
+    id?: true
+    userId?: true
+    type?: true
+    amount?: true
+    royaltyCut?: true
+    description?: true
+    proofFileId?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type FinanceRecordAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which FinanceRecord to aggregate.
+     */
+    where?: FinanceRecordWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of FinanceRecords to fetch.
+     */
+    orderBy?: FinanceRecordOrderByWithRelationInput | FinanceRecordOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: FinanceRecordWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` FinanceRecords from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` FinanceRecords.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned FinanceRecords
+    **/
+    _count?: true | FinanceRecordCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: FinanceRecordAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: FinanceRecordSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: FinanceRecordMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: FinanceRecordMaxAggregateInputType
+  }
+
+  export type GetFinanceRecordAggregateType<T extends FinanceRecordAggregateArgs> = {
+        [P in keyof T & keyof AggregateFinanceRecord]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateFinanceRecord[P]>
+      : GetScalarType<T[P], AggregateFinanceRecord[P]>
+  }
+
+
+
+
+  export type FinanceRecordGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: FinanceRecordWhereInput
+    orderBy?: FinanceRecordOrderByWithAggregationInput | FinanceRecordOrderByWithAggregationInput[]
+    by: FinanceRecordScalarFieldEnum[] | FinanceRecordScalarFieldEnum
+    having?: FinanceRecordScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: FinanceRecordCountAggregateInputType | true
+    _avg?: FinanceRecordAvgAggregateInputType
+    _sum?: FinanceRecordSumAggregateInputType
+    _min?: FinanceRecordMinAggregateInputType
+    _max?: FinanceRecordMaxAggregateInputType
+  }
+
+  export type FinanceRecordGroupByOutputType = {
+    id: string
+    userId: string
+    type: string
+    amount: number
+    royaltyCut: number
+    description: string | null
+    proofFileId: string | null
+    createdAt: Date
+    _count: FinanceRecordCountAggregateOutputType | null
+    _avg: FinanceRecordAvgAggregateOutputType | null
+    _sum: FinanceRecordSumAggregateOutputType | null
+    _min: FinanceRecordMinAggregateOutputType | null
+    _max: FinanceRecordMaxAggregateOutputType | null
+  }
+
+  type GetFinanceRecordGroupByPayload<T extends FinanceRecordGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<FinanceRecordGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof FinanceRecordGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], FinanceRecordGroupByOutputType[P]>
+            : GetScalarType<T[P], FinanceRecordGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type FinanceRecordSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    type?: boolean
+    amount?: boolean
+    royaltyCut?: boolean
+    description?: boolean
+    proofFileId?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["financeRecord"]>
+
+  export type FinanceRecordSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    type?: boolean
+    amount?: boolean
+    royaltyCut?: boolean
+    description?: boolean
+    proofFileId?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["financeRecord"]>
+
+  export type FinanceRecordSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    type?: boolean
+    amount?: boolean
+    royaltyCut?: boolean
+    description?: boolean
+    proofFileId?: boolean
+    createdAt?: boolean
+  }
+
+  export type FinanceRecordInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type FinanceRecordIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $FinanceRecordPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "FinanceRecord"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      type: string
+      amount: number
+      royaltyCut: number
+      description: string | null
+      proofFileId: string | null
+      createdAt: Date
+    }, ExtArgs["result"]["financeRecord"]>
+    composites: {}
+  }
+
+  type FinanceRecordGetPayload<S extends boolean | null | undefined | FinanceRecordDefaultArgs> = $Result.GetResult<Prisma.$FinanceRecordPayload, S>
+
+  type FinanceRecordCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<FinanceRecordFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: FinanceRecordCountAggregateInputType | true
+    }
+
+  export interface FinanceRecordDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['FinanceRecord'], meta: { name: 'FinanceRecord' } }
+    /**
+     * Find zero or one FinanceRecord that matches the filter.
+     * @param {FinanceRecordFindUniqueArgs} args - Arguments to find a FinanceRecord
+     * @example
+     * // Get one FinanceRecord
+     * const financeRecord = await prisma.financeRecord.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends FinanceRecordFindUniqueArgs>(args: SelectSubset<T, FinanceRecordFindUniqueArgs<ExtArgs>>): Prisma__FinanceRecordClient<$Result.GetResult<Prisma.$FinanceRecordPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one FinanceRecord that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {FinanceRecordFindUniqueOrThrowArgs} args - Arguments to find a FinanceRecord
+     * @example
+     * // Get one FinanceRecord
+     * const financeRecord = await prisma.financeRecord.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends FinanceRecordFindUniqueOrThrowArgs>(args: SelectSubset<T, FinanceRecordFindUniqueOrThrowArgs<ExtArgs>>): Prisma__FinanceRecordClient<$Result.GetResult<Prisma.$FinanceRecordPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first FinanceRecord that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FinanceRecordFindFirstArgs} args - Arguments to find a FinanceRecord
+     * @example
+     * // Get one FinanceRecord
+     * const financeRecord = await prisma.financeRecord.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends FinanceRecordFindFirstArgs>(args?: SelectSubset<T, FinanceRecordFindFirstArgs<ExtArgs>>): Prisma__FinanceRecordClient<$Result.GetResult<Prisma.$FinanceRecordPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first FinanceRecord that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FinanceRecordFindFirstOrThrowArgs} args - Arguments to find a FinanceRecord
+     * @example
+     * // Get one FinanceRecord
+     * const financeRecord = await prisma.financeRecord.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends FinanceRecordFindFirstOrThrowArgs>(args?: SelectSubset<T, FinanceRecordFindFirstOrThrowArgs<ExtArgs>>): Prisma__FinanceRecordClient<$Result.GetResult<Prisma.$FinanceRecordPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more FinanceRecords that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FinanceRecordFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all FinanceRecords
+     * const financeRecords = await prisma.financeRecord.findMany()
+     * 
+     * // Get first 10 FinanceRecords
+     * const financeRecords = await prisma.financeRecord.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const financeRecordWithIdOnly = await prisma.financeRecord.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends FinanceRecordFindManyArgs>(args?: SelectSubset<T, FinanceRecordFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FinanceRecordPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a FinanceRecord.
+     * @param {FinanceRecordCreateArgs} args - Arguments to create a FinanceRecord.
+     * @example
+     * // Create one FinanceRecord
+     * const FinanceRecord = await prisma.financeRecord.create({
+     *   data: {
+     *     // ... data to create a FinanceRecord
+     *   }
+     * })
+     * 
+     */
+    create<T extends FinanceRecordCreateArgs>(args: SelectSubset<T, FinanceRecordCreateArgs<ExtArgs>>): Prisma__FinanceRecordClient<$Result.GetResult<Prisma.$FinanceRecordPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many FinanceRecords.
+     * @param {FinanceRecordCreateManyArgs} args - Arguments to create many FinanceRecords.
+     * @example
+     * // Create many FinanceRecords
+     * const financeRecord = await prisma.financeRecord.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends FinanceRecordCreateManyArgs>(args?: SelectSubset<T, FinanceRecordCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many FinanceRecords and returns the data saved in the database.
+     * @param {FinanceRecordCreateManyAndReturnArgs} args - Arguments to create many FinanceRecords.
+     * @example
+     * // Create many FinanceRecords
+     * const financeRecord = await prisma.financeRecord.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many FinanceRecords and only return the `id`
+     * const financeRecordWithIdOnly = await prisma.financeRecord.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends FinanceRecordCreateManyAndReturnArgs>(args?: SelectSubset<T, FinanceRecordCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$FinanceRecordPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a FinanceRecord.
+     * @param {FinanceRecordDeleteArgs} args - Arguments to delete one FinanceRecord.
+     * @example
+     * // Delete one FinanceRecord
+     * const FinanceRecord = await prisma.financeRecord.delete({
+     *   where: {
+     *     // ... filter to delete one FinanceRecord
+     *   }
+     * })
+     * 
+     */
+    delete<T extends FinanceRecordDeleteArgs>(args: SelectSubset<T, FinanceRecordDeleteArgs<ExtArgs>>): Prisma__FinanceRecordClient<$Result.GetResult<Prisma.$FinanceRecordPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one FinanceRecord.
+     * @param {FinanceRecordUpdateArgs} args - Arguments to update one FinanceRecord.
+     * @example
+     * // Update one FinanceRecord
+     * const financeRecord = await prisma.financeRecord.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends FinanceRecordUpdateArgs>(args: SelectSubset<T, FinanceRecordUpdateArgs<ExtArgs>>): Prisma__FinanceRecordClient<$Result.GetResult<Prisma.$FinanceRecordPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more FinanceRecords.
+     * @param {FinanceRecordDeleteManyArgs} args - Arguments to filter FinanceRecords to delete.
+     * @example
+     * // Delete a few FinanceRecords
+     * const { count } = await prisma.financeRecord.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends FinanceRecordDeleteManyArgs>(args?: SelectSubset<T, FinanceRecordDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more FinanceRecords.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FinanceRecordUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many FinanceRecords
+     * const financeRecord = await prisma.financeRecord.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends FinanceRecordUpdateManyArgs>(args: SelectSubset<T, FinanceRecordUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one FinanceRecord.
+     * @param {FinanceRecordUpsertArgs} args - Arguments to update or create a FinanceRecord.
+     * @example
+     * // Update or create a FinanceRecord
+     * const financeRecord = await prisma.financeRecord.upsert({
+     *   create: {
+     *     // ... data to create a FinanceRecord
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the FinanceRecord we want to update
+     *   }
+     * })
+     */
+    upsert<T extends FinanceRecordUpsertArgs>(args: SelectSubset<T, FinanceRecordUpsertArgs<ExtArgs>>): Prisma__FinanceRecordClient<$Result.GetResult<Prisma.$FinanceRecordPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of FinanceRecords.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FinanceRecordCountArgs} args - Arguments to filter FinanceRecords to count.
+     * @example
+     * // Count the number of FinanceRecords
+     * const count = await prisma.financeRecord.count({
+     *   where: {
+     *     // ... the filter for the FinanceRecords we want to count
+     *   }
+     * })
+    **/
+    count<T extends FinanceRecordCountArgs>(
+      args?: Subset<T, FinanceRecordCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], FinanceRecordCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a FinanceRecord.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FinanceRecordAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends FinanceRecordAggregateArgs>(args: Subset<T, FinanceRecordAggregateArgs>): Prisma.PrismaPromise<GetFinanceRecordAggregateType<T>>
+
+    /**
+     * Group by FinanceRecord.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {FinanceRecordGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends FinanceRecordGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: FinanceRecordGroupByArgs['orderBy'] }
+        : { orderBy?: FinanceRecordGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, FinanceRecordGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetFinanceRecordGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the FinanceRecord model
+   */
+  readonly fields: FinanceRecordFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for FinanceRecord.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__FinanceRecordClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the FinanceRecord model
+   */ 
+  interface FinanceRecordFieldRefs {
+    readonly id: FieldRef<"FinanceRecord", 'String'>
+    readonly userId: FieldRef<"FinanceRecord", 'String'>
+    readonly type: FieldRef<"FinanceRecord", 'String'>
+    readonly amount: FieldRef<"FinanceRecord", 'Float'>
+    readonly royaltyCut: FieldRef<"FinanceRecord", 'Float'>
+    readonly description: FieldRef<"FinanceRecord", 'String'>
+    readonly proofFileId: FieldRef<"FinanceRecord", 'String'>
+    readonly createdAt: FieldRef<"FinanceRecord", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * FinanceRecord findUnique
+   */
+  export type FinanceRecordFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FinanceRecord
+     */
+    select?: FinanceRecordSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FinanceRecordInclude<ExtArgs> | null
+    /**
+     * Filter, which FinanceRecord to fetch.
+     */
+    where: FinanceRecordWhereUniqueInput
+  }
+
+  /**
+   * FinanceRecord findUniqueOrThrow
+   */
+  export type FinanceRecordFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FinanceRecord
+     */
+    select?: FinanceRecordSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FinanceRecordInclude<ExtArgs> | null
+    /**
+     * Filter, which FinanceRecord to fetch.
+     */
+    where: FinanceRecordWhereUniqueInput
+  }
+
+  /**
+   * FinanceRecord findFirst
+   */
+  export type FinanceRecordFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FinanceRecord
+     */
+    select?: FinanceRecordSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FinanceRecordInclude<ExtArgs> | null
+    /**
+     * Filter, which FinanceRecord to fetch.
+     */
+    where?: FinanceRecordWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of FinanceRecords to fetch.
+     */
+    orderBy?: FinanceRecordOrderByWithRelationInput | FinanceRecordOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for FinanceRecords.
+     */
+    cursor?: FinanceRecordWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` FinanceRecords from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` FinanceRecords.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of FinanceRecords.
+     */
+    distinct?: FinanceRecordScalarFieldEnum | FinanceRecordScalarFieldEnum[]
+  }
+
+  /**
+   * FinanceRecord findFirstOrThrow
+   */
+  export type FinanceRecordFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FinanceRecord
+     */
+    select?: FinanceRecordSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FinanceRecordInclude<ExtArgs> | null
+    /**
+     * Filter, which FinanceRecord to fetch.
+     */
+    where?: FinanceRecordWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of FinanceRecords to fetch.
+     */
+    orderBy?: FinanceRecordOrderByWithRelationInput | FinanceRecordOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for FinanceRecords.
+     */
+    cursor?: FinanceRecordWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` FinanceRecords from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` FinanceRecords.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of FinanceRecords.
+     */
+    distinct?: FinanceRecordScalarFieldEnum | FinanceRecordScalarFieldEnum[]
+  }
+
+  /**
+   * FinanceRecord findMany
+   */
+  export type FinanceRecordFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FinanceRecord
+     */
+    select?: FinanceRecordSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FinanceRecordInclude<ExtArgs> | null
+    /**
+     * Filter, which FinanceRecords to fetch.
+     */
+    where?: FinanceRecordWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of FinanceRecords to fetch.
+     */
+    orderBy?: FinanceRecordOrderByWithRelationInput | FinanceRecordOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing FinanceRecords.
+     */
+    cursor?: FinanceRecordWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` FinanceRecords from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` FinanceRecords.
+     */
+    skip?: number
+    distinct?: FinanceRecordScalarFieldEnum | FinanceRecordScalarFieldEnum[]
+  }
+
+  /**
+   * FinanceRecord create
+   */
+  export type FinanceRecordCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FinanceRecord
+     */
+    select?: FinanceRecordSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FinanceRecordInclude<ExtArgs> | null
+    /**
+     * The data needed to create a FinanceRecord.
+     */
+    data: XOR<FinanceRecordCreateInput, FinanceRecordUncheckedCreateInput>
+  }
+
+  /**
+   * FinanceRecord createMany
+   */
+  export type FinanceRecordCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many FinanceRecords.
+     */
+    data: FinanceRecordCreateManyInput | FinanceRecordCreateManyInput[]
+  }
+
+  /**
+   * FinanceRecord createManyAndReturn
+   */
+  export type FinanceRecordCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FinanceRecord
+     */
+    select?: FinanceRecordSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many FinanceRecords.
+     */
+    data: FinanceRecordCreateManyInput | FinanceRecordCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FinanceRecordIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * FinanceRecord update
+   */
+  export type FinanceRecordUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FinanceRecord
+     */
+    select?: FinanceRecordSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FinanceRecordInclude<ExtArgs> | null
+    /**
+     * The data needed to update a FinanceRecord.
+     */
+    data: XOR<FinanceRecordUpdateInput, FinanceRecordUncheckedUpdateInput>
+    /**
+     * Choose, which FinanceRecord to update.
+     */
+    where: FinanceRecordWhereUniqueInput
+  }
+
+  /**
+   * FinanceRecord updateMany
+   */
+  export type FinanceRecordUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update FinanceRecords.
+     */
+    data: XOR<FinanceRecordUpdateManyMutationInput, FinanceRecordUncheckedUpdateManyInput>
+    /**
+     * Filter which FinanceRecords to update
+     */
+    where?: FinanceRecordWhereInput
+  }
+
+  /**
+   * FinanceRecord upsert
+   */
+  export type FinanceRecordUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FinanceRecord
+     */
+    select?: FinanceRecordSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FinanceRecordInclude<ExtArgs> | null
+    /**
+     * The filter to search for the FinanceRecord to update in case it exists.
+     */
+    where: FinanceRecordWhereUniqueInput
+    /**
+     * In case the FinanceRecord found by the `where` argument doesn't exist, create a new FinanceRecord with this data.
+     */
+    create: XOR<FinanceRecordCreateInput, FinanceRecordUncheckedCreateInput>
+    /**
+     * In case the FinanceRecord was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<FinanceRecordUpdateInput, FinanceRecordUncheckedUpdateInput>
+  }
+
+  /**
+   * FinanceRecord delete
+   */
+  export type FinanceRecordDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FinanceRecord
+     */
+    select?: FinanceRecordSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FinanceRecordInclude<ExtArgs> | null
+    /**
+     * Filter which FinanceRecord to delete.
+     */
+    where: FinanceRecordWhereUniqueInput
+  }
+
+  /**
+   * FinanceRecord deleteMany
+   */
+  export type FinanceRecordDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which FinanceRecords to delete
+     */
+    where?: FinanceRecordWhereInput
+  }
+
+  /**
+   * FinanceRecord without action
+   */
+  export type FinanceRecordDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the FinanceRecord
+     */
+    select?: FinanceRecordSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: FinanceRecordInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -20124,6 +21248,20 @@ export namespace Prisma {
   export type SettingsScalarFieldEnum = (typeof SettingsScalarFieldEnum)[keyof typeof SettingsScalarFieldEnum]
 
 
+  export const FinanceRecordScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    type: 'type',
+    amount: 'amount',
+    royaltyCut: 'royaltyCut',
+    description: 'description',
+    proofFileId: 'proofFileId',
+    createdAt: 'createdAt'
+  };
+
+  export type FinanceRecordScalarFieldEnum = (typeof FinanceRecordScalarFieldEnum)[keyof typeof FinanceRecordScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -20207,6 +21345,7 @@ export namespace Prisma {
     achievements?: UserAchievementListRelationFilter
     dailyReports?: DailyReportListRelationFilter
     resourceChecks?: UserResourceListRelationFilter
+    financeRecords?: FinanceRecordListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -20230,6 +21369,7 @@ export namespace Prisma {
     achievements?: UserAchievementOrderByRelationAggregateInput
     dailyReports?: DailyReportOrderByRelationAggregateInput
     resourceChecks?: UserResourceOrderByRelationAggregateInput
+    financeRecords?: FinanceRecordOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -20256,6 +21396,7 @@ export namespace Prisma {
     achievements?: UserAchievementListRelationFilter
     dailyReports?: DailyReportListRelationFilter
     resourceChecks?: UserResourceListRelationFilter
+    financeRecords?: FinanceRecordListRelationFilter
   }, "telegramId">
 
   export type UserOrderByWithAggregationInput = {
@@ -21489,6 +22630,78 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"Settings"> | Date | string
   }
 
+  export type FinanceRecordWhereInput = {
+    AND?: FinanceRecordWhereInput | FinanceRecordWhereInput[]
+    OR?: FinanceRecordWhereInput[]
+    NOT?: FinanceRecordWhereInput | FinanceRecordWhereInput[]
+    id?: StringFilter<"FinanceRecord"> | string
+    userId?: StringFilter<"FinanceRecord"> | string
+    type?: StringFilter<"FinanceRecord"> | string
+    amount?: FloatFilter<"FinanceRecord"> | number
+    royaltyCut?: FloatFilter<"FinanceRecord"> | number
+    description?: StringNullableFilter<"FinanceRecord"> | string | null
+    proofFileId?: StringNullableFilter<"FinanceRecord"> | string | null
+    createdAt?: DateTimeFilter<"FinanceRecord"> | Date | string
+    user?: XOR<UserRelationFilter, UserWhereInput>
+  }
+
+  export type FinanceRecordOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    type?: SortOrder
+    amount?: SortOrder
+    royaltyCut?: SortOrder
+    description?: SortOrderInput | SortOrder
+    proofFileId?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type FinanceRecordWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: FinanceRecordWhereInput | FinanceRecordWhereInput[]
+    OR?: FinanceRecordWhereInput[]
+    NOT?: FinanceRecordWhereInput | FinanceRecordWhereInput[]
+    userId?: StringFilter<"FinanceRecord"> | string
+    type?: StringFilter<"FinanceRecord"> | string
+    amount?: FloatFilter<"FinanceRecord"> | number
+    royaltyCut?: FloatFilter<"FinanceRecord"> | number
+    description?: StringNullableFilter<"FinanceRecord"> | string | null
+    proofFileId?: StringNullableFilter<"FinanceRecord"> | string | null
+    createdAt?: DateTimeFilter<"FinanceRecord"> | Date | string
+    user?: XOR<UserRelationFilter, UserWhereInput>
+  }, "id">
+
+  export type FinanceRecordOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    type?: SortOrder
+    amount?: SortOrder
+    royaltyCut?: SortOrder
+    description?: SortOrderInput | SortOrder
+    proofFileId?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: FinanceRecordCountOrderByAggregateInput
+    _avg?: FinanceRecordAvgOrderByAggregateInput
+    _max?: FinanceRecordMaxOrderByAggregateInput
+    _min?: FinanceRecordMinOrderByAggregateInput
+    _sum?: FinanceRecordSumOrderByAggregateInput
+  }
+
+  export type FinanceRecordScalarWhereWithAggregatesInput = {
+    AND?: FinanceRecordScalarWhereWithAggregatesInput | FinanceRecordScalarWhereWithAggregatesInput[]
+    OR?: FinanceRecordScalarWhereWithAggregatesInput[]
+    NOT?: FinanceRecordScalarWhereWithAggregatesInput | FinanceRecordScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"FinanceRecord"> | string
+    userId?: StringWithAggregatesFilter<"FinanceRecord"> | string
+    type?: StringWithAggregatesFilter<"FinanceRecord"> | string
+    amount?: FloatWithAggregatesFilter<"FinanceRecord"> | number
+    royaltyCut?: FloatWithAggregatesFilter<"FinanceRecord"> | number
+    description?: StringNullableWithAggregatesFilter<"FinanceRecord"> | string | null
+    proofFileId?: StringNullableWithAggregatesFilter<"FinanceRecord"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"FinanceRecord"> | Date | string
+  }
+
   export type UserCreateInput = {
     telegramId: string
     role: string
@@ -21510,6 +22723,7 @@ export namespace Prisma {
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     dailyReports?: DailyReportCreateNestedManyWithoutUserInput
     resourceChecks?: UserResourceCreateNestedManyWithoutUserInput
+    financeRecords?: FinanceRecordCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -21533,6 +22747,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     dailyReports?: DailyReportUncheckedCreateNestedManyWithoutUserInput
     resourceChecks?: UserResourceUncheckedCreateNestedManyWithoutUserInput
+    financeRecords?: FinanceRecordUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -21556,6 +22771,7 @@ export namespace Prisma {
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     dailyReports?: DailyReportUpdateManyWithoutUserNestedInput
     resourceChecks?: UserResourceUpdateManyWithoutUserNestedInput
+    financeRecords?: FinanceRecordUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -21579,6 +22795,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     dailyReports?: DailyReportUncheckedUpdateManyWithoutUserNestedInput
     resourceChecks?: UserResourceUncheckedUpdateManyWithoutUserNestedInput
+    financeRecords?: FinanceRecordUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -22894,6 +24111,82 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type FinanceRecordCreateInput = {
+    id?: string
+    type: string
+    amount: number
+    royaltyCut: number
+    description?: string | null
+    proofFileId?: string | null
+    createdAt?: Date | string
+    user: UserCreateNestedOneWithoutFinanceRecordsInput
+  }
+
+  export type FinanceRecordUncheckedCreateInput = {
+    id?: string
+    userId: string
+    type: string
+    amount: number
+    royaltyCut: number
+    description?: string | null
+    proofFileId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type FinanceRecordUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    amount?: FloatFieldUpdateOperationsInput | number
+    royaltyCut?: FloatFieldUpdateOperationsInput | number
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    proofFileId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutFinanceRecordsNestedInput
+  }
+
+  export type FinanceRecordUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    amount?: FloatFieldUpdateOperationsInput | number
+    royaltyCut?: FloatFieldUpdateOperationsInput | number
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    proofFileId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FinanceRecordCreateManyInput = {
+    id?: string
+    userId: string
+    type: string
+    amount: number
+    royaltyCut: number
+    description?: string | null
+    proofFileId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type FinanceRecordUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    amount?: FloatFieldUpdateOperationsInput | number
+    royaltyCut?: FloatFieldUpdateOperationsInput | number
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    proofFileId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FinanceRecordUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    amount?: FloatFieldUpdateOperationsInput | number
+    royaltyCut?: FloatFieldUpdateOperationsInput | number
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    proofFileId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -23006,6 +24299,12 @@ export namespace Prisma {
     none?: UserResourceWhereInput
   }
 
+  export type FinanceRecordListRelationFilter = {
+    every?: FinanceRecordWhereInput
+    some?: FinanceRecordWhereInput
+    none?: FinanceRecordWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -23044,6 +24343,10 @@ export namespace Prisma {
   }
 
   export type UserResourceOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type FinanceRecordOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -23993,6 +25296,49 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
+  export type FinanceRecordCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    type?: SortOrder
+    amount?: SortOrder
+    royaltyCut?: SortOrder
+    description?: SortOrder
+    proofFileId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type FinanceRecordAvgOrderByAggregateInput = {
+    amount?: SortOrder
+    royaltyCut?: SortOrder
+  }
+
+  export type FinanceRecordMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    type?: SortOrder
+    amount?: SortOrder
+    royaltyCut?: SortOrder
+    description?: SortOrder
+    proofFileId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type FinanceRecordMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    type?: SortOrder
+    amount?: SortOrder
+    royaltyCut?: SortOrder
+    description?: SortOrder
+    proofFileId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type FinanceRecordSumOrderByAggregateInput = {
+    amount?: SortOrder
+    royaltyCut?: SortOrder
+  }
+
   export type TaskCreateNestedManyWithoutOwnerInput = {
     create?: XOR<TaskCreateWithoutOwnerInput, TaskUncheckedCreateWithoutOwnerInput> | TaskCreateWithoutOwnerInput[] | TaskUncheckedCreateWithoutOwnerInput[]
     connectOrCreate?: TaskCreateOrConnectWithoutOwnerInput | TaskCreateOrConnectWithoutOwnerInput[]
@@ -24063,6 +25409,13 @@ export namespace Prisma {
     connect?: UserResourceWhereUniqueInput | UserResourceWhereUniqueInput[]
   }
 
+  export type FinanceRecordCreateNestedManyWithoutUserInput = {
+    create?: XOR<FinanceRecordCreateWithoutUserInput, FinanceRecordUncheckedCreateWithoutUserInput> | FinanceRecordCreateWithoutUserInput[] | FinanceRecordUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: FinanceRecordCreateOrConnectWithoutUserInput | FinanceRecordCreateOrConnectWithoutUserInput[]
+    createMany?: FinanceRecordCreateManyUserInputEnvelope
+    connect?: FinanceRecordWhereUniqueInput | FinanceRecordWhereUniqueInput[]
+  }
+
   export type TaskUncheckedCreateNestedManyWithoutOwnerInput = {
     create?: XOR<TaskCreateWithoutOwnerInput, TaskUncheckedCreateWithoutOwnerInput> | TaskCreateWithoutOwnerInput[] | TaskUncheckedCreateWithoutOwnerInput[]
     connectOrCreate?: TaskCreateOrConnectWithoutOwnerInput | TaskCreateOrConnectWithoutOwnerInput[]
@@ -24131,6 +25484,13 @@ export namespace Prisma {
     connectOrCreate?: UserResourceCreateOrConnectWithoutUserInput | UserResourceCreateOrConnectWithoutUserInput[]
     createMany?: UserResourceCreateManyUserInputEnvelope
     connect?: UserResourceWhereUniqueInput | UserResourceWhereUniqueInput[]
+  }
+
+  export type FinanceRecordUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<FinanceRecordCreateWithoutUserInput, FinanceRecordUncheckedCreateWithoutUserInput> | FinanceRecordCreateWithoutUserInput[] | FinanceRecordUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: FinanceRecordCreateOrConnectWithoutUserInput | FinanceRecordCreateOrConnectWithoutUserInput[]
+    createMany?: FinanceRecordCreateManyUserInputEnvelope
+    connect?: FinanceRecordWhereUniqueInput | FinanceRecordWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -24301,6 +25661,20 @@ export namespace Prisma {
     deleteMany?: UserResourceScalarWhereInput | UserResourceScalarWhereInput[]
   }
 
+  export type FinanceRecordUpdateManyWithoutUserNestedInput = {
+    create?: XOR<FinanceRecordCreateWithoutUserInput, FinanceRecordUncheckedCreateWithoutUserInput> | FinanceRecordCreateWithoutUserInput[] | FinanceRecordUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: FinanceRecordCreateOrConnectWithoutUserInput | FinanceRecordCreateOrConnectWithoutUserInput[]
+    upsert?: FinanceRecordUpsertWithWhereUniqueWithoutUserInput | FinanceRecordUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: FinanceRecordCreateManyUserInputEnvelope
+    set?: FinanceRecordWhereUniqueInput | FinanceRecordWhereUniqueInput[]
+    disconnect?: FinanceRecordWhereUniqueInput | FinanceRecordWhereUniqueInput[]
+    delete?: FinanceRecordWhereUniqueInput | FinanceRecordWhereUniqueInput[]
+    connect?: FinanceRecordWhereUniqueInput | FinanceRecordWhereUniqueInput[]
+    update?: FinanceRecordUpdateWithWhereUniqueWithoutUserInput | FinanceRecordUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: FinanceRecordUpdateManyWithWhereWithoutUserInput | FinanceRecordUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: FinanceRecordScalarWhereInput | FinanceRecordScalarWhereInput[]
+  }
+
   export type TaskUncheckedUpdateManyWithoutOwnerNestedInput = {
     create?: XOR<TaskCreateWithoutOwnerInput, TaskUncheckedCreateWithoutOwnerInput> | TaskCreateWithoutOwnerInput[] | TaskUncheckedCreateWithoutOwnerInput[]
     connectOrCreate?: TaskCreateOrConnectWithoutOwnerInput | TaskCreateOrConnectWithoutOwnerInput[]
@@ -24439,6 +25813,20 @@ export namespace Prisma {
     update?: UserResourceUpdateWithWhereUniqueWithoutUserInput | UserResourceUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: UserResourceUpdateManyWithWhereWithoutUserInput | UserResourceUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: UserResourceScalarWhereInput | UserResourceScalarWhereInput[]
+  }
+
+  export type FinanceRecordUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<FinanceRecordCreateWithoutUserInput, FinanceRecordUncheckedCreateWithoutUserInput> | FinanceRecordCreateWithoutUserInput[] | FinanceRecordUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: FinanceRecordCreateOrConnectWithoutUserInput | FinanceRecordCreateOrConnectWithoutUserInput[]
+    upsert?: FinanceRecordUpsertWithWhereUniqueWithoutUserInput | FinanceRecordUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: FinanceRecordCreateManyUserInputEnvelope
+    set?: FinanceRecordWhereUniqueInput | FinanceRecordWhereUniqueInput[]
+    disconnect?: FinanceRecordWhereUniqueInput | FinanceRecordWhereUniqueInput[]
+    delete?: FinanceRecordWhereUniqueInput | FinanceRecordWhereUniqueInput[]
+    connect?: FinanceRecordWhereUniqueInput | FinanceRecordWhereUniqueInput[]
+    update?: FinanceRecordUpdateWithWhereUniqueWithoutUserInput | FinanceRecordUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: FinanceRecordUpdateManyWithWhereWithoutUserInput | FinanceRecordUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: FinanceRecordScalarWhereInput | FinanceRecordScalarWhereInput[]
   }
 
   export type UserCreateNestedOneWithoutOwnedTasksInput = {
@@ -25051,6 +26439,20 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutDailyReportsInput, UserUpdateWithoutDailyReportsInput>, UserUncheckedUpdateWithoutDailyReportsInput>
   }
 
+  export type UserCreateNestedOneWithoutFinanceRecordsInput = {
+    create?: XOR<UserCreateWithoutFinanceRecordsInput, UserUncheckedCreateWithoutFinanceRecordsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutFinanceRecordsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutFinanceRecordsNestedInput = {
+    create?: XOR<UserCreateWithoutFinanceRecordsInput, UserUncheckedCreateWithoutFinanceRecordsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutFinanceRecordsInput
+    upsert?: UserUpsertWithoutFinanceRecordsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutFinanceRecordsInput, UserUpdateWithoutFinanceRecordsInput>, UserUncheckedUpdateWithoutFinanceRecordsInput>
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -25610,6 +27012,35 @@ export namespace Prisma {
     data: UserResourceCreateManyUserInput | UserResourceCreateManyUserInput[]
   }
 
+  export type FinanceRecordCreateWithoutUserInput = {
+    id?: string
+    type: string
+    amount: number
+    royaltyCut: number
+    description?: string | null
+    proofFileId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type FinanceRecordUncheckedCreateWithoutUserInput = {
+    id?: string
+    type: string
+    amount: number
+    royaltyCut: number
+    description?: string | null
+    proofFileId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type FinanceRecordCreateOrConnectWithoutUserInput = {
+    where: FinanceRecordWhereUniqueInput
+    create: XOR<FinanceRecordCreateWithoutUserInput, FinanceRecordUncheckedCreateWithoutUserInput>
+  }
+
+  export type FinanceRecordCreateManyUserInputEnvelope = {
+    data: FinanceRecordCreateManyUserInput | FinanceRecordCreateManyUserInput[]
+  }
+
   export type TaskUpsertWithWhereUniqueWithoutOwnerInput = {
     where: TaskWhereUniqueInput
     update: XOR<TaskUpdateWithoutOwnerInput, TaskUncheckedUpdateWithoutOwnerInput>
@@ -25914,6 +27345,36 @@ export namespace Prisma {
     notes?: StringNullableFilter<"UserResource"> | string | null
   }
 
+  export type FinanceRecordUpsertWithWhereUniqueWithoutUserInput = {
+    where: FinanceRecordWhereUniqueInput
+    update: XOR<FinanceRecordUpdateWithoutUserInput, FinanceRecordUncheckedUpdateWithoutUserInput>
+    create: XOR<FinanceRecordCreateWithoutUserInput, FinanceRecordUncheckedCreateWithoutUserInput>
+  }
+
+  export type FinanceRecordUpdateWithWhereUniqueWithoutUserInput = {
+    where: FinanceRecordWhereUniqueInput
+    data: XOR<FinanceRecordUpdateWithoutUserInput, FinanceRecordUncheckedUpdateWithoutUserInput>
+  }
+
+  export type FinanceRecordUpdateManyWithWhereWithoutUserInput = {
+    where: FinanceRecordScalarWhereInput
+    data: XOR<FinanceRecordUpdateManyMutationInput, FinanceRecordUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type FinanceRecordScalarWhereInput = {
+    AND?: FinanceRecordScalarWhereInput | FinanceRecordScalarWhereInput[]
+    OR?: FinanceRecordScalarWhereInput[]
+    NOT?: FinanceRecordScalarWhereInput | FinanceRecordScalarWhereInput[]
+    id?: StringFilter<"FinanceRecord"> | string
+    userId?: StringFilter<"FinanceRecord"> | string
+    type?: StringFilter<"FinanceRecord"> | string
+    amount?: FloatFilter<"FinanceRecord"> | number
+    royaltyCut?: FloatFilter<"FinanceRecord"> | number
+    description?: StringNullableFilter<"FinanceRecord"> | string | null
+    proofFileId?: StringNullableFilter<"FinanceRecord"> | string | null
+    createdAt?: DateTimeFilter<"FinanceRecord"> | Date | string
+  }
+
   export type UserCreateWithoutOwnedTasksInput = {
     telegramId: string
     role: string
@@ -25934,6 +27395,7 @@ export namespace Prisma {
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     dailyReports?: DailyReportCreateNestedManyWithoutUserInput
     resourceChecks?: UserResourceCreateNestedManyWithoutUserInput
+    financeRecords?: FinanceRecordCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutOwnedTasksInput = {
@@ -25956,6 +27418,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     dailyReports?: DailyReportUncheckedCreateNestedManyWithoutUserInput
     resourceChecks?: UserResourceUncheckedCreateNestedManyWithoutUserInput
+    financeRecords?: FinanceRecordUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutOwnedTasksInput = {
@@ -25983,6 +27446,7 @@ export namespace Prisma {
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     dailyReports?: DailyReportCreateNestedManyWithoutUserInput
     resourceChecks?: UserResourceCreateNestedManyWithoutUserInput
+    financeRecords?: FinanceRecordCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutAssignedTasksInput = {
@@ -26005,6 +27469,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     dailyReports?: DailyReportUncheckedCreateNestedManyWithoutUserInput
     resourceChecks?: UserResourceUncheckedCreateNestedManyWithoutUserInput
+    financeRecords?: FinanceRecordUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutAssignedTasksInput = {
@@ -26062,6 +27527,7 @@ export namespace Prisma {
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     dailyReports?: DailyReportUpdateManyWithoutUserNestedInput
     resourceChecks?: UserResourceUpdateManyWithoutUserNestedInput
+    financeRecords?: FinanceRecordUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutOwnedTasksInput = {
@@ -26084,6 +27550,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     dailyReports?: DailyReportUncheckedUpdateManyWithoutUserNestedInput
     resourceChecks?: UserResourceUncheckedUpdateManyWithoutUserNestedInput
+    financeRecords?: FinanceRecordUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserUpsertWithoutAssignedTasksInput = {
@@ -26117,6 +27584,7 @@ export namespace Prisma {
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     dailyReports?: DailyReportUpdateManyWithoutUserNestedInput
     resourceChecks?: UserResourceUpdateManyWithoutUserNestedInput
+    financeRecords?: FinanceRecordUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAssignedTasksInput = {
@@ -26139,6 +27607,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     dailyReports?: DailyReportUncheckedUpdateManyWithoutUserNestedInput
     resourceChecks?: UserResourceUncheckedUpdateManyWithoutUserNestedInput
+    financeRecords?: FinanceRecordUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type TaskSkillTagUpsertWithWhereUniqueWithoutTaskInput = {
@@ -26640,6 +28109,7 @@ export namespace Prisma {
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     dailyReports?: DailyReportCreateNestedManyWithoutUserInput
     resourceChecks?: UserResourceCreateNestedManyWithoutUserInput
+    financeRecords?: FinanceRecordCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutUserSkillsInput = {
@@ -26662,6 +28132,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     dailyReports?: DailyReportUncheckedCreateNestedManyWithoutUserInput
     resourceChecks?: UserResourceUncheckedCreateNestedManyWithoutUserInput
+    financeRecords?: FinanceRecordUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutUserSkillsInput = {
@@ -26729,6 +28200,7 @@ export namespace Prisma {
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     dailyReports?: DailyReportUpdateManyWithoutUserNestedInput
     resourceChecks?: UserResourceUpdateManyWithoutUserNestedInput
+    financeRecords?: FinanceRecordUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutUserSkillsInput = {
@@ -26751,6 +28223,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     dailyReports?: DailyReportUncheckedUpdateManyWithoutUserNestedInput
     resourceChecks?: UserResourceUncheckedUpdateManyWithoutUserNestedInput
+    financeRecords?: FinanceRecordUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type SkillUpsertWithoutUserSkillsInput = {
@@ -26837,6 +28310,7 @@ export namespace Prisma {
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     dailyReports?: DailyReportCreateNestedManyWithoutUserInput
     resourceChecks?: UserResourceCreateNestedManyWithoutUserInput
+    financeRecords?: FinanceRecordCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutSkillTasksOwnedInput = {
@@ -26859,6 +28333,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     dailyReports?: DailyReportUncheckedCreateNestedManyWithoutUserInput
     resourceChecks?: UserResourceUncheckedCreateNestedManyWithoutUserInput
+    financeRecords?: FinanceRecordUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutSkillTasksOwnedInput = {
@@ -26932,6 +28407,7 @@ export namespace Prisma {
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     dailyReports?: DailyReportUpdateManyWithoutUserNestedInput
     resourceChecks?: UserResourceUpdateManyWithoutUserNestedInput
+    financeRecords?: FinanceRecordUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutSkillTasksOwnedInput = {
@@ -26954,6 +28430,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     dailyReports?: DailyReportUncheckedUpdateManyWithoutUserNestedInput
     resourceChecks?: UserResourceUncheckedUpdateManyWithoutUserNestedInput
+    financeRecords?: FinanceRecordUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type SkillCreateWithoutResourcesInput = {
@@ -27081,6 +28558,7 @@ export namespace Prisma {
     penalties?: PenaltyCreateNestedManyWithoutUserInput
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     dailyReports?: DailyReportCreateNestedManyWithoutUserInput
+    financeRecords?: FinanceRecordCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutResourceChecksInput = {
@@ -27103,6 +28581,7 @@ export namespace Prisma {
     penalties?: PenaltyUncheckedCreateNestedManyWithoutUserInput
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     dailyReports?: DailyReportUncheckedCreateNestedManyWithoutUserInput
+    financeRecords?: FinanceRecordUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutResourceChecksInput = {
@@ -27170,6 +28649,7 @@ export namespace Prisma {
     penalties?: PenaltyUpdateManyWithoutUserNestedInput
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     dailyReports?: DailyReportUpdateManyWithoutUserNestedInput
+    financeRecords?: FinanceRecordUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutResourceChecksInput = {
@@ -27192,6 +28672,7 @@ export namespace Prisma {
     penalties?: PenaltyUncheckedUpdateManyWithoutUserNestedInput
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     dailyReports?: DailyReportUncheckedUpdateManyWithoutUserNestedInput
+    financeRecords?: FinanceRecordUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type ResourceUpsertWithoutUserResourcesInput = {
@@ -27249,6 +28730,7 @@ export namespace Prisma {
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     dailyReports?: DailyReportCreateNestedManyWithoutUserInput
     resourceChecks?: UserResourceCreateNestedManyWithoutUserInput
+    financeRecords?: FinanceRecordCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutCreatedContactsInput = {
@@ -27271,6 +28753,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     dailyReports?: DailyReportUncheckedCreateNestedManyWithoutUserInput
     resourceChecks?: UserResourceUncheckedCreateNestedManyWithoutUserInput
+    financeRecords?: FinanceRecordUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutCreatedContactsInput = {
@@ -27309,6 +28792,7 @@ export namespace Prisma {
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     dailyReports?: DailyReportUpdateManyWithoutUserNestedInput
     resourceChecks?: UserResourceUpdateManyWithoutUserNestedInput
+    financeRecords?: FinanceRecordUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutCreatedContactsInput = {
@@ -27331,6 +28815,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     dailyReports?: DailyReportUncheckedUpdateManyWithoutUserNestedInput
     resourceChecks?: UserResourceUncheckedUpdateManyWithoutUserNestedInput
+    financeRecords?: FinanceRecordUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutChatMessagesInput = {
@@ -27353,6 +28838,7 @@ export namespace Prisma {
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     dailyReports?: DailyReportCreateNestedManyWithoutUserInput
     resourceChecks?: UserResourceCreateNestedManyWithoutUserInput
+    financeRecords?: FinanceRecordCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutChatMessagesInput = {
@@ -27375,6 +28861,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     dailyReports?: DailyReportUncheckedCreateNestedManyWithoutUserInput
     resourceChecks?: UserResourceUncheckedCreateNestedManyWithoutUserInput
+    financeRecords?: FinanceRecordUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutChatMessagesInput = {
@@ -27413,6 +28900,7 @@ export namespace Prisma {
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     dailyReports?: DailyReportUpdateManyWithoutUserNestedInput
     resourceChecks?: UserResourceUpdateManyWithoutUserNestedInput
+    financeRecords?: FinanceRecordUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutChatMessagesInput = {
@@ -27435,6 +28923,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     dailyReports?: DailyReportUncheckedUpdateManyWithoutUserNestedInput
     resourceChecks?: UserResourceUncheckedUpdateManyWithoutUserNestedInput
+    financeRecords?: FinanceRecordUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutPenaltiesInput = {
@@ -27457,6 +28946,7 @@ export namespace Prisma {
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     dailyReports?: DailyReportCreateNestedManyWithoutUserInput
     resourceChecks?: UserResourceCreateNestedManyWithoutUserInput
+    financeRecords?: FinanceRecordCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutPenaltiesInput = {
@@ -27479,6 +28969,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     dailyReports?: DailyReportUncheckedCreateNestedManyWithoutUserInput
     resourceChecks?: UserResourceUncheckedCreateNestedManyWithoutUserInput
+    financeRecords?: FinanceRecordUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutPenaltiesInput = {
@@ -27517,6 +29008,7 @@ export namespace Prisma {
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     dailyReports?: DailyReportUpdateManyWithoutUserNestedInput
     resourceChecks?: UserResourceUpdateManyWithoutUserNestedInput
+    financeRecords?: FinanceRecordUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPenaltiesInput = {
@@ -27539,6 +29031,7 @@ export namespace Prisma {
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
     dailyReports?: DailyReportUncheckedUpdateManyWithoutUserNestedInput
     resourceChecks?: UserResourceUncheckedUpdateManyWithoutUserNestedInput
+    financeRecords?: FinanceRecordUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserAchievementCreateWithoutAchievementInput = {
@@ -27598,6 +29091,7 @@ export namespace Prisma {
     penalties?: PenaltyCreateNestedManyWithoutUserInput
     dailyReports?: DailyReportCreateNestedManyWithoutUserInput
     resourceChecks?: UserResourceCreateNestedManyWithoutUserInput
+    financeRecords?: FinanceRecordCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutAchievementsInput = {
@@ -27620,6 +29114,7 @@ export namespace Prisma {
     penalties?: PenaltyUncheckedCreateNestedManyWithoutUserInput
     dailyReports?: DailyReportUncheckedCreateNestedManyWithoutUserInput
     resourceChecks?: UserResourceUncheckedCreateNestedManyWithoutUserInput
+    financeRecords?: FinanceRecordUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutAchievementsInput = {
@@ -27683,6 +29178,7 @@ export namespace Prisma {
     penalties?: PenaltyUpdateManyWithoutUserNestedInput
     dailyReports?: DailyReportUpdateManyWithoutUserNestedInput
     resourceChecks?: UserResourceUpdateManyWithoutUserNestedInput
+    financeRecords?: FinanceRecordUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAchievementsInput = {
@@ -27705,6 +29201,7 @@ export namespace Prisma {
     penalties?: PenaltyUncheckedUpdateManyWithoutUserNestedInput
     dailyReports?: DailyReportUncheckedUpdateManyWithoutUserNestedInput
     resourceChecks?: UserResourceUncheckedUpdateManyWithoutUserNestedInput
+    financeRecords?: FinanceRecordUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type AchievementUpsertWithoutUsersInput = {
@@ -27758,6 +29255,7 @@ export namespace Prisma {
     penalties?: PenaltyCreateNestedManyWithoutUserInput
     achievements?: UserAchievementCreateNestedManyWithoutUserInput
     resourceChecks?: UserResourceCreateNestedManyWithoutUserInput
+    financeRecords?: FinanceRecordCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutDailyReportsInput = {
@@ -27780,6 +29278,7 @@ export namespace Prisma {
     penalties?: PenaltyUncheckedCreateNestedManyWithoutUserInput
     achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
     resourceChecks?: UserResourceUncheckedCreateNestedManyWithoutUserInput
+    financeRecords?: FinanceRecordUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutDailyReportsInput = {
@@ -27818,6 +29317,7 @@ export namespace Prisma {
     penalties?: PenaltyUpdateManyWithoutUserNestedInput
     achievements?: UserAchievementUpdateManyWithoutUserNestedInput
     resourceChecks?: UserResourceUpdateManyWithoutUserNestedInput
+    financeRecords?: FinanceRecordUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutDailyReportsInput = {
@@ -27839,6 +29339,115 @@ export namespace Prisma {
     createdContacts?: ContactUncheckedUpdateManyWithoutCreatedByNestedInput
     penalties?: PenaltyUncheckedUpdateManyWithoutUserNestedInput
     achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    resourceChecks?: UserResourceUncheckedUpdateManyWithoutUserNestedInput
+    financeRecords?: FinanceRecordUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserCreateWithoutFinanceRecordsInput = {
+    telegramId: string
+    role: string
+    name?: string
+    royaltyCut?: number
+    totalEarned?: number
+    xpTotal?: number
+    level?: number
+    streakDays?: number
+    lastActiveAt?: Date | string | null
+    createdAt?: Date | string
+    ownedTasks?: TaskCreateNestedManyWithoutOwnerInput
+    assignedTasks?: TaskCreateNestedManyWithoutAssignedByInput
+    userSkills?: UserSkillCreateNestedManyWithoutUserInput
+    skillTasksOwned?: SkillTaskCreateNestedManyWithoutOwnerInput
+    chatMessages?: ChatMessageCreateNestedManyWithoutUserInput
+    createdContacts?: ContactCreateNestedManyWithoutCreatedByInput
+    penalties?: PenaltyCreateNestedManyWithoutUserInput
+    achievements?: UserAchievementCreateNestedManyWithoutUserInput
+    dailyReports?: DailyReportCreateNestedManyWithoutUserInput
+    resourceChecks?: UserResourceCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutFinanceRecordsInput = {
+    telegramId: string
+    role: string
+    name?: string
+    royaltyCut?: number
+    totalEarned?: number
+    xpTotal?: number
+    level?: number
+    streakDays?: number
+    lastActiveAt?: Date | string | null
+    createdAt?: Date | string
+    ownedTasks?: TaskUncheckedCreateNestedManyWithoutOwnerInput
+    assignedTasks?: TaskUncheckedCreateNestedManyWithoutAssignedByInput
+    userSkills?: UserSkillUncheckedCreateNestedManyWithoutUserInput
+    skillTasksOwned?: SkillTaskUncheckedCreateNestedManyWithoutOwnerInput
+    chatMessages?: ChatMessageUncheckedCreateNestedManyWithoutUserInput
+    createdContacts?: ContactUncheckedCreateNestedManyWithoutCreatedByInput
+    penalties?: PenaltyUncheckedCreateNestedManyWithoutUserInput
+    achievements?: UserAchievementUncheckedCreateNestedManyWithoutUserInput
+    dailyReports?: DailyReportUncheckedCreateNestedManyWithoutUserInput
+    resourceChecks?: UserResourceUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutFinanceRecordsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutFinanceRecordsInput, UserUncheckedCreateWithoutFinanceRecordsInput>
+  }
+
+  export type UserUpsertWithoutFinanceRecordsInput = {
+    update: XOR<UserUpdateWithoutFinanceRecordsInput, UserUncheckedUpdateWithoutFinanceRecordsInput>
+    create: XOR<UserCreateWithoutFinanceRecordsInput, UserUncheckedCreateWithoutFinanceRecordsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutFinanceRecordsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutFinanceRecordsInput, UserUncheckedUpdateWithoutFinanceRecordsInput>
+  }
+
+  export type UserUpdateWithoutFinanceRecordsInput = {
+    telegramId?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    royaltyCut?: FloatFieldUpdateOperationsInput | number
+    totalEarned?: FloatFieldUpdateOperationsInput | number
+    xpTotal?: IntFieldUpdateOperationsInput | number
+    level?: IntFieldUpdateOperationsInput | number
+    streakDays?: IntFieldUpdateOperationsInput | number
+    lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    ownedTasks?: TaskUpdateManyWithoutOwnerNestedInput
+    assignedTasks?: TaskUpdateManyWithoutAssignedByNestedInput
+    userSkills?: UserSkillUpdateManyWithoutUserNestedInput
+    skillTasksOwned?: SkillTaskUpdateManyWithoutOwnerNestedInput
+    chatMessages?: ChatMessageUpdateManyWithoutUserNestedInput
+    createdContacts?: ContactUpdateManyWithoutCreatedByNestedInput
+    penalties?: PenaltyUpdateManyWithoutUserNestedInput
+    achievements?: UserAchievementUpdateManyWithoutUserNestedInput
+    dailyReports?: DailyReportUpdateManyWithoutUserNestedInput
+    resourceChecks?: UserResourceUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutFinanceRecordsInput = {
+    telegramId?: StringFieldUpdateOperationsInput | string
+    role?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    royaltyCut?: FloatFieldUpdateOperationsInput | number
+    totalEarned?: FloatFieldUpdateOperationsInput | number
+    xpTotal?: IntFieldUpdateOperationsInput | number
+    level?: IntFieldUpdateOperationsInput | number
+    streakDays?: IntFieldUpdateOperationsInput | number
+    lastActiveAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    ownedTasks?: TaskUncheckedUpdateManyWithoutOwnerNestedInput
+    assignedTasks?: TaskUncheckedUpdateManyWithoutAssignedByNestedInput
+    userSkills?: UserSkillUncheckedUpdateManyWithoutUserNestedInput
+    skillTasksOwned?: SkillTaskUncheckedUpdateManyWithoutOwnerNestedInput
+    chatMessages?: ChatMessageUncheckedUpdateManyWithoutUserNestedInput
+    createdContacts?: ContactUncheckedUpdateManyWithoutCreatedByNestedInput
+    penalties?: PenaltyUncheckedUpdateManyWithoutUserNestedInput
+    achievements?: UserAchievementUncheckedUpdateManyWithoutUserNestedInput
+    dailyReports?: DailyReportUncheckedUpdateManyWithoutUserNestedInput
     resourceChecks?: UserResourceUncheckedUpdateManyWithoutUserNestedInput
   }
 
@@ -27964,6 +29573,16 @@ export namespace Prisma {
     status?: string
     completedAt?: Date | string | null
     notes?: string | null
+  }
+
+  export type FinanceRecordCreateManyUserInput = {
+    id?: string
+    type: string
+    amount: number
+    royaltyCut: number
+    description?: string | null
+    proofFileId?: string | null
+    createdAt?: Date | string
   }
 
   export type TaskUpdateWithoutOwnerInput = {
@@ -28342,6 +29961,36 @@ export namespace Prisma {
     notes?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
+  export type FinanceRecordUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    amount?: FloatFieldUpdateOperationsInput | number
+    royaltyCut?: FloatFieldUpdateOperationsInput | number
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    proofFileId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FinanceRecordUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    amount?: FloatFieldUpdateOperationsInput | number
+    royaltyCut?: FloatFieldUpdateOperationsInput | number
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    proofFileId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type FinanceRecordUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    amount?: FloatFieldUpdateOperationsInput | number
+    royaltyCut?: FloatFieldUpdateOperationsInput | number
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    proofFileId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type TaskSkillTagCreateManyTaskInput = {
     id?: string
     skillId: string
@@ -28717,6 +30366,10 @@ export namespace Prisma {
      * @deprecated Use SettingsDefaultArgs instead
      */
     export type SettingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = SettingsDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use FinanceRecordDefaultArgs instead
+     */
+    export type FinanceRecordArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = FinanceRecordDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany
