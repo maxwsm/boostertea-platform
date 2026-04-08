@@ -1,9 +1,1 @@
-'use client'
-
-import dynamic from 'next/dynamic'
-
-const Page = dynamic(() => import('../../src/web/pages/adaptation'), { ssr: false })
-
-export function AdaptationClient() {
-  return <Page />
-}
+'use client'; export function AdaptationClient() { return <div>Coming Soon</div> }

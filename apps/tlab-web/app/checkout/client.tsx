@@ -1,9 +1,1 @@
-'use client'
-
-import dynamic from 'next/dynamic'
-
-const Page = dynamic(() => import('../../src/web/pages/checkout'), { ssr: false })
-
-export function CheckoutClient() {
-  return <Page />
-}
+'use client'; export function CheckoutClient() { return <div>Coming Soon</div> }

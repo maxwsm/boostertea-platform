@@ -855,6 +855,18 @@ importers:
       '@radix-ui/react-slot':
         specifier: ^1.2.4
         version: 1.2.4(@types/react@19.2.14)(react@19.2.3)
+      '@react-three/drei':
+        specifier: ^10.7.7
+        version: 10.7.7(@react-three/fiber@9.5.0(@types/react@19.2.14)(immer@11.1.4)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(three@0.183.2))(@types/react@19.2.14)(@types/three@0.183.1)(immer@11.1.4)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(three@0.183.2)
+      '@react-three/fiber':
+        specifier: ^9.5.0
+        version: 9.5.0(@types/react@19.2.14)(immer@11.1.4)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(three@0.183.2)
+      '@types/canvas-confetti':
+        specifier: ^1.9.0
+        version: 1.9.0
+      '@types/three':
+        specifier: ^0.183.1
+        version: 0.183.1
       '@wsm/config':
         specifier: workspace:*
         version: link:../../packages/wsm-config
@@ -885,6 +897,9 @@ importers:
       bullmq:
         specifier: ^5.71.0
         version: 5.71.1
+      canvas-confetti:
+        specifier: ^1.9.4
+        version: 1.9.4
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -918,6 +933,9 @@ importers:
       next:
         specifier: ^16.1.6
         version: 16.2.1(@babel/core@7.29.0)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      next-mdx-remote:
+        specifier: ^6.0.0
+        version: 6.0.0(@types/react@19.2.14)(react@19.2.3)
       pg:
         specifier: ^8.20.0
         version: 8.20.0
@@ -933,6 +951,9 @@ importers:
       react-icons:
         specifier: ^5.5.0
         version: 5.6.0(react@19.2.3)
+      recharts:
+        specifier: ^2.15.4
+        version: 2.15.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       runable-website-runtime:
         specifier: ^0.0.14
         version: 0.0.14(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3))
@@ -942,6 +963,9 @@ importers:
       telegraf:
         specifier: ^4.16.3
         version: 4.16.3
+      three:
+        specifier: ^0.183.2
+        version: 0.183.2
       wouter:
         specifier: ^3.9.0
         version: 3.9.0(react@19.2.3)
