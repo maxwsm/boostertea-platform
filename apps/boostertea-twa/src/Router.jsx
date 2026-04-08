@@ -56,21 +56,21 @@ export default function MainRouter() {
 
       {/* TWA Navigation Bar (Bottom) */}
       <nav className="bottom-nav">
-        <button className={`nav-item ${currentPage === 'mission' ? 'active' : ''}`} onClick={() => setCurrentPage('mission')}>
+        <div className={`nav-item ${currentPage === 'mission' ? 'active' : ''}`} onClick={() => setCurrentPage('mission')}>
           <Crosshair /><span>Mission</span>
-        </button>
-        <button className={`nav-item ${currentPage === 'academy' ? 'active' : ''}`} onClick={() => setCurrentPage('academy')}>
+        </div>
+        <div className={`nav-item ${currentPage === 'academy' ? 'active' : ''}`} onClick={() => setCurrentPage('academy')}>
           <BookOpen /><span>Academy</span>
-        </button>
-        <button className={`nav-item ${currentPage === 'valera' ? 'active' : ''}`} onClick={() => setCurrentPage('valera')}>
+        </div>
+        <div className={`nav-item ${currentPage === 'valera' ? 'active' : ''}`} onClick={() => setCurrentPage('valera')}>
           <ValeraIcon /><span>Валєра</span>
-        </button>
-        <button className={`nav-item ${currentPage === 'syndicate' ? 'active' : ''}`} onClick={() => setCurrentPage('syndicate')}>
+        </div>
+        <div className={`nav-item ${currentPage === 'syndicate' ? 'active' : ''}`} onClick={() => setCurrentPage('syndicate')}>
           <Hexagon /><span>Capital</span>
-        </button>
-        <button className={`nav-item ${currentPage === 'admin' ? 'active' : ''}`} onClick={() => setCurrentPage('admin')}>
+        </div>
+        <div className={`nav-item ${currentPage === 'admin' ? 'active' : ''}`} onClick={() => setCurrentPage('admin')}>
           <Shield /><span>Command</span>
-        </button>
+        </div>
       </nav>
     </div>
   );
