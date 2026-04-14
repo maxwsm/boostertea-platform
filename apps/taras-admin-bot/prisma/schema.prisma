@@ -46,6 +46,7 @@ model User {
   dailyReports    DailyReport[]
   resourceChecks  UserResource[]
   financeRecords  FinanceRecord[]
+  referralLinks   ReferralLink[]
 }
 
 // ═══════════════════════════════════════════
@@ -319,4 +320,82 @@ model FinanceRecord {
   description String?
   proofFileId String?
   createdAt   DateTime @default(now())
+}
+
+// ═══════════════════════════════════════════
+// БЛОК 11: E-COMMERCE CORE (CENTRALIZED)
+// ═══════════════════════════════════════════
+
+model Customer {
+  id         String   @id @default(uuid())
+  telegramId String?  @unique
+  phone      String?  @unique
+  name       String
+  orders     Order[]
+  createdAt  DateTime @default(now())
+}
+
+model B2BPartner {
+  id          String   @id @default(uuid())
+  companyName String
+  contactName String
+  phone       String?
+  telegramId  String?  @unique
+  discountPct Float    @default(0.0)
+  orders      Order[]
+  createdAt   DateTime @default(now())
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  slug        String   @unique
+  name        String
+  description String
+  price       Float
+  stock       Int      @default(0)
+  category    String   // "concentrate"|"tea"|"merch"
+  isB2BOnly   Boolean  @default(false)
+  orderItems  OrderItem[]
+  createdAt   DateTime @default(now())
+}
+
+model ReferralLink {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [telegramId], onDelete: Cascade)
+  clicks    Int      @default(0)
+  orders    Order[]
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id            String   @id @default(uuid())
+  status        String   @default("NEW") // "NEW"|"PROCESSING"|"SHIPPED"|"DONE"
+  totalAmount   Float
+  sourceBot     String   // "taidrink_bot"|"b2b_bot"|"manifest_web"
+  
+  // Buyer details (can be D2C or B2B)
+  customerId    String?
+  customer      Customer?   @relation(fields: [customerId], references: [id])
+  b2bPartnerId  String?
+  b2bPartner    B2BPartner? @relation(fields: [b2bPartnerId], references: [id])
+
+  // Referral tracking
+  referralId    String?
+  referralLink  ReferralLink? @relation(fields: [referralId], references: [id])
+
+  items         OrderItem[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int      @default(1)
+  price     Float    // Price at the time of order
 }

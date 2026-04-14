@@ -6,8 +6,10 @@ import ContactsCRM from './pages/ContactsCRM';
 import SyndicateDashboard from './pages/Syndicate';
 import ValeraGPT from './pages/ValeraGPT';
 import AdminDashboard from './pages/AdminDashboard';
+import StoreFront from './pages/StoreFront';
 import Onboarding from './components/Onboarding';
 import NeuralNomadTour from './components/NeuralNomadTour';
+import { useCart } from './components/CartStore.jsx';
 import './index.css';
 import './academy.css';
 import './crm.css';
@@ -18,11 +20,13 @@ const BookOpen = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="non
 const Hexagon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>;
 const ValeraIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>;
 const Shield = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
+const StoreIcon = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>;
 
 export default function MainRouter() {
   const [currentPage, setCurrentPage] = useState('mission');
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showNeuralTour, setShowNeuralTour] = useState(false);
+  const { cartCount, toggleCart } = useCart();
 
   useEffect(() => {
     const userId = WebApp.initDataUnsafe?.user?.id?.toString() || '';
@@ -46,6 +50,7 @@ export default function MainRouter() {
         <ValeraGPT />
       ) : (
         <div style={{ paddingBottom: '95px' }}>
+          {currentPage === 'store' && <div className="twa-container" style={{padding:'0'}}><StoreFront /></div>}
           {currentPage === 'mission' && <App />}
           {currentPage === 'academy' && <div className="twa-container"><AcademyRouter /></div>}
           {currentPage === 'syndicate' && <div className="twa-container" style={{padding:'20px 10px'}}><SyndicateDashboard /></div>}
@@ -54,8 +59,18 @@ export default function MainRouter() {
         </div>
       )}
 
+      {/* Floating Cart Button */}
+      {cartCount > 0 && (
+        <button className="floating-cart-btn" onClick={toggleCart}>
+          🛒 <span className="cart-badge">{cartCount}</span>
+        </button>
+      )}
+
       {/* TWA Navigation Bar (Bottom) */}
       <nav className="bottom-nav">
+        <div className={`nav-item ${currentPage === 'store' ? 'active' : ''}`} onClick={() => setCurrentPage('store')}>
+          <StoreIcon /><span>Store</span>
+        </div>
         <div className={`nav-item ${currentPage === 'mission' ? 'active' : ''}`} onClick={() => setCurrentPage('mission')}>
           <Crosshair /><span>Mission</span>
         </div>
