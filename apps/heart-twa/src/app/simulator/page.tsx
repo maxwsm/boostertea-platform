@@ -9,9 +9,10 @@ import { generateDebrief } from "@/data/game-simulator/debrief";
 import { createScienceTracker, ScienceTracker, investLossInScience, SCIENCE_TOPICS, generateRevelation, getVisibleAction } from "@/data/game-simulator/scienceEasterEgg";
 import { getRandomCase, EVENT_TO_CASE_MAP, RealCase } from "@/data/game-simulator/realCases";
 import { CIPOLLA_SCALE_CASES, CipollaScaleCase } from "@/data/game-simulator/cipollaScaleMatrix";
-import { Brain, Heart, DollarSign, Activity, AlertTriangle, Gamepad2, ChevronRight, Shield, Target, Zap, BookOpen, GraduationCap, Scale } from "lucide-react";
+import { generateRandomPartner, MultiplayerSession, VOTING_TOPICS, generateEgoDistortionReports, PartnerProfile, GroupVote, VotingTopic } from "@/data/game-simulator/multiplayerEngine";
+import { Brain, Heart, DollarSign, Activity, AlertTriangle, Gamepad2, ChevronRight, Shield, Target, Zap, BookOpen, GraduationCap, Scale, Users } from "lucide-react";
 
-type Phase = "ONBOARDING" | "FUNDING" | "PLAYING" | "EVENT" | "PUZZLE" | "SCIENCE_PICK" | "DEBRIEF";
+type Phase = "ONBOARDING" | "FUNDING" | "PLAYING" | "EVENT" | "PUZZLE" | "SCIENCE_PICK" | "TEAM_VOTE" | "DEBRIEF";
 
 export default function SimulatorPage() {
   const [phase, setPhase] = useState<Phase>("ONBOARDING");
@@ -25,6 +26,11 @@ export default function SimulatorPage() {
   const [pendingLoss, setPendingLoss] = useState<number>(0);
   const [currentScaleCase, setCurrentScaleCase] = useState<CipollaScaleCase | null>(null);
   const [currentRealCase, setCurrentRealCase] = useState<RealCase | null>(null);
+
+  // Multiplayer Offline State
+  const [partnerCount, setPartnerCount] = useState<number>(0);
+  const [multiSession, setMultiSession] = useState<MultiplayerSession | null>(null);
+  const [pendingVote, setPendingVote] = useState<VotingTopic | null>(null);
 
   const mental = player.banks.MENTAL.balance;
   const cash = player.banks.FINANCIAL.balance;
@@ -55,6 +61,17 @@ export default function SimulatorPage() {
     setStep(s => s + 1);
     setLastResult(null);
     setPlayer(p => ({ ...p, month: p.month + 1 }));
+    
+    // Team Vote phase check
+    if (multiSession && multiSession.players.length > 1) {
+      const pendingTopic = VOTING_TOPICS.find(t => t.step === step + 1);
+      if (pendingTopic) {
+        setPendingVote(pendingTopic);
+        setPhase("TEAM_VOTE");
+        return;
+      }
+    }
+
     const events = rollMonthlyEvents(player);
     if (events.npcEvent) {
       const e = events.npcEvent;
@@ -171,8 +188,33 @@ export default function SimulatorPage() {
               <span className="text-xs text-white/50 uppercase font-mono">6. Особиста мета</span>
               <input value={form.personalGoal} onChange={e => setForm(f => ({...f, personalGoal: e.target.value}))} placeholder="Що ти хочеш відчувати?" className="w-full mt-1 p-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/20 focus:outline-none" />
             </label>
+            <label className="block mt-4 border-t border-white/10 pt-4">
+              <span className="text-xs text-white/50 uppercase font-mono flex items-center gap-1"><Users size={12}/> 7. Команда (Партнери)</span>
+              <p className="text-[10px] text-white/40 mb-2">Обмежено. Тільки офлайн AI-партнери з прихованою мотивацією.</p>
+              <div className="flex gap-2">
+                {[0,1,2,3].map(num => (
+                  <button key={num} onClick={() => setPartnerCount(num)} className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all ${partnerCount === num ? "bg-[#FF9500]/15 border-[#FF9500]/50 text-[#FF9500]" : "bg-white/5 border-white/10 text-white/50"}`}>
+                    {num === 0 ? "Соло" : `${num} Партнер${num > 1 ? 'и' : ''}`}
+                  </button>
+                ))}
+              </div>
+            </label>
           </div>
-          <button onClick={() => { setPlayer(p => ({...p, goalCostUSD: form.financialGoal, goalDescription: form.personalGoal})); setPhase("FUNDING"); }} disabled={!form.direction || !form.niche} className="w-full py-4 bg-[#00FF88] text-black font-black uppercase tracking-widest rounded-xl disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-[0_0_30px_rgba(0,255,136,0.3)]">
+          <button onClick={() => { 
+            setPlayer(p => ({...p, goalCostUSD: form.financialGoal, goalDescription: form.personalGoal})); 
+            if (partnerCount > 0) {
+              const names = ["Олег", "Марина", "Максим", "Вікторія"];
+              const partners = Array.from({length: partnerCount}).map((_, i) => generateRandomPartner(`p${i+1}`, names[i], Math.floor(100/(partnerCount+1))));
+              setMultiSession({
+                sessionId: "local-1",
+                players: [{id: "player", name: "Ви", statedMotivation: form.motivation, hiddenMotivation: "LEARNING", equityShare: Math.floor(100/(partnerCount+1)), roleInCompany: "CEO", votingPower: Math.floor(100/(partnerCount+1)), decisions: []}, ...partners],
+                sharedCompany: { name: "Startup", direction: form.direction!, niche: form.niche, totalValuation: 100000, month: 1 },
+                votingHistory: [],
+                isDebriefReady: false
+              });
+            }
+            setPhase("FUNDING"); 
+          }} disabled={!form.direction || !form.niche} className="w-full py-4 bg-[#00FF88] text-black font-black uppercase tracking-widest rounded-xl disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-[0_0_30px_rgba(0,255,136,0.3)]">
             Почати Гру →
           </button>
         </div>
@@ -306,6 +348,42 @@ export default function SimulatorPage() {
         </div>
       )}
 
+      {/* ── TEAM VOTE ───────────────────────── */}
+      {phase === "TEAM_VOTE" && pendingVote && multiSession && (
+        <div className="space-y-4">
+          <div className="p-5 rounded-xl bg-[#00FF88]/10 border border-[#00FF88]/30">
+            <Users className="text-[#00FF88] mb-2" size={24} />
+            <p className="text-[10px] text-[#00FF88] uppercase font-mono mb-2">Командне Рішення</p>
+            <p className={cls("font-bold text-white mb-2")}>{pendingVote.title}</p>
+            <p className="text-xs text-white/70 mb-4">{pendingVote.description}</p>
+            
+            <div className="flex gap-2">
+              <button onClick={() => {
+                applyResult({ financialDelta: pendingVote.financialImpact.yes * cash, mentalDelta: pendingVote.mentalImpact.yes, socialDelta: 0, mindset: "NEUTRAL", title: "Командне Рішення: ЗА", message: pendingVote.title, lesson: pendingVote.lesson });
+                setPendingVote(null); setPhase("PLAYING");
+              }} className="flex-1 py-3 bg-[#00FF88]/20 text-[#00FF88] font-bold rounded-xl">Проголосувати ЗА</button>
+              <button onClick={() => {
+                applyResult({ financialDelta: pendingVote.financialImpact.no * cash, mentalDelta: pendingVote.mentalImpact.no, socialDelta: 0, mindset: "NEUTRAL", title: "Командне Рішення: ПРОТИ", message: pendingVote.title, lesson: pendingVote.lesson });
+                setPendingVote(null); setPhase("PLAYING");
+              }} className="flex-1 py-3 bg-red-500/20 text-red-500 font-bold rounded-xl">Проголосувати ПРОТИ</button>
+            </div>
+            
+            <div className="mt-4 pt-4 border-t border-[#00FF88]/20">
+              <p className="text-[10px] uppercase font-mono text-white/40 mb-2">Голоси Партнерів (Приховані мотиви діють)</p>
+              {multiSession.players.filter(p => p.id !== "player").map(p => {
+                const partnerVote = pendingVote.motivationBias[p.hiddenMotivation] || "ABSTAIN";
+                return (
+                  <div key={p.id} className="flex justify-between text-xs mb-1">
+                    <span className="text-white/70">{p.name}</span>
+                    <span className={partnerVote === "YES" ? "text-[#00FF88]" : partnerVote === "NO" ? "text-red-500" : "text-white/40"}>{partnerVote}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── PUZZLE ─────────────────────────── */}
       {phase === "PUZZLE" && pendingPuzzle && (
         <div className="space-y-4">
@@ -395,7 +473,28 @@ export default function SimulatorPage() {
               </div>
             )}
 
-            <button onClick={() => { setPhase("ONBOARDING"); setPlayer(createInitialPlayer("Гравець")); setStep(0); setForm(createEmptyForm()); setScienceTracker(createScienceTracker()); }} className="w-full py-4 bg-[#00FF88] text-black font-black uppercase rounded-xl">Нова Гра</button>
+            {/* ═══ MULTIPLAYER EGO DISTORTION ═══ */}
+            {multiSession && (
+              <div className="space-y-4 border-t border-white/10 pt-6">
+                <h3 className="text-lg font-black text-center mb-4 flex items-center justify-center gap-2"><Users className="text-[#FF9500]"/> Реальні мотиви команди</h3>
+                {generateEgoDistortionReports(multiSession).filter(r => r.playerId !== "player").map(report => (
+                  <div key={report.playerId} className="p-4 rounded-xl bg-white/5 border border-white/10">
+                    <div className="flex justify-between items-center mb-2">
+                      <p className="font-bold text-white">{report.playerName}</p>
+                      <span className="text-[10px] px-2 py-1 bg-amber-500/20 text-amber-400 rounded-full">{report.revealedMotivation.icon} {report.revealedMotivation.label}</span>
+                    </div>
+                    <p className="text-[10px] text-white/40 italic mb-2">Говорив: "{report.statedMotivation}"</p>
+                    <p className="text-xs text-white/80 mb-3">{report.revealedMotivation.description}</p>
+                    <div className="space-y-1 mb-3">
+                      {report.keyDistortions.map((k,i) => <p key={i} className="text-[10px] text-red-400/80 flex gap-1"><AlertTriangle size={10}/> {k}</p>)}
+                    </div>
+                    <p className="text-[9px] text-[#00FF88] italic border-t border-white/5 pt-2">Кейс: {report.realWorldArchetype}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <button onClick={() => { setPhase("ONBOARDING"); setPlayer(createInitialPlayer("Гравець")); setStep(0); setForm(createEmptyForm()); setScienceTracker(createScienceTracker()); setMultiSession(null); }} className="w-full py-4 bg-[#00FF88] text-black font-black uppercase rounded-xl">Нова Гра</button>
           </div>
         );
       })()}
