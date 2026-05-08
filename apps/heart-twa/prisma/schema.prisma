@@ -1,0 +1,30 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String    @id @default(uuid())
+  telegramId String    @unique
+  createdAt  DateTime  @default(now())
+  sessions   Session[]
+}
+
+model Session {
+  id                  String   @id @default(uuid())
+  userId              String
+  prompt              String
+  aiResponse          String   // JSON stringified schema
+  isAdhdMode          Boolean  @default(false)
+  createdAt           DateTime @default(now())
+
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

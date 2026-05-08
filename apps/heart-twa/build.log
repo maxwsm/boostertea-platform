@@ -1,0 +1,47 @@
+
+> heart-twa@0.1.0 build
+> next build
+
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/13WSM31/package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * /Users/13WSM31/knowledge_graph/ANTI001/wsm-ecosystem/pnpm-workspace.yaml
+
+▲ Next.js 16.2.5 (Turbopack)
+- Environments: .env
+
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build failed with 1 errors:
+./knowledge_graph/ANTI001/wsm-ecosystem/apps/heart-twa/src/components/tabs/MusicTab.tsx:288:1
+Expected '</', got '<eof>'
+  [90m286 |[0m [32m  );[0m
+  [90m287 |[0m [32m}[0m
+[31m[1m>[0m [90m288 |[0m
+  [90m    |[0m [31m[1m^[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./knowledge_graph/ANTI001/wsm-ecosystem/apps/heart-twa/src/components/tabs/MusicTab.tsx [Client Component Browser]
+    ./knowledge_graph/ANTI001/wsm-ecosystem/apps/heart-twa/src/app/page.tsx [Client Component Browser]
+    ./knowledge_graph/ANTI001/wsm-ecosystem/apps/heart-twa/src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./knowledge_graph/ANTI001/wsm-ecosystem/apps/heart-twa/src/components/tabs/MusicTab.tsx [Client Component SSR]
+    ./knowledge_graph/ANTI001/wsm-ecosystem/apps/heart-twa/src/app/page.tsx [Client Component SSR]
+    ./knowledge_graph/ANTI001/wsm-ecosystem/apps/heart-twa/src/app/page.tsx [Server Component]
+
+
+    at <unknown> (./knowledge_graph/ANTI001/wsm-ecosystem/apps/heart-twa/src/components/tabs/MusicTab.tsx:288:1)
+npm error Lifecycle script `build` failed with error:
+npm error code 1
+npm error path /Users/13WSM31/knowledge_graph/ANTI001/wsm-ecosystem/apps/heart-twa
+npm error workspace heart-twa@0.1.0
+npm error location /Users/13WSM31/knowledge_graph/ANTI001/wsm-ecosystem/apps/heart-twa
+npm error command failed
+npm error command sh -c next build
