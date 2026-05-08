@@ -43,6 +43,20 @@ bot.start((ctx) => {
   ]));
 });
 
+// /codex — Direct command
+bot.command('codex', (ctx) => {
+  ctx.reply('📖 Кодекс Тіней — відкрийте вкладку "Кодекс" у Терміналі:', Markup.inlineKeyboard([
+    [Markup.button.webApp('📖 Відкрити Кодекс', twaUrl)]
+  ]));
+});
+
+// /frameworks — Direct command
+bot.command('frameworks', (ctx) => {
+  ctx.reply('⚔️ Фреймворки Рішень — відкрийте вкладку "Кодекс" → "Рішення":', Markup.inlineKeyboard([
+    [Markup.button.webApp('⚔️ Відкрити Фреймворки', twaUrl)]
+  ]));
+});
+
 // Callback: Codex Shadows
 bot.action('codex_shadows', (ctx) => {
   ctx.answerCbQuery();
