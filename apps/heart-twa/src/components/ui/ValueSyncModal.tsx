@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Scale, X, ExternalLink } from "lucide-react";
+import { Scale, X, ExternalLink, Share2 } from "lucide-react";
 
 interface ValueSyncModalProps {
   isOpen: boolean;
@@ -67,9 +67,15 @@ export function ValueSyncModal({ isOpen, onClose }: ValueSyncModalProps) {
                 <p>
                   Я пропоную оформити підписку, переказавши цю суму на Банку. Якщо зараз для вас це коштує менше — окей, вписуйте свою суму. Якщо усвідомите, що Moriarti приніс більше грошей чи зберіг нерви — ви завжди зможете повернутися сюди.
                 </p>
+                <div className="p-3 mt-2 rounded-[12px] bg-oatmeal/5 border border-oatmeal/10">
+                  <p className="font-bold text-oatmeal mb-1 text-[12px]">Альтернативна інвестиція: Партнерство</p>
+                  <p className="text-[12px]">
+                    Додаткова цінність — це розповсюдження системи. Поділіться вашим унікальним доступом в два кліки. Ви отримаєте 10% від усіх інвестицій тих, хто увійде за вашим персональним посиланням.
+                  </p>
+                </div>
               </div>
 
-              <div className="w-full mt-8 flex flex-col gap-3">
+              <div className="w-full mt-6 flex flex-col gap-3">
                 <a 
                   href="https://send.monobank.ua/jar/dMbywRi5S?a=800"
                   target="_blank"
@@ -83,6 +89,28 @@ export function ValueSyncModal({ isOpen, onClose }: ValueSyncModalProps) {
                   Інвестувати в I³.MRMRRT.ƐI (800 грн)
                   <ExternalLink size={16} />
                 </a>
+
+                <button 
+                  onClick={() => {
+                    const userId = typeof window !== "undefined" && (window as any).Telegram?.WebApp?.initDataUnsafe?.user?.id 
+                      ? (window as any).Telegram.WebApp.initDataUnsafe.user.id 
+                      : 'guest';
+                    const text = encodeURIComponent("I³.MRMRRT.ƐI — Автономний Тіньовий Стратег. Дешифруй свою реальність.");
+                    const botUrl = encodeURIComponent(`https://t.me/MRMRRTI_bot?start=ref_${userId}`);
+                    const shareUrl = `https://t.me/share/url?url=${botUrl}&text=${text}`;
+                    
+                    if (typeof window !== "undefined" && (window as any).Telegram?.WebApp?.openTelegramLink) {
+                      (window as any).Telegram.WebApp.openTelegramLink(shareUrl);
+                    } else {
+                      window.open(shareUrl, "_blank");
+                    }
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-3.5 rounded-[14px] text-sm font-bold transition-all hover:opacity-90 border"
+                  style={{ borderColor: "var(--v-text)", color: "var(--v-text)" }}
+                >
+                  Поділитися (Отримати 10%)
+                  <Share2 size={16} />
+                </button>
 
                 <button 
                   onClick={onClose}
