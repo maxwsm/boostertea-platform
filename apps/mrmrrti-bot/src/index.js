@@ -133,10 +133,13 @@ bot.on('text', (ctx) => {
 });
 
 // Start bot
-bot.launch().then(() => {
-  console.log('🤖 I3.MRMRRT.ƐI Bot is running...');
-  console.log(`📡 TWA URL: ${twaUrl}`);
-});
+console.log('🚀 Starting I3.MRMRRT.ƐI Bot...');
+console.log(`📡 TWA URL: ${twaUrl}`);
+console.log(`🔑 Token: ...${token.slice(-6)}`);
+
+bot.launch({ dropPendingUpdates: true })
+  .then(() => console.log('✅ Bot polling active — @MRMRRTI_bot'))
+  .catch(err => console.error('❌ Launch error:', err.message));
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, Sliders, ChevronDown, ChevronUp, Target, Zap, Shield, Skull, Swords } from "lucide-react";
 import { SHADOWS_DATABASE, Shadow } from "@/data/shadowsDatabase";
 import { DECISION_FRAMEWORKS, DecisionFramework } from "@/data/decisionFrameworks";
+import { ShadowIcon, SHADOW_ACCENT_COLORS, SHADOW_BG_COLORS } from "@/components/ui/ShadowIcons";
 
 function ChemistryBar({ label, value, color }: { label: string; value: number; color: string }) {
   return (
@@ -33,7 +34,9 @@ function ShadowCard({ shadow, isAdhdMode }: { shadow: Shadow; isAdhdMode: boolea
         className="w-full p-4 flex items-center justify-between text-left hover:bg-oatmeal/5 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <span className="text-xl">{shadow.icon}</span>
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center border ${SHADOW_BG_COLORS[shadow.iconId] || 'bg-oatmeal/5 border-oatmeal/10'}`}>
+            <ShadowIcon shadowId={shadow.iconId} size={18} className={SHADOW_ACCENT_COLORS[shadow.iconId] || 'text-oatmeal/60'} />
+          </div>
           <span className={`text-sm text-oatmeal font-bold ${isAdhdMode ? "text-base" : ""}`}>{shadow.name}</span>
         </div>
         {expanded ? <ChevronUp size={18} className="text-oatmeal/40" /> : <ChevronDown size={18} className="text-oatmeal/40" />}
@@ -118,7 +121,15 @@ function FrameworkCard({ framework, isAdhdMode }: { framework: DecisionFramework
         className="w-full p-4 flex items-center justify-between text-left hover:bg-ocean/5 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <span className="text-xl">{framework.icon}</span>
+          {(() => {
+            const iconLucideMap: Record<string, any> = { okr: Target, first_principles: Zap, pre_mortem: Skull, red_team: Swords, blitzscaling: Shield };
+            const LucideIcon = iconLucideMap[framework.id] || Target;
+            return (
+              <div className="w-9 h-9 rounded-xl bg-ocean/10 border border-ocean/20 flex items-center justify-center">
+                <LucideIcon size={18} className="text-ocean" />
+              </div>
+            );
+          })()}
           <div className="flex flex-col">
             <span className={`text-sm text-oatmeal font-bold ${isAdhdMode ? "text-base" : ""}`}>{framework.name}</span>
             <span className="text-[10px] text-ocean/60 font-mono uppercase">{framework.company}</span>

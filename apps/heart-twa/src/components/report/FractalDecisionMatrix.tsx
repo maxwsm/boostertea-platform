@@ -58,17 +58,19 @@ void main() {
 function GLSLJuliaSet({ vectors }: { vectors: any }) {
   const materialRef = useRef<THREE.ShaderMaterial>(null);
 
+  // Safe extraction with fallbacks to prevent NaN
+  const dopamine = Number.isFinite(vectors?.dopamine) ? vectors.dopamine : 50;
+  const cogLoad = Number.isFinite(vectors?.cognitiveLoad) ? vectors.cognitiveLoad : 50;
+  const spiritual = Number.isFinite(vectors?.spiritual) ? vectors.spiritual : 0;
+  const financial = Number.isFinite(vectors?.financial) ? vectors.financial : 0;
+
   // Map AI Vectors to Mathematical Parameters
-  // Dopamine (-100 to 100) -> X axis of Complex C
-  const cx = useMemo(() => (vectors.dopamine / 100) * 0.8, [vectors.dopamine]);
-  
-  // Cognitive Load (0 to 100) -> Y axis of Complex C
-  // We map it to [0.1, 0.9] to get interesting Julia shapes
-  const cy = useMemo(() => 0.1 + (vectors.cognitiveLoad / 100) * 0.6, [vectors.cognitiveLoad]);
+  const cx = useMemo(() => (dopamine / 100) * 0.8, [dopamine]);
+  const cy = useMemo(() => 0.1 + (cogLoad / 100) * 0.6, [cogLoad]);
 
   // Determine Colors based on Spiritual/Financial vectors (Order vs Chaos)
   // High balance = Ocean / Sage. Low balance = Magma / Red.
-  const isChaotic = vectors.spiritual < 0 || vectors.financial < 0;
+  const isChaotic = spiritual < 0 || financial < 0;
 
   const colorA = useMemo(() => isChaotic ? new THREE.Color("#450a0a") : new THREE.Color("#0f172a"), [isChaotic]);
   const colorB = useMemo(() => isChaotic ? new THREE.Color("#ef4444") : new THREE.Color("#2d9cdb"), [isChaotic]);
@@ -122,14 +124,14 @@ export function FractalDecisionMatrix({ vectors }: { vectors: any }) {
           <GLSLJuliaSet vectors={vectors} />
         </Canvas>
         
-        {/* Overlay Variables to show user the equation inputs */}
+        {/* Overlay Variables */}
         <div className="absolute top-2 left-2 flex flex-col gap-1 bg-black/60 p-2 rounded backdrop-blur-md">
           <span className="text-[8px] font-mono text-oatmeal/60">C_x (Дофамін)</span>
-          <span className="text-[10px] font-mono text-amber">{((vectors.dopamine / 100) * 0.8).toFixed(2)}</span>
+          <span className="text-[10px] font-mono text-amber">{(((Number.isFinite(vectors?.dopamine) ? vectors.dopamine : 50) / 100) * 0.8).toFixed(2)}</span>
         </div>
         <div className="absolute top-2 right-2 flex flex-col gap-1 bg-black/60 p-2 rounded backdrop-blur-md items-end">
           <span className="text-[8px] font-mono text-oatmeal/60">C_y (Когнітив)</span>
-          <span className="text-[10px] font-mono text-ocean">{(0.1 + (vectors.cognitiveLoad / 100) * 0.6).toFixed(2)}</span>
+          <span className="text-[10px] font-mono text-ocean">{(0.1 + ((Number.isFinite(vectors?.cognitiveLoad) ? vectors.cognitiveLoad : 50) / 100) * 0.6).toFixed(2)}</span>
         </div>
       </div>
     </div>

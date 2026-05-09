@@ -1,7 +1,7 @@
 export interface Shadow {
   id: string;
   name: string;
-  icon: string;
+  iconId: string;
   phrases: string[];
   somatics: string;
   behavior: string;
@@ -22,7 +22,7 @@ export const SHADOWS_DATABASE: Shadow[] = [
   {
     id: "escapist",
     name: "Ескапіст (Втеча)",
-    icon: "🏃",
+    iconId: "escapist",
     phrases: [
       "Я зроблю це завтра",
       "Мені треба просто відпочити",
@@ -39,7 +39,7 @@ export const SHADOWS_DATABASE: Shadow[] = [
   {
     id: "perfectionist",
     name: "Перфекціоніст (Гіперконтроль)",
-    icon: "🎯",
+    iconId: "perfectionist",
     phrases: [
       "Якщо робити, то ідеально",
       "Я повинен все перевірити",
@@ -56,7 +56,7 @@ export const SHADOWS_DATABASE: Shadow[] = [
   {
     id: "victim",
     name: "Жертва (Безсилість)",
-    icon: "😔",
+    iconId: "victim",
     phrases: [
       "Чому це завжди зі мною?",
       "У мене немає вибору",
@@ -73,7 +73,7 @@ export const SHADOWS_DATABASE: Shadow[] = [
   {
     id: "aggressor",
     name: "Агресор (Домінування)",
-    icon: "🔥",
+    iconId: "aggressor",
     phrases: [
       "Вони мене змусили",
       "Я покажу їм",
@@ -90,7 +90,7 @@ export const SHADOWS_DATABASE: Shadow[] = [
   {
     id: "impostor",
     name: "Самозванець (Недостатність)",
-    icon: "🎭",
+    iconId: "impostor",
     phrases: [
       "Я не заслуговую на це",
       "Скоро вони зрозуміють, що я фейк",
@@ -107,7 +107,7 @@ export const SHADOWS_DATABASE: Shadow[] = [
   {
     id: "rescuer",
     name: "Рятувальник (Кодепенденція)",
-    icon: "🛡️",
+    iconId: "rescuer",
     phrases: [
       "Без мене вони не впораються",
       "Мій обов'язок — допомагати",
@@ -124,7 +124,7 @@ export const SHADOWS_DATABASE: Shadow[] = [
   {
     id: "manipulator",
     name: "Маніпулятор (Тіньова влада)",
-    icon: "🕸️",
+    iconId: "manipulator",
     phrases: [
       "Я знаю краще, що їм потрібно",
       "Це для їхнього ж блага",
@@ -141,7 +141,7 @@ export const SHADOWS_DATABASE: Shadow[] = [
   {
     id: "dissociator",
     name: "Спостерігач (Дисоціація)",
-    icon: "👁️",
+    iconId: "dissociator",
     phrases: [
       "Мене це не стосується",
       "Нічого не зміниться",

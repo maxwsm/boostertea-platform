@@ -20,19 +20,57 @@
   :root {
     --background: #0D0F12;
     --foreground: #F7F5F0;
+    /* Vision defaults (overridden by VisionProvider) */
+    --v-bg: #0D0F12;
+    --v-text: #F7F5F0;
+    --v-text-muted: rgba(247,245,240,0.6);
+    --v-text-dim: rgba(247,245,240,0.3);
+    --v-accent: #6a9cbb;
+    --v-accent-muted: rgba(106,156,187,0.15);
+    --v-border: rgba(247,245,240,0.08);
+    --v-border-active: rgba(106,156,187,0.4);
+    --v-bg-card: rgba(247,245,240,0.03);
+    --v-bg-input: rgba(247,245,240,0.05);
+    --v-danger: #ef4444;
+    --v-success: #9fb29f;
+    --v-warning: #d9a05b;
+    --v-shadow: rgba(0,0,0,0.3);
+    --v-font-family: var(--font-sans);
+    --v-font-scale: 1;
+    --v-font-weight: 400;
+    --v-line-height: 1.6;
+    --v-letter-spacing: 0em;
+    --v-contrast: 1;
+    --v-motion-duration: 0.3s;
+    --v-touch-min: 44px;
   }
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans);
+  background-color: var(--v-bg, var(--background));
+  color: var(--v-text, var(--foreground));
+  font-family: var(--v-font-family, var(--font-sans));
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-size: 18px; /* Accessible base size */
+  font-size: calc(16px * var(--v-font-scale, 1));
+  font-weight: var(--v-font-weight, 400);
+  line-height: var(--v-line-height, 1.6);
+  letter-spacing: var(--v-letter-spacing, 0em);
+  filter: contrast(var(--v-contrast, 1));
+  transition: background-color 0.5s ease, color 0.3s ease;
 }
 
 /* Hide scrollbars for absolute clean look */
 ::-webkit-scrollbar {
   display: none;
+}
+
+/* Vision-adapted range inputs */
+input[type="range"] {
+  accent-color: var(--v-accent, #6a9cbb);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  width: var(--v-touch-min, 44px);
+  height: 20px;
 }
