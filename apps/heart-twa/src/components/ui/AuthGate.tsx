@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock } from "lucide-react";
 
@@ -28,14 +28,14 @@ export function AuthGate({ children }: AuthGateProps) {
   const [attempts, setAttempts] = useState(0);
 
   // Check lockout on mount
-  useState(() => {
+  useEffect(() => {
     if (typeof window !== "undefined") {
       const lockoutEnd = localStorage.getItem("mrrt_lockout_until");
       if (lockoutEnd && parseInt(lockoutEnd, 10) > Date.now()) {
         setStatus("locked");
       }
     }
-  });
+  }, []);
 
   const handleAccess = (e: React.FormEvent) => {
     e.preventDefault();

@@ -11,18 +11,38 @@ async function getKnowledgeBase() {
     const hzFrequencies = await fs.readFile(path.join(dataDir, 'hz_frequencies.txt'), 'utf-8');
     const totemsAndShadows = await fs.readFile(path.join(dataDir, 'totems_and_shadows.txt'), 'utf-8');
     const dictionaryMarkers = await fs.readFile(path.join(dataDir, 'dictionary_markers.txt'), 'utf-8');
+    const neurochemistry = await fs.readFile(path.join(dataDir, 'neurochemistry_sapolsky.txt'), 'utf-8');
+    const polyvagal = await fs.readFile(path.join(dataDir, 'polyvagal_theory.txt'), 'utf-8');
+    const negotiation = await fs.readFile(path.join(dataDir, 'negotiation_model.txt'), 'utf-8');
+    const adhdRsd = await fs.readFile(path.join(dataDir, 'adhd_rsd_protocols.txt'), 'utf-8');
+    const dailyLife = await fs.readFile(path.join(dataDir, 'daily_life_scenarios.txt'), 'utf-8');
 
     return `
 ${systemPrompt}
 
-[БАЗА ЗНАНИЙ: ЧАСТОТЫ (АУДИО-ТЕРАПИЯ)]
+[БАЗА ЗНАНЬ: АУДІО-ТЕРАПІЯ (Hz ЧАСТОТИ)]
 ${hzFrequencies}
 
-[БАЗА ЗНАНИЙ: ТЕНИ И ТОТЕМЫ ЮНГА]
+[БАЗА ЗНАНЬ: ТІНІ ТА ТОТЕМИ ЮНГА]
 ${totemsAndShadows}
 
-[БАЗА ЗНАНИЙ: СЛОВА-МАРКЕРЫ (ДЕФИЦИТ/ПРОФИЦИТ)]
+[БАЗА ЗНАНЬ: СЛОВА-МАРКЕРИ (ДЕФІЦИТ/ПРОФІЦИТ)]
 ${dictionaryMarkers}
+
+[БАЗА ЗНАНЬ: НЕЙРОХІМІЯ (САПОЛСКІ)]
+${neurochemistry}
+
+[БАЗА ЗНАНЬ: ПОЛІВАГАЛЬНА ТЕОРІЯ (PORGES)]
+${polyvagal}
+
+[БАЗА ЗНАНЬ: ПЕРЕГОВОРНА МОДЕЛЬ]
+${negotiation}
+
+[БАЗА ЗНАНЬ: РДУГ ТА RSD ПРОТОКОЛИ]
+${adhdRsd}
+
+[БАЗА ЗНАНЬ: ЩОДЕННІ ЖИТТЄВІ СИТУАЦІЇ]
+${dailyLife}
     `;
   } catch (error) {
     console.error('Failed to load knowledge base', error);
