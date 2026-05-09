@@ -8,7 +8,8 @@ if (!token) {
 }
 
 const bot = new Telegraf(token);
-const twaUrl = process.env.TWA_URL || 'https://heart-twa.vercel.app';
+// Add a version parameter to bust Telegram WebApp cache
+const twaUrl = process.env.TWA_URL ? `${process.env.TWA_URL}?v=2.2` : 'https://heart-twa.vercel.app?v=2.2';
 
 // Access codes (synced with AuthGate.tsx)
 const ACCESS_CODES = [
@@ -19,13 +20,8 @@ const ACCESS_CODES = [
 
 // /start — Welcome + Open TWA
 bot.start((ctx) => {
-  const userName = ctx.from.first_name || 'Користувач';
   const code = ACCESS_CODES[Math.floor(Math.random() * ACCESS_CODES.length)];
 
-  // Log the code for debugging/user info in terminal if needed, but we don't send it directly anymore
-  // to maintain the "exclusive access" illusion if they already have one, or maybe we still provide it?
-  // The user said: "Введіть ваш персональний ключ доступу." 
-  // Let's provide it in a formatted block so they can copy it.
   const message = `
 ⚡️ *З'ЄДНАННЯ ВСТАНОВЛЕНО\\.*
 \\[ Статус користувача: Неопізнаний \\]
@@ -40,23 +36,23 @@ bot.start((ctx) => {
 
   ctx.replyWithMarkdownV2(message, Markup.inlineKeyboard([
     [Markup.button.webApp('🔑 ІНІЦІАЛІЗАЦІЯ', twaUrl)],
-    [Markup.button.callback('📖 Кодекс Тіней', 'codex_shadows')],
-    [Markup.button.callback('⚔️ Фреймворки Рішень', 'codex_frameworks')],
-    [Markup.button.callback('ℹ️ Про Систему', 'about')]
+    [Markup.button.callback('[ ДАНИХ: Тіні ]', 'codex_shadows')],
+    [Markup.button.callback('[ ДАНИХ: Фреймворки ]', 'codex_frameworks')],
+    [Markup.button.callback('[ МАНІФЕСТ ]', 'about')]
   ]));
 });
 
 // /codex — Direct command
 bot.command('codex', (ctx) => {
-  ctx.reply('📖 Кодекс Тіней — відкрийте вкладку "Кодекс" у Терміналі:', Markup.inlineKeyboard([
-    [Markup.button.webApp('📖 Відкрити Кодекс', twaUrl)]
+  ctx.reply('[ ДОСТУП ДО КОДЕКСУ ТІНЕЙ ]\nІніціалізуйте термінал:', Markup.inlineKeyboard([
+    [Markup.button.webApp('🔑 ІНІЦІАЛІЗАЦІЯ', twaUrl)]
   ]));
 });
 
 // /frameworks — Direct command
 bot.command('frameworks', (ctx) => {
-  ctx.reply('⚔️ Фреймворки Рішень — відкрийте вкладку "Кодекс" → "Рішення":', Markup.inlineKeyboard([
-    [Markup.button.webApp('⚔️ Відкрити Фреймворки', twaUrl)]
+  ctx.reply('[ ДОСТУП ДО ФРЕЙМВОРКІВ РІШЕНЬ ]\nІніціалізуйте термінал:', Markup.inlineKeyboard([
+    [Markup.button.webApp('🔑 ІНІЦІАЛІЗАЦІЯ', twaUrl)]
   ]));
 });
 
@@ -64,23 +60,24 @@ bot.command('frameworks', (ctx) => {
 bot.action('codex_shadows', (ctx) => {
   ctx.answerCbQuery();
   ctx.replyWithMarkdownV2(`
-📖 *Енциклопедія Тіней \\(Юнг\\)*
+\\[ *СИСТЕМНИЙ РЕЄСТР: ТІНЬОВІ АРХЕТИПИ* \\]
 
-У системі доступні 8 архетипів:
-🏃 Ескапіст \\— Втеча від реальності
-🎯 Перфекціоніст \\— Гіперконтроль
-😔 Жертва \\— Безсилість
-🔥 Агресор \\— Домінування
-🎭 Самозванець \\— Недостатність
-🛡 Рятувальник \\— Кодепенденція
-🕸 Маніпулятор \\— Тіньова влада
-👁 Спостерігач \\— Дисоціація
+Ідентифіковано 8 патернів \\(за К\\.Г\\. Юнгом\\):
 
-Кожен містить: _хімічний профіль, моторику тіла, тригерні фрази та методологію виходу_\\.
+\\[ Ескапіст \\] — Дисоціація та втеча від реальності
+\\[ Перфекціоніст \\] — Параліч через гіперконтроль
+\\[ Жертва \\] — Делегування відповідальності за біль
+\\[ Агресор \\] — Компенсація страху через домінування
+\\[ Самозванець \\] — Хронічне відчуття недостатності
+\\[ Рятувальник \\] — Кодепенденція та втрата фокусу
+\\[ Маніпулятор \\] — Тіньова влада та недовіра
+\\[ Спостерігач \\] — Відмова від дії через гіпер\\-аналіз
 
-Відкрийте вкладку "Кодекс" у Терміналі для детального вивчення\\.
+Кожен профіль містить: _біохімічні маркери, соматичні реакції, лінгвістичні тригери та протокол виходу в Профіцит_\\.
+
+Для розшифровки ініціалізуйте термінал\\.
   `.trim(), Markup.inlineKeyboard([
-    [Markup.button.webApp('🖥 Відкрити Кодекс', twaUrl)]
+    [Markup.button.webApp('🔑 ІНІЦІАЛІЗАЦІЯ', twaUrl)]
   ]));
 });
 
@@ -88,18 +85,21 @@ bot.action('codex_shadows', (ctx) => {
 bot.action('codex_frameworks', (ctx) => {
   ctx.answerCbQuery();
   ctx.replyWithMarkdownV2(`
-⚔️ *Фреймворки Прийняття Рішень*
+\\[ *БАЗА ДАНИХ: ФРЕЙМВОРКИ РІШЕНЬ* \\]
 
-5 інструментів рівня топ\\-компаній:
-🎯 *Google* \\— OKR \\(Objectives \\& Key Results\\)
-⚛️ *Tesla / SpaceX* \\— First Principles Thinking
-💀 *NASA* \\— Pre\\-Mortem Analysis
-⚔️ *Pentagon / DARPA* \\— Red Team / Blue Team
-⚡ *Meta / Red Bull / Dragon Capital* \\— Blitzscaling
+Доступні 5 тактичних моделей вищого рівня:
 
-Кожен фреймворк має: _принцип, модель мислення, покроковий алгоритм, реальний кейс та небезпеку зловживання_\\.
+\\[ Google \\] — OKR \\(Objectives \\& Key Results\\)
+\\[ Tesla / SpaceX \\] — First Principles Thinking
+\\[ NASA \\] — Pre\\-Mortem Analysis
+\\[ Pentagon / DARPA \\] — Red Team / Blue Team
+\\[ Meta / Dragon Capital \\] — Blitzscaling
+
+Специфікація кожної моделі включає: _базовий принцип, когнітивний алгоритм, реальний прецедент використання та загрози зловживання_\\.
+
+Для розшифровки ініціалізуйте термінал\\.
   `.trim(), Markup.inlineKeyboard([
-    [Markup.button.webApp('🖥 Відкрити Фреймворки', twaUrl)]
+    [Markup.button.webApp('🔑 ІНІЦІАЛІЗАЦІЯ', twaUrl)]
   ]));
 });
 
@@ -107,36 +107,31 @@ bot.action('codex_frameworks', (ctx) => {
 bot.action('about', (ctx) => {
   ctx.answerCbQuery();
   ctx.replyWithMarkdownV2(`
-🧠 *I³\\.MRMRRT\\.ƐI \\— Нейро\\-Ментор Профіциту*
+\\[ *МАНІФЕСТ СИСТЕМИ: I³\\.MRMRRT\\.ƐI* \\]
 
-Система працює на перетині:
-• Аналітичної психології Юнга \\(Тінь, Архетипи\\)
-• Polyvagal Theory \\(Вагусне регулювання\\)
-• IFS \\(Внутрішні Частини\\)
-• RSD \\(Rejection Sensitive Dysphoria\\)
-• Human Design \\(Сакрал, Емоційна Хвиля\\)
+Статус: Автономний Тіньовий Стратег\\.
+Інструмент елітарного моделювання реальності для тих, хто керує системами, а не є їхньою частиною\\.
 
-*Модулі:*
-📡 Нейро\\-Сканер \\(голос/текст → AI аналіз\\)
-🧬 Соматична Карта Тіла
-🌐 GLSL Фрактали \\(Julia Set\\)
-📊 Біометричні Дельти
-📖 Кодекс \\(8 Тіней \\+ 5 Фреймворків\\)
-🎵 Аудіо\\-Терапія \\(432 Hz / 396 Hz\\)
+\\[ *АРХІТЕКТУРА* \\]:
+▪️ Нейро\\-перетин: К\\.Г\\. Юнг × Polyvagal Theory × Human Design
+▪️ Аналітичний рушій: 8 Архетипів Тіней
+▪️ Тактичний рушій: 5 Фреймворків рішень
+▪️ Інтерфейс: GLSL\\-Фрактали та Соматичне картування
+▪️ Аудіо\\-корекція: Нейро\\-частоти \\(432 Hz / 396 Hz\\)
 
-_Не є медичним інструментом\\._
+\\[ *УВАГА* \\]: Система не надає медичних консультацій\\. Лише холодний стратегічний аналіз\\.
   `.trim());
 });
 
 // Any text message — prompt to use terminal
 bot.on('text', (ctx) => {
-  ctx.reply('Для аналізу використовуйте Термінал (TWA). Натисніть кнопку нижче:', Markup.inlineKeyboard([
-    [Markup.button.webApp('🖥 Відкрити Термінал', twaUrl)]
+  ctx.reply('[ СТАТУС: ВІДМОВА ]\nДля аналізу ініціалізуйте Термінал:', Markup.inlineKeyboard([
+    [Markup.button.webApp('🔑 ІНІЦІАЛІЗАЦІЯ', twaUrl)]
   ]));
 });
 
 // Start bot
-console.log('🚀 Starting I3.MRMRRT.ƐI Bot...');
+console.log('🚀 Starting I3.MRMRRT.ƐI Bot (v2.2)...');
 console.log(`📡 TWA URL: ${twaUrl}`);
 console.log(`🔑 Token: ...${token.slice(-6)}`);
 
