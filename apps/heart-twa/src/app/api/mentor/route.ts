@@ -16,6 +16,9 @@ async function getKnowledgeBase() {
     const negotiation = await fs.readFile(path.join(dataDir, 'negotiation_model.txt'), 'utf-8');
     const adhdRsd = await fs.readFile(path.join(dataDir, 'adhd_rsd_protocols.txt'), 'utf-8');
     const dailyLife = await fs.readFile(path.join(dataDir, 'daily_life_scenarios.txt'), 'utf-8');
+    const attachment = await fs.readFile(path.join(dataDir, 'attachment_styles.txt'), 'utf-8');
+    const cogDistortions = await fs.readFile(path.join(dataDir, 'cognitive_distortions.txt'), 'utf-8');
+    const sleepCircadian = await fs.readFile(path.join(dataDir, 'sleep_circadian.txt'), 'utf-8');
 
     return `
 ${systemPrompt}
@@ -43,6 +46,15 @@ ${adhdRsd}
 
 [БАЗА ЗНАНЬ: ЩОДЕННІ ЖИТТЄВІ СИТУАЦІЇ]
 ${dailyLife}
+
+[БАЗА ЗНАНЬ: СТИЛІ ПРИВ'ЯЗАНОСТІ (Bowlby)]
+${attachment}
+
+[БАЗА ЗНАНЬ: КОГНІТИВНІ СПОТВОРЕННЯ (Beck/Burns/Kahneman)]
+${cogDistortions}
+
+[БАЗА ЗНАНЬ: СОН ТА ЦИРКАДНІ РИТМИ]
+${sleepCircadian}
     `;
   } catch (error) {
     console.error('Failed to load knowledge base', error);
