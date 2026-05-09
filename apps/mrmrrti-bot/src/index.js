@@ -9,7 +9,7 @@ if (!token) {
 
 const bot = new Telegraf(token);
 // Add a version parameter to bust Telegram WebApp cache
-const twaUrl = process.env.TWA_URL ? `${process.env.TWA_URL}?v=2.2` : 'https://heart-twa.vercel.app?v=2.2';
+const twaUrl = process.env.TWA_URL ? `${process.env.TWA_URL}?v=2.5` : 'https://heart-twa.vercel.app?v=2.5';
 
 // Access codes (synced with AuthGate.tsx)
 const ACCESS_CODES = [
