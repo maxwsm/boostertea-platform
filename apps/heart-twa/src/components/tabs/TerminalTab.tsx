@@ -108,6 +108,20 @@ export function TerminalTab({ isAdhdMode }: { isAdhdMode: boolean }) {
       const data = await res.json();
       setAiResult({ ...data, description: inputText, category: "Персональний Аналіз" });
       setStage("analysis");
+
+      // Trigger ValueSync logic after a valuable result is generated
+      setTimeout(() => {
+        const lastPrompted = localStorage.getItem("mrrt_value_prompted");
+        const hasSynced = localStorage.getItem("mrrt_value_synced");
+        const now = Date.now();
+        
+        // Don't show if already synced, or prompted in the last 24h
+        if (!hasSynced && (!lastPrompted || (now - parseInt(lastPrompted, 10)) > 24 * 60 * 60 * 1000)) {
+          localStorage.setItem("mrrt_value_prompted", now.toString());
+          window.dispatchEvent(new Event("mrrt:showValueSync"));
+        }
+      }, 5000); // Give user 5 seconds to read the analysis before showing the pop-up
+
     } catch (err) {
       console.error(err);
       alert("Помилка синхронізації з ядром.");

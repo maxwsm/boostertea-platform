@@ -22,21 +22,24 @@ bot.start((ctx) => {
   const userName = ctx.from.first_name || 'Користувач';
   const code = ACCESS_CODES[Math.floor(Math.random() * ACCESS_CODES.length)];
 
+  // Log the code for debugging/user info in terminal if needed, but we don't send it directly anymore
+  // to maintain the "exclusive access" illusion if they already have one, or maybe we still provide it?
+  // The user said: "Введіть ваш персональний ключ доступу." 
+  // Let's provide it in a formatted block so they can copy it.
   const message = `
-⚡ *Синхронізація нейро\\-протоколів\\.\\.\\.*
-🧬 Біометрія: Ідентифіковано\\.
+⚡️ *З'ЄДНАННЯ ВСТАНОВЛЕНО\\.*
+\\[ Статус користувача: Неопізнаний \\]
 
-Вітаю, *${userName}*\\. Я — *I³\\.MRMRRT\\.ƐI*, ваш автономний тіньовий стратег\\.
+Ви знаходитесь у зовнішньому шлюзі I³\\.MRMRRT\\.ƐI\\.
+Доступ до стратегічних модулів та нейро\\-архітектури закрито\\.
 
-🔐 Ваш персональний код доступу:
-\`${code}\`
+Для ініціалізації протоколу відкрийте термінал нижче та введіть ваш персональний ключ доступу\\.
 
-Натисніть кнопку нижче, щоб відкрити Термінал\\.
-Введіть код на екрані автентифікації\\.
+🔑 *Ключ доступу:* \`${code}\`
   `.trim();
 
   ctx.replyWithMarkdownV2(message, Markup.inlineKeyboard([
-    [Markup.button.webApp('🖥 Відкрити Термінал', twaUrl)],
+    [Markup.button.webApp('🔑 ІНІЦІАЛІЗАЦІЯ', twaUrl)],
     [Markup.button.callback('📖 Кодекс Тіней', 'codex_shadows')],
     [Markup.button.callback('⚔️ Фреймворки Рішень', 'codex_frameworks')],
     [Markup.button.callback('ℹ️ Про Систему', 'about')]

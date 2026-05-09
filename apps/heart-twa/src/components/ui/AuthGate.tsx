@@ -24,16 +24,41 @@ interface AuthGateProps {
 export function AuthGate({ children }: AuthGateProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passcode, setPasscode] = useState("");
-  const [error, setError] = useState(false);
+  const [status, setStatus] = useState<"idle" | "error" | "success" | "locked">("idle");
+  const [attempts, setAttempts] = useState(0);
+
+  // Check lockout on mount
+  useState(() => {
+    if (typeof window !== "undefined") {
+      const lockoutEnd = localStorage.getItem("mrrt_lockout_until");
+      if (lockoutEnd && parseInt(lockoutEnd, 10) > Date.now()) {
+        setStatus("locked");
+      }
+    }
+  });
 
   const handleAccess = (e: React.FormEvent) => {
     e.preventDefault();
+    if (status === "locked" || status === "success") return;
+
     if (VALID_ACCESS_CODES.includes(passcode.trim().toUpperCase())) {
-      setIsAuthenticated(true);
-      setError(false);
+      setStatus("success");
+      setTimeout(() => {
+        setIsAuthenticated(true);
+      }, 1500); // Give time to read success message before transition
     } else {
-      setError(true);
-      setTimeout(() => setError(false), 2000);
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
+      
+      if (newAttempts >= 3) {
+        setStatus("locked");
+        localStorage.setItem("mrrt_lockout_until", (Date.now() + 24 * 60 * 60 * 1000).toString());
+      } else {
+        setStatus("error");
+        setTimeout(() => {
+          setStatus(prev => prev !== "locked" ? "idle" : prev);
+        }, 2000);
+      }
     }
   };
 
@@ -72,7 +97,7 @@ export function AuthGate({ children }: AuthGateProps) {
 
         <form onSubmit={handleAccess} className="w-full flex flex-col items-center">
           <motion.div 
-            animate={error ? { x: [-10, 10, -10, 10, 0] } : {}}
+            animate={status === "error" ? { x: [-10, 10, -10, 10, 0] } : {}}
             transition={{ duration: 0.4 }}
             className="w-full relative"
           >
@@ -80,28 +105,53 @@ export function AuthGate({ children }: AuthGateProps) {
               type="text"
               value={passcode}
               onChange={(e) => setPasscode(e.target.value)}
-              placeholder="Введіть код доступу"
-              className={`w-full bg-oatmeal/5 border ${error ? 'border-amber' : 'border-oatmeal/10'} rounded-[20px] px-6 py-4 text-center font-mono text-oatmeal placeholder:text-oatmeal/30 focus:outline-none focus:border-sage transition-colors shadow-[0_10px_30px_rgba(0,0,0,0.2)]`}
+              disabled={status === "locked" || status === "success"}
+              placeholder="Input_Access_Key"
+              className={`w-full bg-oatmeal/5 border ${status === "error" ? 'border-amber' : status === "success" ? 'border-sage' : status === "locked" ? 'border-red-500/50' : 'border-oatmeal/10'} rounded-[20px] px-6 py-4 text-center font-mono text-oatmeal placeholder:text-oatmeal/30 focus:outline-none focus:border-sage transition-colors shadow-[0_10px_30px_rgba(0,0,0,0.2)] disabled:opacity-50`}
             />
           </motion.div>
           
           <button 
             type="submit"
-            className="mt-6 px-8 py-3 rounded-[20px] bg-oatmeal/10 hover:bg-oatmeal/20 transition-all font-mono text-sm tracking-widest text-oatmeal shadow-[0_5px_20px_rgba(0,0,0,0.1)] active:scale-95"
+            disabled={status === "locked" || status === "success"}
+            className="mt-6 px-8 py-3 rounded-[20px] bg-oatmeal/10 hover:bg-oatmeal/20 transition-all font-mono text-sm tracking-widest text-oatmeal shadow-[0_5px_20px_rgba(0,0,0,0.1)] active:scale-95 disabled:opacity-50"
           >
             ІНІЦІАЛІЗАЦІЯ
           </button>
         </form>
 
-        <AnimatePresence>
-          {error && (
+        <AnimatePresence mode="wait">
+          {status === "error" && (
             <motion.p
+              key="error"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="mt-6 text-amber text-sm font-mono text-center"
+              exit={{ opacity: 0, y: -10 }}
+              className="mt-6 text-amber text-xs font-mono text-center px-4"
             >
-              Код не знайдено. Доступ заборонено.
+              🔴 [ ПОМИЛКА ] Ключ не розпізнано. Рівень допуску недостатній.
+            </motion.p>
+          )}
+          {status === "locked" && (
+            <motion.p
+              key="locked"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mt-6 text-red-400 text-xs font-mono text-center px-4"
+            >
+              ⛔️ [ БЛОКУВАННЯ ] Підозріла активність. Шлюз закрито на 24 години.
+            </motion.p>
+          )}
+          {status === "success" && (
+            <motion.p
+              key="success"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mt-6 text-sage text-xs font-mono text-center px-4"
+            >
+              🟢 [ ІДЕНТИФІКАЦІЯ УСПІШНА ] Декодування системи... Вітаємо в Тіні.
             </motion.p>
           )}
         </AnimatePresence>

@@ -8,7 +8,8 @@ import { MusicTab } from "@/components/tabs/MusicTab";
 import { HistoryTab } from "@/components/tabs/HistoryTab";
 import { CodexTab } from "@/components/tabs/CodexTab";
 import { WelcomeOnboarding } from "@/components/onboarding/WelcomeOnboarding";
-import { Terminal, Hexagon, Headphones, User, BookOpen, Eye } from "lucide-react";
+import { ValueSyncModal } from "@/components/ui/ValueSyncModal";
+import { Terminal, Hexagon, Headphones, User, BookOpen, Eye, Scale } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import Link from "next/link";
@@ -25,6 +26,13 @@ export default function Home() {
 
   // Re-entry flow: vision → welcome → app
   const [reEntryPhase, setReEntryPhase] = useState<"checking" | "vision" | "welcome" | "ready">("checking");
+  const [showValueSync, setShowValueSync] = useState(false);
+
+  useEffect(() => {
+    const handleShowValueSync = () => setShowValueSync(true);
+    window.addEventListener("mrrt:showValueSync", handleShowValueSync);
+    return () => window.removeEventListener("mrrt:showValueSync", handleShowValueSync);
+  }, []);
 
   useEffect(() => {
     const lastVisit = localStorage.getItem("mrrt_last_visit");
@@ -57,6 +65,13 @@ export default function Home() {
         {/* Global Header — hidden during onboarding */}
         {reEntryPhase === "ready" && (
         <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
+          <button
+            onClick={() => setShowValueSync(true)}
+            className="flex items-center justify-center w-10 h-10 rounded-full backdrop-blur-md hover:opacity-80 transition-all"
+            style={{ backgroundColor: "var(--v-bg-card)", border: "1px solid var(--v-border)" }}
+          >
+            <Scale size={16} style={{ color: "var(--v-text-dim)" }} />
+          </button>
           <button
             onClick={() => setShowVision(true)}
             className="flex items-center justify-center w-10 h-10 rounded-full backdrop-blur-md hover:opacity-80 transition-all"
@@ -160,6 +175,8 @@ export default function Home() {
             </Suspense>
           )}
         </AnimatePresence>
+
+        <ValueSyncModal isOpen={showValueSync} onClose={() => setShowValueSync(false)} />
 
       </main>
     </AuthGate>
